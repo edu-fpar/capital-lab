@@ -1,8 +1,13 @@
 # Capital Lab — atelier capital & pouvoir
 
+[![Capital Lab en mode cinéma : une pyramide de holdings et une question posée à la salle](capital-lab.png)](https://edu-fpar.github.io/capital-lab/)
+
 Outil pédagogique pour visualiser et expliquer les structures de participations entre sociétés :
 on peut être **minoritaire** dans une société et pourtant la **contrôler** via des chaînes de participations,
 des pactes, des droits de vote double, l'autocontrôle…
+
+**▶ En ligne : [edu-fpar.github.io/capital-lab](https://edu-fpar.github.io/capital-lab/)** (aussi sur téléphone) ·
+[documentation](https://edu-fpar.github.io/capital-lab/docs/)
 
 Aucune installation : ouvrez `index.html` (double-clic) ou servez le dossier avec UwAmp
 (`http://localhost/edu-fpar/capital-lab/`). Pas de dépendance externe, fonctionne hors ligne.
