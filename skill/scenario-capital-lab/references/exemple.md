@@ -52,12 +52,30 @@ societe BETA "Beta SAS"
 lien ALPHA -> BETA 51%
 focus BETA
 ```
-## 5. Le point de vue des minoritaires
-Le **Fonds Delta** détient les 49 % restants de Martin Participations. Il a donc indirectement un intérêt de 49 % × 51 % × 51 % ≈ **12,7 %** dans Alpha SA — presque autant que la famille ! Mais **aucun pouvoir** : ses voix sont minoritaires dès le premier étage.
+## Question : quel pouvoir le Fonds Delta a-t-il dans Alpha SA ?
+Le **Fonds Delta** détient les 49 % restants de Martin Participations : il finance la pyramide presque autant que la famille.
 
 ```scene
 fonds DELTA "Fonds Delta"
 lien DELTA -> H1 49%
+vue aucune
+focus DELTA ALPHA
+```
+- [ ] 49 % des droits de vote d'Alpha SA
+  Ses 49 % portent sur Martin Participations, pas sur Alpha SA.
+- [ ] Environ 12,7 % des droits de vote, comme son intérêt économique
+  49 % × 51 % × 51 % ≈ 12,7 % mesure sa part des bénéfices d'Alpha SA, pas ses voix.
+- [x] Aucun : il ne vote pas à l'assemblée d'Alpha SA
+  Ses voix ne comptent qu'à l'assemblée de Martin Participations, où la famille est majoritaire.
+- [ ] Une minorité de blocage
+  Il en a une dans Martin Participations (49 %, plus d'un tiers), mais pas dans Alpha SA.
+
+### Réponse
+Le fonds a un **intérêt économique** d'environ **12,7 %** dans Alpha SA — presque autant que la famille (13,3 %) — mais **aucun droit de vote** : il ne vote qu'à l'assemblée de Martin Participations, où il est minoritaire.
+
+C'est le paradoxe de la pyramide : on peut **financer sans décider**. Le point de vue du fonds s'affiche maintenant sur le canevas.
+
+```scene
 vue DELTA
 focus DELTA ALPHA
 ```

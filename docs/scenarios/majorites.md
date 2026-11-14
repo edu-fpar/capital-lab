@@ -1,7 +1,7 @@
 # Majorités et minorité de blocage
 > 50 %, 1/3, 2/3 : pourquoi certains seuils changent tout en assemblée générale.
 
-Dans une société anonyme, les décisions se prennent en **assemblée générale ordinaire** (AGO, majorité des voix) ou **extraordinaire** (AGE, majorité des **deux tiers**). Ces seuils dessinent la carte du pouvoir.
+Dans une société anonyme, les décisions se prennent en **assemblée générale ordinaire** (AGO) ou **extraordinaire** (AGE), avec des majorités différentes. Ces seuils dessinent la carte du pouvoir.
 
 ## 1. Deux associés
 Gamma SA a deux actionnaires : **Marie (60 %)** et **Paul (40 %)**.
@@ -16,8 +16,18 @@ lien MARIE -> GAMMA 60%
 lien PAUL -> GAMMA 40%
 focus GAMMA
 ```
-## 2. Le pouvoir de dire non
-Pour **modifier les statuts**, augmenter le capital, fusionner… il faut les **2/3** des voix en AGE. Marie n'a que 60 % : sans Paul, elle ne peut rien changer.
+## Question : Marie peut-elle modifier seule les statuts de Gamma SA ?
+Marie détient 60 % des voix, Paul 40 %. Tous deux participent à l'assemblée et votent.
+
+- [ ] Oui : avec 60 %, elle est majoritaire
+  La majorité simple suffit en assemblée **ordinaire**, pas pour modifier les statuts.
+- [x] Non : il faut les deux tiers des voix en assemblée extraordinaire
+  60 % < 66,67 % : sans l'accord de Paul, la résolution est rejetée.
+- [ ] Non : il faut l'unanimité
+  L'unanimité n'est exigée que pour quelques décisions, par exemple augmenter les engagements des actionnaires.
+
+### Réponse
+Pour **modifier les statuts**, augmenter le capital, fusionner… il faut, dans une SA, les **2/3** des voix exprimées par les actionnaires présents ou représentés en AGE. Avec 60 %, Marie ne peut rien changer sans Paul.
 
 Paul détient plus d'un tiers des voix : il dispose d'une **minorité de blocage** (lien orange).
 

@@ -21,7 +21,8 @@
     studio: { open: false, title: 'Mon scénario', steps: [] },
     hoverRef: null, libreState: null, planOpen: false, drag: null,
     cinePos: {},   // positions d'entités déplacées à la main pendant la lecture d'un scénario
-    noteOff: {}    // décalages des bulles déplacées à la main
+    noteOff: {},   // décalages des bulles déplacées à la main
+    q: { revealed: false, collapsed: false, picked: null, flipped: {} }  // étape question en cours
   };
 
   /* ============================================================ utilitaires */
@@ -317,9 +318,12 @@
         x0 = Math.min(x0, e.x - NW / 2); x1 = Math.max(x1, e.x + NW / 2 + (self ? 80 : 0), note ? e.x + 60 + Math.min(34, note.length) * 6.8 : -Infinity);
         y0 = Math.min(y0, e.y - NH / 2 - ((st.view.notes || {})[id] ? 70 : 0) - 30); y1 = Math.max(y1, e.y + NH / 2 + 10);
       });
-      const pad = 50;
-      const k = clamp(Math.min(r.width / (x1 - x0 + 2 * pad), r.height / (y1 - y0 + 2 * pad)), 0.25, 1.3);
-      t = { x: (x0 + x1) / 2, y: (y0 + y1) / 2, k };
+      // la feuille de question occupe le bas du canevas : on cadre dans l'espace restant au-dessus
+      const sheet = $('#qsheet');
+      const inset = App.mode === 'cinema' && !sheet.hidden ? Math.min(sheet.offsetHeight, r.height * 0.7) : 0;
+      const pad = 50, h = Math.max(120, r.height - inset);
+      const k = clamp(Math.min(r.width / (x1 - x0 + 2 * pad), h / (y1 - y0 + 2 * pad)), 0.25, 1.3);
+      t = { x: (x0 + x1) / 2, y: (y0 + y1) / 2 + inset / 2 / k, k };
     }
     if (animate) App.camT = t; else { App.cam = Object.assign({}, t); App.camT = null; }
     requestRender();
@@ -906,8 +910,10 @@
     const sc = App.scenario; if (!sc || !sc.steps.length) return;
     n = clamp(n, 0, sc.steps.length - 1);
     const changed = n !== App.step;
-    App.state = P.buildState(sc, n); App.step = n;
+    if (changed) App.q = { revealed: false, collapsed: false, picked: null, flipped: {} };
+    App.state = P.buildState(sc, n, null, App.q.revealed); App.step = n;
     App.sel = App.state.view.select ? { kind: 'node', id: App.state.view.select } : null;
+    renderQSheet();
     App.commit();
     App.fit(true);
     updatePlayer();
@@ -915,12 +921,72 @@
     App.schedule();
   };
 
+  const curQuestion = () => App.mode === 'cinema' && App.scenario && App.scenario.steps[App.step] ? App.scenario.steps[App.step].question : null;
+
+  /** Révèle la réponse de l'étape question : cartes, explication et commandes « réponse » du canevas. */
+  App.reveal = function () {
+    const q = curQuestion();
+    if (!q || App.q.revealed) return;
+    App.q.revealed = true;
+    const sel = App.sel;
+    App.state = P.buildState(App.scenario, App.step, null, true);
+    App.sel = App.state.view.select ? { kind: 'node', id: App.state.view.select } : sel;
+    renderQSheet();
+    App.commit();
+    App.fit(true);
+    updatePlayer();
+    App.schedule();
+  };
+
+  function renderQSheet() {
+    const el = $('#qsheet'), q = curQuestion(), Q = App.q;
+    if (!q) { el.hidden = true; stage.style.setProperty('--sheet-h', '0px'); return; }
+    const inl = t => P.md(t, { nameOf });
+    let h = `<div class="qs-head" data-qs="toggle" title="Réduire / agrandir"><span class="qs-badge">❓ Question</span><div class="qs-text">${inl(q.text)}</div><div class="qs-actions">`;
+    h += Q.revealed ? '<span class="qs-done">✔ Réponse révélée</span>' : '<button class="primary" data-qs="reveal" title="Révéler la réponse (→)">💡 Révéler la réponse</button>';
+    h += `<button class="qs-min" data-qs="toggle" title="${Q.collapsed ? 'Agrandir' : 'Réduire'}">${Q.collapsed ? '▴' : '▾'}</button></div></div><div class="qs-body">`;
+    if (q.choices.length) {
+      h += '<div class="qs-grid">' + q.choices.map((c, i) => {
+        const cls = ['qcard', Q.picked === i ? 'picked' : '', Q.revealed ? (c.correct ? 'correct' : 'wrong') : '', Q.revealed && Q.flipped[i] ? 'flipped' : ''].join(' ');
+        const pickTag = Q.picked === i ? '<span class="qc-pick">👥 choix de la salle</span>' : '';
+        return `<div class="${cls}" data-card="${i}" role="button" tabindex="0"><div class="qc-inner">
+          <div class="qc-face qc-front"><span class="qc-letter">${'ABCDEFGHIJ'[i] || i + 1}</span><div class="qc-txt">${inl(c.text)}${pickTag}</div>${Q.revealed ? `<span class="qc-mark">${c.correct ? '✓' : '✗'}</span>` : ''}</div>
+          <div class="qc-face qc-back"><div class="qc-verdict">${c.correct ? '✓ Bonne réponse' : '✗ Mauvaise réponse'}</div><div class="qc-txt">${c.explain ? inl(c.explain) : ''}</div></div>
+        </div></div>`;
+      }).join('') + '</div>';
+      h += `<p class="qs-hint">${Q.revealed ? (q.choices.some(c => c.explain) ? 'Cliquez sur une carte (ou tapez son numéro) pour la retourner et lire son explication.' : 'Cliquez sur une carte pour la retourner.') : 'Cliquez sur la réponse choisie par la salle (ou tapez son numéro), puis révélez la réponse (→).'} Le canevas reste déplaçable au-dessus.</p>`;
+    } else {
+      h += `<p class="qs-open">${Q.revealed ? 'La réponse est affichée dans le panneau de droite.' : 'Question ouverte : échangez avec la salle, puis révélez la réponse (→).'}</p>`;
+    }
+    el.innerHTML = h + '</div>';
+    el.hidden = false;
+    el.classList.toggle('collapsed', Q.collapsed);
+    stage.style.setProperty('--sheet-h', el.offsetHeight + 'px');
+  }
+
+  $('#qsheet').addEventListener('click', ev => {
+    const a = ev.target.closest('[data-qs]');
+    if (a && a.dataset.qs === 'reveal') { ev.stopPropagation(); App.reveal(); return; }
+    if (a && a.dataset.qs === 'toggle') { App.q.collapsed = !App.q.collapsed; renderQSheet(); App.fit(true); return; }
+    const c = ev.target.closest('[data-card]');
+    if (c) clickCard(+c.dataset.card);
+  });
+  function clickCard(i) {
+    const q = curQuestion(); if (!q || !q.choices[i]) return;
+    if (App.q.revealed) {
+      App.q.flipped[i] = !App.q.flipped[i];
+      const el = $(`#qsheet [data-card="${i}"]`); if (el) el.classList.toggle('flipped', App.q.flipped[i]);
+    } else { App.q.picked = App.q.picked === i ? null : i; renderQSheet(); }
+  }
+
   App.schedule = function () {
     clearTimeout(App.timer);
     const bar = $('#pl-timer i');
     bar.style.transition = 'none'; bar.style.width = '0%';
     if (!(App.playing && App.mode === 'cinema' && App.playMode === 'continu' && App.scenario)) return;
-    const d = P.stepDuration(App.scenario.steps[App.step]) / App.speed;
+    // la lecture continue attend que l'enseignant révèle la réponse d'une question
+    if (curQuestion() && !App.q.revealed) return;
+    const d = P.stepDuration(App.scenario.steps[App.step], App.q.revealed) / App.speed;
     void bar.offsetWidth;
     bar.style.transition = `width ${d}ms linear`; bar.style.width = '100%';
     App.timer = setTimeout(() => {
@@ -935,7 +1001,10 @@
     App.playing = true;
     if (App.step >= App.scenario.steps.length - 1) App.goStep(0); else { updatePlayer(); App.schedule(); }
   }
-  function next() { if (App.scenario && App.step < App.scenario.steps.length - 1) App.goStep(App.step + 1); }
+  function next() {
+    if (curQuestion() && !App.q.revealed) { App.reveal(); return; }   // 1er appui : la réponse ; 2e : la suite
+    if (App.scenario && App.step < App.scenario.steps.length - 1) App.goStep(App.step + 1);
+  }
   function prev() { if (App.scenario && App.step > 0) App.goStep(App.step - 1); }
 
   function updatePlayer() {
@@ -950,7 +1019,10 @@
     $('#pl-dots').innerHTML = sc.steps.map((s, i) => `<button data-go="${i}" class="${i === App.step ? 'cur' : i < App.step ? 'done' : ''}" title="${esc((i + 1) + '. ' + s.title)}"></button>`).join('');
     $('#pl-reset').hidden = !Object.keys(App.cinePos).length && !Object.keys(App.noteOff).length;
     $('#pl-prev').disabled = App.step <= 0;
-    $('#pl-next').disabled = App.step >= sc.steps.length - 1;
+    const pending = !!curQuestion() && !App.q.revealed;
+    $('#pl-next').textContent = pending ? '💡 Réponse ▶' : 'Suivant ▶';
+    $('#pl-next').title = pending ? 'Révéler la réponse (→)' : 'Étape suivante (→)';
+    $('#pl-next').disabled = !pending && App.step >= sc.steps.length - 1;
   }
   $('#pl-first').onclick = () => App.goStep(0);
   $('#pl-prev').onclick = prev;
@@ -983,7 +1055,14 @@
     }
     const s = sc.steps[App.step], st = App.state;
     let h = `<div class="sc-head"><div class="sc-title">${esc(sc.title)}</div><div class="sc-no">Étape ${App.step + 1} / ${sc.steps.length}</div></div>`;
-    h += `<h2 class="step-title">${esc(s.title)}</h2><div class="md">${P.md(s.md, { nameOf })}</div>`;
+    h += `<h2 class="step-title">${s.question ? '❓ ' : ''}${esc(s.title)}</h2><div class="md">${P.md(s.md, { nameOf })}</div>`;
+    if (s.question) {
+      const q = s.question, good = q.choices.map((c, i) => c.correct ? `<b>${'ABCDEFGHIJ'[i] || i + 1}</b> — ${P.md(c.text, { nameOf }).replace(/^<p>|<\/p>$/g, '')}` : null).filter(Boolean);
+      if (!App.q.revealed) h += '<div class="answer-wait">La réponse s\'affichera ici. <button class="small" data-act="reveal">💡 Révéler la réponse</button></div>';
+      else if (good.length || q.answerMd) {
+        h += `<details class="answer" open><summary>💡 Réponse</summary>${good.length ? `<p class="good">${good.length > 1 ? 'Bonnes réponses' : 'Bonne réponse'} : ${good.join(' ; ')}</p>` : ''}<div class="md">${P.md(q.answerMd, { nameOf })}</div></details>`;
+      }
+    }
     const target = App.sel && App.sel.kind === 'node' ? App.sel.id : null;
     if (target && st.entities[target]) h += `<div class="auto"><div class="auto-h">🔍 ${iconOf(target)} ${esc(nameOf(target))}<button data-act="unsel" title="Fermer">×</button></div>${App.analysisHTML(target)}</div>`;
     else if (st.view.perspective && st.entities[st.view.perspective]) h += perspectiveSummary(st.view.perspective);
@@ -998,7 +1077,8 @@
     const g = ev.target.closest('[data-go]'); if (g) { App.goStep(+g.dataset.go); return; }
     const r = ev.target.closest('.ref'); if (r) { const id = P.resolve(App.state, { v: r.dataset.ref }); if (id) App.select({ kind: 'node', id }); return; }
     const b = ev.target.closest('[data-act]'); if (!b) return;
-    if (b.dataset.act === 'lib') openLibrary();
+    if (b.dataset.act === 'reveal') App.reveal();
+    else if (b.dataset.act === 'lib') openLibrary();
     else if (b.dataset.act === 'unsel') App.select(null);
     else if (b.dataset.act === 'sel') App.select({ kind: 'node', id: b.dataset.id });
   });
@@ -1092,7 +1172,7 @@
     $('#player').hidden = App.mode !== 'cinema';
     $('#inspector').hidden = App.mode !== 'libre';
     $('#commentary').hidden = App.mode !== 'cinema';
-    updateStudio(); updatePlayer();
+    updateStudio(); updatePlayer(); renderQSheet();
     requestAnimationFrame(() => { requestRender(); });
   }
   $$('.modes button').forEach(b => { b.onclick = () => setMode(b.dataset.mode); });
@@ -1160,6 +1240,7 @@
       if (ev.key === 'ArrowRight' || ev.key === 'PageDown') { next(); ev.preventDefault(); }
       else if (ev.key === 'ArrowLeft' || ev.key === 'PageUp') { prev(); ev.preventDefault(); }
       else if (ev.key === ' ') { if (App.playMode === 'continu') togglePlay(); else next(); ev.preventDefault(); }
+      else if (/^[1-9]$/.test(ev.key) && curQuestion()) clickCard(+ev.key - 1);
       else if (ev.key === 'Home') App.goStep(0);
       else if (ev.key === 'End' && App.scenario) App.goStep(App.scenario.steps.length - 1);
     } else {

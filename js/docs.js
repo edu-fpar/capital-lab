@@ -20,6 +20,7 @@ P.HELP_DOC = `## Prise en main
 - **Pas à pas** : l'utilisateur passe lui-même à l'étape suivante (→ ou Espace).
 - **Lecture continue** : les étapes s'enchaînent ; le curseur **Rythme** accélère ou ralentit.
 - ← / → : étape précédente / suivante. Cliquez sur une entité pour afficher son analyse.
+- **Étapes questions** : une fenêtre monte en bas du canevas. Cliquez sur le choix de la salle (ou tapez son numéro), puis → révèle la réponse ; cliquez sur une carte pour lire son explication. ▾ réduit la fenêtre ; le canevas reste déplaçable au-dessus.
 - Lien direct vers un scénario : index.html?scenario=pyramide
 
 ## Couleurs et règles de calcul
@@ -72,6 +73,41 @@ Règles :
 - dans un bloc, une ligne commençant par # ou // est un commentaire ;
 - identifiants sans espace (FAM, H1, ALPHA…) ; noms entre guillemets ;
 - pourcentages : 51%, 51, 51,5 %, 1/3 ou 2/3 sont acceptés.
+
+## Étapes questions
+
+Une étape peut interroger l'audience. Une fenêtre monte alors en bas du canevas avec la question et les choix en grandes cartes. L'enseignant peut cliquer sur le choix de la salle, puis révèle la réponse : bouton, **→** ou télécommande. Les cartes se colorent ; cliquer sur une carte la retourne pour lire son explication. L'explication générale s'affiche dans le panneau de droite. En lecture continue, le défilement attend la révélation.
+
+~~~
+## Question : qui contrôle Alpha SA ?
+Contexte éventuel, affiché dans le panneau de droite.
+
+\`\`\`scene
+focus ALPHA
+\`\`\`
+
+- [ ] Personne
+  Explication de ce choix (lignes indentées sous le choix).
+- [x] La famille Martin
+  Elle contrôle la holding, qui détient 51 % d'Alpha SA.
+- [ ] Le Fonds Delta
+
+### Réponse
+Explication générale, affichée après la révélation.
+
+\`\`\`scene
+vue FAM
+note ALPHA "Contrôle par la chaîne"
+\`\`\`
+~~~
+
+Règles :
+- une étape est une question si son titre commence par « Question » (ou « Quiz », « ❓ »), si elle contient des choix \`- [ ]\` / \`- [x]\`, ou une section \`### Réponse\` (aussi : Correction, Explication, Solution) ;
+- \`[x]\` marque une bonne réponse ; il peut y en avoir plusieurs, ou aucune case pour une **question ouverte** ;
+- le texte de la question est le titre, sans le préfixe « Question : » ;
+- le contexte se place **avant** les choix ; les lignes indentées (ou « > ») juste sous un choix sont son explication ;
+- les commandes placées **après** \`### Réponse\` ne s'exécutent qu'à la révélation, ce qui permet de montrer la réponse sur le canevas ; elles restent appliquées aux étapes suivantes (sauf \`focus\`, \`note\` et \`selection\`, propres à l'étape) ;
+- évitez que le texte des étapes précédentes donne déjà la réponse.
 
 ## Commandes
 

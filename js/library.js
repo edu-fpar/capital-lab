@@ -65,12 +65,31 @@ lien ALPHA -> BETA 51%
 focus BETA
 ~~~
 
-## 5. Le point de vue des minoritaires
-Le **Fonds Delta** détient les 49 % restants de Martin Participations. Il a donc indirectement un intérêt de 49 % × 51 % × 51 % ≈ **12,7 %** dans Alpha SA — presque autant que la famille ! Mais **aucun pouvoir** : ses voix sont minoritaires dès le premier étage.
+## Question : quel pouvoir le Fonds Delta a-t-il dans Alpha SA ?
+Le **Fonds Delta** détient les 49 % restants de Martin Participations : il finance la pyramide presque autant que la famille.
 
 ~~~scene
 fonds DELTA "Fonds Delta"
 lien DELTA -> H1 49%
+vue aucune
+focus DELTA ALPHA
+~~~
+
+- [ ] 49 % des droits de vote d'Alpha SA
+  Ses 49 % portent sur Martin Participations, pas sur Alpha SA.
+- [ ] Environ 12,7 % des droits de vote, comme son intérêt économique
+  49 % × 51 % × 51 % ≈ 12,7 % mesure sa part des bénéfices d'Alpha SA, pas ses voix.
+- [x] Aucun : il ne vote pas à l'assemblée d'Alpha SA
+  Ses voix ne comptent qu'à l'assemblée de Martin Participations, où la famille est majoritaire.
+- [ ] Une minorité de blocage
+  Il en a une dans Martin Participations (49 %, plus d'un tiers), mais pas dans Alpha SA.
+
+### Réponse
+Le fonds a un **intérêt économique** d'environ **12,7 %** dans Alpha SA — presque autant que la famille (13,3 %) — mais **aucun droit de vote** : il ne vote qu'à l'assemblée de Martin Participations, où il est minoritaire.
+
+C'est le paradoxe de la pyramide : on peut **financer sans décider**. Le point de vue du fonds s'affiche maintenant sur le canevas.
+
+~~~scene
 vue DELTA
 focus DELTA ALPHA
 ~~~
@@ -99,7 +118,7 @@ selection BETA
 { id: 'majorites', md: `# Majorités et minorité de blocage
 > 50 %, 1/3, 2/3 : pourquoi certains seuils changent tout en assemblée générale.
 
-Dans une société anonyme, les décisions se prennent en **assemblée générale ordinaire** (AGO, majorité des voix) ou **extraordinaire** (AGE, majorité des **deux tiers**). Ces seuils dessinent la carte du pouvoir.
+Dans une société anonyme, les décisions se prennent en **assemblée générale ordinaire** (AGO) ou **extraordinaire** (AGE), avec des majorités différentes. Ces seuils dessinent la carte du pouvoir.
 
 ## 1. Deux associés
 Gamma SA a deux actionnaires : **Marie (60 %)** et **Paul (40 %)**.
@@ -115,8 +134,18 @@ lien PAUL -> GAMMA 40%
 focus GAMMA
 ~~~
 
-## 2. Le pouvoir de dire non
-Pour **modifier les statuts**, augmenter le capital, fusionner… il faut les **2/3** des voix en AGE. Marie n'a que 60 % : sans Paul, elle ne peut rien changer.
+## Question : Marie peut-elle modifier seule les statuts de Gamma SA ?
+Marie détient 60 % des voix, Paul 40 %. Tous deux participent à l'assemblée et votent.
+
+- [ ] Oui : avec 60 %, elle est majoritaire
+  La majorité simple suffit en assemblée **ordinaire**, pas pour modifier les statuts.
+- [x] Non : il faut les deux tiers des voix en assemblée extraordinaire
+  60 % < 66,67 % : sans l'accord de Paul, la résolution est rejetée.
+- [ ] Non : il faut l'unanimité
+  L'unanimité n'est exigée que pour quelques décisions, par exemple augmenter les engagements des actionnaires.
+
+### Réponse
+Pour **modifier les statuts**, augmenter le capital, fusionner… il faut, dans une SA, les **2/3** des voix exprimées par les actionnaires présents ou représentés en AGE. Avec 60 %, Marie ne peut rien changer sans Paul.
 
 Paul détient plus d'un tiers des voix : il dispose d'une **minorité de blocage** (lien orange).
 

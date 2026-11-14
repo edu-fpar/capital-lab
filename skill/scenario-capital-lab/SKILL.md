@@ -30,6 +30,7 @@ L'outil n'affiche que des participations. Certaines notions du cours n'ont pas d
 - Commence simple (une société, un actionnaire), complique ensuite (chaîne, pacte, variation de pourcentage).
 - Reprends les **exemples, noms de sociétés et chiffres du support** quand il y en a : l'étudiant doit reconnaître son cours. Sinon, invente des noms neutres.
 - Une dernière étape de synthèse (tableau, points à retenir) est souvent utile.
+- Une ou deux **étapes questions** (voir `references/format.md`) rendent le déroulé interactif. Place-les juste **avant** l'étape qui expliquerait la notion, et vérifie que le texte qui précède ne donne pas déjà la réponse. Les mauvais choix doivent être des erreurs plausibles (confondre intérêt et contrôle, oublier la chaîne, prendre 50 % pour une majorité) ; chaque choix a une explication courte, et la section `### Réponse` peut montrer la solution sur le canevas (`vue`, `focus`, `note`). Si le support contient des exercices ou des questions de cours, reprends-les.
 
 ### 3. Écrire le scénario
 

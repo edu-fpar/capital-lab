@@ -32,7 +32,7 @@ errs.forEach(e => { blocking++; console.log(`ERREUR étape ${e.step + 1}, ligne 
 if (errs.length) console.log('');
 
 sc.steps.forEach((s, i) => {
-  const st = P.buildState(sc, i);
+  const st = P.buildState(sc, i, null, true);
   const an = P.analyze(st);
   const name = id => (st.entities[id] ? st.entities[id].name : (an.blockById[id] ? an.blockById[id].name : id));
   console.log(`── [${i + 1}/${sc.steps.length}] ${s.title}${s.title === 'Introduction' ? ' (texte placé avant le premier « ## »)' : ''}`);
@@ -43,7 +43,17 @@ sc.steps.forEach((s, i) => {
       .map(C => `${name(C)} ${pct(an.pct(b.id, C))}`).join(', ');
     console.log(`   pacte « ${c.name} » (${c.members.map(name).join(' + ')}) · voix réunies : ${where || '—'}`);
   });
-  if (!s.md.trim()) warn.push(`étape ${i + 1} : pas de commentaire`);
+  if (s.question) {
+    const q = s.question, L = 'ABCDEFGHIJ';
+    console.log(`   ❓ question : ${q.text}`);
+    q.choices.forEach((c, k) => console.log(`     ${c.correct ? '[x]' : '[ ]'} ${L[k] || k + 1}. ${c.text}${c.explain ? '' : '   (sans explication)'}`));
+    if (!q.choices.length) console.log('     (question ouverte)');
+    if (q.choices.length && !q.choices.some(c => c.correct)) warn.push(`étape ${i + 1} : question à choix sans bonne réponse [x]`);
+    if (q.choices.length === 1) warn.push(`étape ${i + 1} : question avec un seul choix`);
+    if (!q.answerMd && !q.choices.some(c => c.explain)) warn.push(`étape ${i + 1} : question sans explication (ni « ### Réponse » ni explications de choix)`);
+    if (q.reveal.length) console.log(`     commandes à la révélation : ${q.reveal.map(c => c.text).join(' ; ')}`);
+    console.log('     (état ci-dessous : après révélation)');
+  } else if (!s.md.trim()) warn.push(`étape ${i + 1} : pas de commentaire`);
   if (s.md.length > 1600) warn.push(`étape ${i + 1} : commentaire long (${s.md.length} caractères), à scinder ?`);
   Object.entries(st.view.notes || {}).forEach(([id, t]) => { if (t.length > 80) warn.push(`étape ${i + 1} : bulle sur ${id} longue (${t.length} caractères)`); });
   if (st.options.deFacto) console.log('   (présomption de contrôle de fait > 40 % activée)');

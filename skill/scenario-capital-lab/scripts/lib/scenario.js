@@ -212,15 +212,49 @@
   /* ------------------------------------------------------------ analyse d'un scénario */
   const SCENE_LANGS = ['scene', 'canevas', 'canvas', 'actions', 'script', 'commandes'];
 
+  /* Étapes « questions » :
+   *  - titre commençant par « Question », « Quiz » ou « ❓ », ou présence de choix « - [ ] » / « - [x] »,
+   *    ou d'une section « ### Réponse » ;
+   *  - lignes indentées (ou citations « > ») sous un choix = explication de ce choix ;
+   *  - tout ce qui suit « ### Réponse » (texte et blocs scene) n'apparaît qu'à la révélation. */
+  const ANSWER_RE = /^###\s+(?:💡\s*)?(?:réponse|reponse|correction|explication|solution)s?\b/i;
+  const CHOICE_RE = /^\s*[-*+]\s+\[( |x|X)\]\s+(.*)$/;
+  const QTITLE_RE = /^(?:❓\s*)?(?:question|quiz)\b/i;
+  const QPREFIX_RE = /^(?:❓\s*)?(?:(?:question|quiz)\s*(?:n°\s*)?\d*\s*[:.\-–—]\s*)?/i;
+
+  function makeStep(cur) {
+    const ctx = [], choices = [];
+    let last = null;
+    for (const l of cur.md) {
+      const m = l.match(CHOICE_RE);
+      if (m) { last = { text: m[2].trim(), correct: m[1] !== ' ', explain: [] }; choices.push(last); continue; }
+      if (last && (/^\s{2,}\S/.test(l) || /^\s*>/.test(l))) { last.explain.push(l.trim().replace(/^>\s?/, '')); continue; }
+      if (last && !l.trim()) { last.explain.push(''); continue; }
+      last = null; ctx.push(l);
+    }
+    const isQ = choices.length > 0 || cur.hasAnswer || QTITLE_RE.test(cur.title);
+    const step = { title: cur.title, md: (isQ ? ctx : cur.md).join('\n').trim(), commands: cur.commands, duration: cur.duration, question: null };
+    if (isQ) {
+      step.question = {
+        text: cur.title.replace(QPREFIX_RE, '').trim() || cur.title,
+        choices: choices.map(c => ({ text: c.text, correct: c.correct, explain: c.explain.join('\n').trim() })),
+        answerMd: cur.answer.join('\n').trim(),
+        reveal: cur.reveal
+      };
+    }
+    return step;
+  }
+
   P.parseScenario = function (src) {
     const lines = String(src || '').replace(/\r/g, '').split('\n');
     const sc = { title: 'Scénario', description: '', steps: [], errors: [], meta: {} };
-    let cur = { title: 'Introduction', md: [], commands: [], duration: null, intro: true };
+    const newCur = (title, intro) => ({ title, md: [], commands: [], duration: null, intro: !!intro, hasAnswer: false, answer: [], reveal: [] });
+    let cur = newCur('Introduction', true);
     let inFence = null, isScene = false, gotTitle = false, i = 0;
     const push = () => {
       const md = cur.md.join('\n').trim();
       if (cur.intro && !md && !cur.commands.length) return;
-      sc.steps.push({ title: cur.title, md, commands: cur.commands, duration: cur.duration });
+      sc.steps.push(makeStep(cur));
     };
     if (lines[0] && lines[0].trim() === '---') {
       let j = 1;
@@ -233,30 +267,32 @@
     }
     for (; i < lines.length; i++) {
       const line = lines[i];
+      const mdOut = cur.hasAnswer ? cur.answer : cur.md;
       if (inFence) {
-        if (line.trim().startsWith(inFence)) { if (!isScene) cur.md.push(line); inFence = null; continue; }
+        if (line.trim().startsWith(inFence)) { if (!isScene) mdOut.push(line); inFence = null; continue; }
         if (isScene) {
           const tl = line.trim();
           if (tl && !tl.startsWith('#') && !tl.startsWith('//')) {
-            cur.commands.push({ text: tl, line: i + 1 });
+            (cur.hasAnswer ? cur.reveal : cur.commands).push({ text: tl, line: i + 1 });
             const t = P.tokenize(tl);
             if (t.length > 1 && ['duree', 'duration'].includes(P.norm(t[0].v))) cur.duration = P.num(t[1].v);
           }
-        } else cur.md.push(line);
+        } else mdOut.push(line);
         continue;
       }
       const f = line.match(/^\s*(```+|~~~+)\s*([^\s`]*)/);
       if (f) {
         inFence = f[1];
         isScene = SCENE_LANGS.includes(P.norm(f[2] || '').replace('è', 'e'));
-        if (!isScene) cur.md.push(line);
+        if (!isScene) mdOut.push(line);
         continue;
       }
       const h1 = line.match(/^#\s+(.*)$/);
       if (h1 && !gotTitle) { sc.title = h1[1].trim(); gotTitle = true; continue; }
       const h2 = line.match(/^##\s+(.*)$/);
-      if (h2) { push(); cur = { title: h2[1].trim(), md: [], commands: [], duration: null }; continue; }
-      cur.md.push(line);
+      if (h2) { push(); cur = newCur(h2[1].trim()); continue; }
+      if (!cur.intro && !cur.hasAnswer && ANSWER_RE.test(line.trim())) { cur.hasAnswer = true; continue; }
+      mdOut.push(line);
     }
     push();
     if (sc.meta.titre || sc.meta.title) sc.title = sc.meta.titre || sc.meta.title;
@@ -267,19 +303,25 @@
     return sc;
   };
 
-  P.buildState = function (sc, n, errs) {
+  /** État après l'étape n. Les commandes de réponse des questions précédentes sont toujours
+   *  appliquées (le déroulé reste identique, que la réponse ait été révélée ou non) ;
+   *  celles de l'étape n seulement si revealLast est vrai. */
+  P.buildState = function (sc, n, errs, revealLast) {
     const st = P.newState();
     for (let i = 0; i <= n && i < sc.steps.length; i++) {
       st.view.focus = []; st.view.notes = {}; st.view.select = null;
       const sink = errs ? { push: e => errs.push(Object.assign(e, { step: i })) } : null;
-      sc.steps[i].commands.forEach(c => P.runCommand(st, c.text, sink, c.line));
+      const s = sc.steps[i];
+      s.commands.forEach(c => P.runCommand(st, c.text, sink, c.line));
+      if (s.question && (i < n || revealLast || errs)) s.question.reveal.forEach(c => P.runCommand(st, c.text, sink, c.line));
     }
     return st;
   };
 
-  P.stepDuration = function (s) {
+  P.stepDuration = function (s, revealed) {
     if (s.duration) return s.duration * 1000;
-    const words = (s.md || '').replace(/[#*_>|`~-]/g, ' ').split(/\s+/).filter(Boolean).length;
+    const text = revealed && s.question ? s.question.answerMd + ' ' + s.question.choices.map(c => c.explain).join(' ') : s.md;
+    const words = (text || '').replace(/[#*_>|`~-]/g, ' ').split(/\s+/).filter(Boolean).length;
     return Math.max(5000, Math.min(45000, 3500 + words * 290));
   };
 
