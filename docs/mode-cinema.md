@@ -9,7 +9,30 @@ Bouton **📚 Scénarios** :
 - ou **coller** le markdown fourni par un collègue ou une IA, puis « ▶ Lancer » ;
 - ou **ouvrir un fichier** `.md`. On peut aussi le déposer directement sur la fenêtre.
 
-Lien direct vers un scénario intégré : `index.html?scenario=pyramide`. Vers un fichier servi par le même serveur : `index.html?md=scenarios/mon-cours.md`.
+## Partager un lien
+
+L'atelier est en ligne à l'adresse **https://edu-fpar.github.io/capital-lab/**. Le bouton **🔗 Partager** propose trois liens à copier : vers **l'étape affichée**, vers **le début du scénario**, ou vers **la bibliothèque**. Pendant la lecture, l'adresse du navigateur suit d'ailleurs l'étape en cours : on peut aussi la copier directement.
+
+| Lien | Ouvre |
+|---|---|
+| `…/capital-lab/?scenarios` | la bibliothèque des scénarios |
+| `…/capital-lab/?scenario=pyramide` | un scénario intégré, à sa première étape |
+| `…/capital-lab/?scenario=pyramide&etape=6` | ce scénario, directement à l'étape 6 |
+| `…/capital-lab/?md=adresse-du-fichier.md` | un scénario publié sous forme de fichier |
+| `…/capital-lab/#md=…` | un scénario personnel (collé ou généré par une IA), dont le texte est encodé dans le lien |
+
+Pour un scénario personnel, le lien contient le texte compressé du scénario après le `#` : il n'est envoyé à aucun serveur et fonctionne sans rien publier. Pour un très long scénario, le lien peut devenir trop long pour certaines messageries : publiez plutôt le fichier `.md` et utilisez `?md=`. Dans tous les cas, `&etape=N` choisit l'étape d'arrivée.
+
+## Sur téléphone
+
+L'atelier s'adapte aux écrans étroits. Sur téléphone, il s'ouvre directement sur la bibliothèque des scénarios :
+- le **schéma** occupe le haut de l'écran, les **explications** le bas ;
+- les boutons **🗺 / ◫ / 📖** de la barre du bas affichent le schéma seul, les deux, ou le texte seul ;
+- on **balaie** les explications vers la gauche ou la droite pour changer d'étape ; les boutons **◀ / Suivant** restent disponibles ;
+- on **pince** le schéma pour zoomer, on le fait glisser pour se déplacer, et on touche une entité pour afficher son analyse sous le texte ;
+- les **questions** s'affichent dans le texte, avec les choix empilés : toucher un choix pour indiquer sa réponse, « Révéler la réponse », puis toucher une carte pour la retourner.
+
+Le mode libre reste accessible, mais il est conçu pour un écran plus large.
 
 ## Pas à pas ou lecture continue
 
@@ -39,7 +62,7 @@ Certaines étapes interrogent l'audience. Leur titre est précédé de ❓, et u
 
 La fenêtre ne masque pas la structure : le canevas se recadre automatiquement au-dessus d'elle, il reste déplaçable et zoomable, et le bouton **▾** réduit la fenêtre à une simple barre. En lecture continue, le défilement s'arrête sur une question jusqu'à la révélation, puis reprend.
 
-Pour écrire une question, voir le [format des scénarios](format-scenario.md#Étapes-questions).
+Pour écrire une question, voir le [format des scénarios](format-scenario.md#étapes-questions).
 
 ## Interagir pendant la présentation
 

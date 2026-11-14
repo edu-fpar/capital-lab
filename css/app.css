@@ -366,3 +366,74 @@ details.answer { margin-top: 16px; border: 1px solid var(--ok-line); background:
 details.answer summary { font-weight: 700; color: var(--ok); cursor: pointer; }
 details.answer .good { margin: 8px 0 4px; }
 @media (prefers-reduced-motion: reduce) { .qc-inner, #qsheet, details.answer { transition: none; animation: none; } }
+
+/* ---------------- partage */
+.share-row { margin: 14px 0; }
+.share-line { display: flex; gap: 6px; margin-top: 5px; align-items: center; }
+.share-line input { flex: 1; min-width: 0; font-family: Consolas, "Cascadia Mono", monospace; font-size: 12px; }
+
+/* ---------------- téléphone (portrait) */
+#pl-view { display: none; }
+@media (max-width: 760px) {
+  body { height: 100vh; height: 100dvh; }
+  #topbar { padding: 6px 8px; gap: 6px; }
+  .brand { margin-right: 0; }
+  .brand small, .lbl, .opt { display: none; }
+  .brand b { font-size: 15px; }
+  .modes button { padding: 4px 10px; }
+  .actions { gap: 4px; }
+  .actions button { padding: 4px 8px; }
+
+  /* cinéma : schéma en haut, explications en bas (ou l'un des deux seul) */
+  body.cinema #main { grid-template-columns: 1fr; grid-template-rows: minmax(0, 46fr) minmax(0, 54fr); }
+  body.cinema #stage { grid-column: 1; grid-row: 1; border-bottom: 1px solid var(--line); }
+  body.cinema #side { grid-column: 1; grid-row: 2; border-left: none; }
+  body.cinema.m-schema #main { grid-template-rows: minmax(0, 1fr) 0; }
+  body.cinema.m-schema #side { display: none; }
+  body.cinema.m-texte #main { grid-template-rows: 0 minmax(0, 1fr); }
+  body.cinema.m-texte #stage { display: none; }
+  body.cinema #legend { display: none; }
+  #commentary { padding: 10px 16px 28px; font-size: 15px; }
+  .step-title { font-size: 18px; margin: 8px 0 6px; }
+  #zoom { right: 8px; }
+  #zoom button { width: 30px; height: 30px; font-size: 15px; }
+  #banner { top: 6px; font-size: 12px; padding: 3px 6px 3px 12px; max-width: calc(100% - 16px); }
+  #player { gap: 6px; padding: 6px 8px; flex-wrap: nowrap; }
+  body { grid-template-columns: minmax(0, 1fr); }
+  #main, #side, #stage { min-width: 0; }
+  #pl-first, #player .pl-modelabel, #player .speed { display: none; }
+  #pl-prev, #pl-next, #pl-reset, #pl-play { white-space: nowrap; }
+  #pl-prev, #pl-next { padding: 8px 12px; }
+  #pl-progress { min-width: 40px; }
+  #pl-dots { gap: 2px; }
+  #pl-dots button { min-width: 3px; }
+  #pl-count { min-width: 38px; font-size: 13px; }
+  #pl-view { display: flex; gap: 2px; background: var(--bg); border-radius: 8px; padding: 2px; flex: none; }
+  #pl-view button { border: none; background: transparent; padding: 5px 7px; }
+  #pl-view button.on { background: var(--panel); box-shadow: 0 1px 3px rgba(15, 23, 42, .18); }
+
+  /* questions : dans le texte, choix empilés */
+  .qinline { margin: 14px -4px 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--panel); }
+  .qinline .qs-head { position: static; cursor: default; }
+  .qinline .qs-min { display: none; }
+  .qinline .qs-text { display: none; }   /* déjà dans le titre de l étape, juste au-dessus */
+  .qinline .qs-grid { grid-template-columns: 1fr; gap: 8px; }
+  .qinline .qc-face { min-height: 50px; font-size: 15px; padding: 10px 12px; }
+
+  /* bibliothèque et fenêtres en plein écran */
+  #modal { padding: 0; align-items: stretch; }
+  #modal .dialog, #modal.narrow .dialog { max-width: none; max-height: none; height: 100%; border-radius: 0; padding: 16px; }
+  .lib-grid { grid-template-columns: 1fr; }
+  #modal textarea { min-height: 120px; }
+  #modal textarea.big { min-height: 50vh; }
+
+  /* libre : palette en bandeau horizontal, inspecteur sous le canevas */
+  body.libre #main { grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr) minmax(0, 42%); }
+  body.libre #palette { grid-column: 1; grid-row: 1; display: flex; gap: 6px; overflow-x: auto; padding: 6px; border-right: none; border-bottom: 1px solid var(--line); }
+  body.libre #palette h3, body.libre #palette .hint, body.libre .tool small { display: none; }
+  body.libre .tool, body.libre .tool-btn { flex: none; margin: 0; padding: 6px 10px; width: auto; }
+  body.libre .tool b { font-size: 12px; }
+  body.libre #stage { grid-column: 1; grid-row: 2; }
+  body.libre #side { grid-column: 1; grid-row: 3; border-left: none; border-top: 1px solid var(--line); }
+  #studio { max-width: calc(100% - 20px); }
+}

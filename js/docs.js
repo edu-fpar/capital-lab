@@ -21,7 +21,8 @@ P.HELP_DOC = `## Prise en main
 - **Lecture continue** : les étapes s'enchaînent ; le curseur **Rythme** accélère ou ralentit.
 - ← / → : étape précédente / suivante. Cliquez sur une entité pour afficher son analyse.
 - **Étapes questions** : une fenêtre monte en bas du canevas. Cliquez sur le choix de la salle (ou tapez son numéro), puis → révèle la réponse ; cliquez sur une carte pour lire son explication. ▾ réduit la fenêtre ; le canevas reste déplaçable au-dessus.
-- Lien direct vers un scénario : index.html?scenario=pyramide
+- **🔗 Partager** : liens vers l'étape affichée, le début du scénario ou la bibliothèque (ex. ?scenario=pyramide&etape=6, ?scenarios). Un scénario personnel est encodé dans le lien lui-même.
+- **Sur téléphone** : schéma en haut, explications en bas (boutons 🗺 / ◫ / 📖), balayer le texte pour changer d'étape, pincer le schéma pour zoomer.
 
 ## Couleurs et règles de calcul
 

@@ -4,7 +4,7 @@
 
 Il montre notamment comment on peut être **minoritaire en capital** et pourtant **contrôler** une société : pyramides de holdings, pactes d'actionnaires, droits de vote double, autocontrôle, contrôle de fait…
 
-[▶ Ouvrir l'atelier](../index.html ':ignore')
+[▶ Ouvrir l'atelier](../index.html ':ignore') — en ligne : **https://edu-fpar.github.io/capital-lab/**, utilisable aussi sur téléphone. Le bouton 🔗 Partager du mode cinéma donne un lien vers un scénario ou une étape précise ([détails](mode-cinema.md#partager-un-lien)).
 
 ## Deux façons de l'utiliser
 

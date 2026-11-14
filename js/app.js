@@ -11,6 +11,9 @@
   const PALETTE = ['#2563eb', '#dc2626', '#059669', '#9333ea', '#ea580c', '#0891b2', '#db2777', '#65a30d', '#7c3aed', '#b45309'];
   const LS_KEY = 'capital-lab.libre.v1';
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  /* téléphone en portrait : disposition empilée (voir css, @media max-width 760px) */
+  const mqMobile = window.matchMedia ? window.matchMedia('(max-width: 760px)') : null;
+  function isMobile() { return !!(mqMobile && mqMobile.matches); }
 
   const App = window.App = {
     mode: 'libre', state: P.newState(), an: null, sel: null,
@@ -382,7 +385,22 @@
     return { x: c.x + (ev.clientX - r.left - r.width / 2) / c.k, y: c.y + (ev.clientY - r.top - r.height / 2) / c.k };
   }
 
+  /* pincer à deux doigts pour zoomer (écrans tactiles) */
+  const touches = new Map();
+  function startPinch() {
+    const [a, b] = Array.from(touches.values());
+    const d = App.drag;
+    if (d && d.kind === 'node') { const dd = App.disp[d.id]; if (dd) dd.drag = false; }
+    const mid = { clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2 };
+    App.drag = { kind: 'pinch', d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, k0: App.cam.k, w0: toWorld(mid) };
+    App.camT = null;
+  }
   svg.addEventListener('pointerdown', ev => {
+    if (ev.pointerType === 'touch') {
+      touches.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
+      if (touches.size === 2) { startPinch(); return; }
+      if (touches.size > 2) return;
+    }
     if (ev.button !== 0 && ev.button !== 1) return;
     const w = toWorld(ev), t = ev.target;
     const port = t.closest('[data-port]'), node = t.closest('[data-node]'), link = t.closest('[data-link]'), conc = t.closest('[data-concert]'), note = t.closest('[data-note]');
@@ -405,7 +423,16 @@
     App.drag = { kind: 'pan', sx: ev.clientX, sy: ev.clientY, cx: App.cam.x, cy: App.cam.y, moved: false };
   });
   svg.addEventListener('pointermove', ev => {
+    if (touches.has(ev.pointerId)) touches.set(ev.pointerId, { x: ev.clientX, y: ev.clientY });
     const dr = App.drag; if (!dr) return;
+    if (dr.kind === 'pinch') {
+      if (touches.size < 2) return;
+      const [a, b] = Array.from(touches.values()), r = svg.getBoundingClientRect();
+      const k = clamp(dr.k0 * Math.hypot(a.x - b.x, a.y - b.y) / dr.d0, 0.2, 3);
+      const mx = (a.x + b.x) / 2 - r.left - r.width / 2, my = (a.y + b.y) / 2 - r.top - r.height / 2;
+      App.cam = { x: dr.w0.x - mx / k, y: dr.w0.y - my / k, k };   // le point pincé reste sous les doigts
+      requestRender(); return;
+    }
     const w = toWorld(ev);
     if (dr.kind === 'node' || dr.kind === 'cnode') {
       const e = App.state.entities[dr.id], d = App.disp[dr.id]; if (!e) return;
@@ -427,7 +454,9 @@
     }
   });
   function endDrag(ev) {
+    touches.delete(ev.pointerId);
     const dr = App.drag; if (!dr) return;
+    if (dr.kind === 'pinch') { if (touches.size < 2) App.drag = null; return; }
     App.drag = null;
     if (dr.kind === 'node') { const d = App.disp[dr.id]; if (d) d.drag = false; if (dr.moved) App.commit({ animate: false }); }
     else if (dr.kind === 'cnode') { const d = App.disp[dr.id]; if (d) d.drag = false; updatePlayer(); }
@@ -439,7 +468,7 @@
     } else if (dr.kind === 'pan' && !dr.moved) App.select(null);
   }
   svg.addEventListener('pointerup', endDrag);
-  svg.addEventListener('pointercancel', () => { App.drag = null; requestRender(); });
+  svg.addEventListener('pointercancel', ev => { touches.delete(ev.pointerId); App.drag = null; requestRender(); });
   svg.addEventListener('wheel', ev => {
     ev.preventDefault();
     const w = toWorld(ev), c = App.cam;
@@ -829,7 +858,7 @@
     c.addEventListener('click', ev => {
       const b = ev.target.closest('button'); if (!b) return;
       const get = id => P.LIBRARY.find(s => s.id === id);
-      if (b.dataset.run) { App.closeModal(); App.loadScenario(get(b.dataset.run).md); }
+      if (b.dataset.run) { App.closeModal(); App.loadScenario(get(b.dataset.run).md, { id: b.dataset.run }); }
       else if (b.dataset.see) openEditor(get(b.dataset.see).md, false);
       else if (b.dataset.dl) download(b.dataset.dl + '.md', get(b.dataset.dl).md.replace(/~~~scene/g, '```scene').replace(/^~~~$/gm, '```'));
       else if (b.id === 'md-run') { const v = $('#md-input', c).value; if (v.trim()) { App.closeModal(); App.loadScenario(v); } }
@@ -847,7 +876,10 @@
     $('#ed-md', c).value = md;
     $('#ed-run', c).onclick = () => {
       const keep = App.step; App.closeModal();
-      if (App.loadScenario($('#ed-md').value) && isCurrent) App.goStep(keep);
+      const v = $('#ed-md').value;
+      // un scénario modifié n'est plus celui de la bibliothèque : il sera partagé par son texte
+      const origin = isCurrent && v === App.scenarioSrc ? App.origin : null;
+      if (App.loadScenario(v, origin) && isCurrent) App.goStep(keep);
     };
     $('#ed-copy', c).onclick = () => copyText($('#ed-md').value);
     $('#ed-dl', c).onclick = () => download('scenario.md', $('#ed-md').value);
@@ -891,17 +923,19 @@
   $('#tool-example').onclick = loadExample;
 
   /* ============================================================ mode cinéma */
-  App.loadScenario = function (md) {
+  /** origin : d'où vient le scénario, pour pouvoir le partager par lien —
+   *  { id } (bibliothèque), { url } (fichier servi), { packed } (texte encodé dans le lien) ou rien. */
+  App.loadScenario = function (md, origin, startStep) {
     const sc = P.parseScenario(md);
     if (!sc.steps.length) { toast('⚠ Ce scénario ne contient aucune étape.'); return false; }
     const errs = []; P.buildState(sc, sc.steps.length - 1, errs);
     sc.errors = sc.errors.concat(errs);
     App.pause();
-    App.scenario = sc; App.scenarioSrc = md;
+    App.scenario = sc; App.scenarioSrc = md; App.origin = origin || null;
     App.colorMap = {}; App.colorIdx = 0; App.disp = {}; App.ldisp = {}; App.step = -1;
     App.cinePos = {}; App.noteOff = {};
     if (App.mode !== 'cinema') setMode('cinema', true);
-    App.goStep(0);
+    App.goStep(startStep || 0);
     if (errs.length) toast(`⚠ ${errs.length} avertissement(s) dans le scénario (voir sous le commentaire).`, 4000);
     return true;
   };
@@ -919,7 +953,67 @@
     updatePlayer();
     if (changed) $('#side').scrollTop = 0;
     App.schedule();
+    syncUrl();
   };
+
+  /* ---- liens profonds : ?scenario=id | ?md=url | #md=texte-encodé, + &etape=N ; ?scenarios ouvre la bibliothèque */
+  const PUBLIC_BASE = 'https://edu-fpar.github.io/capital-lab/';
+  function baseUrl() {
+    // depuis un fichier local ou un serveur local, on partage l'adresse publique
+    const local = location.protocol === 'file:' || /^(localhost|127\.|\[::1\])/.test(location.hostname);
+    return local ? PUBLIC_BASE : location.origin + location.pathname;
+  }
+  function scenarioUrl(base, step) {
+    const o = App.origin; if (!o) return null;
+    const u = new URL(base);
+    if (o.id) u.searchParams.set('scenario', o.id);
+    else if (o.url) u.searchParams.set('md', o.url);
+    if (step > 0) u.searchParams.set('etape', step + 1);
+    if (o.packed) u.hash = 'md=' + o.packed;
+    return u.toString();
+  }
+  function syncUrl() {
+    try {
+      const here = location.origin + location.pathname;
+      const target = App.mode === 'cinema' && App.scenario ? scenarioUrl(location.protocol === 'file:' ? location.href.split(/[?#]/)[0] : here, App.step) : null;
+      history.replaceState(null, '', target || location.href.split(/[?#]/)[0]);
+    } catch (e) { /* adresse non modifiable (fichier local selon le navigateur) */ }
+  }
+  /* texte du scénario compressé dans le lien (deflate + base64url), préfixe z ; repli non compressé, préfixe b */
+  async function packMd(md) {
+    const toB64 = bytes => { let bin = ''; bytes.forEach(b => { bin += String.fromCharCode(b); }); return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); };
+    const raw = new TextEncoder().encode(md);
+    if (!window.CompressionStream) return 'b' + toB64(raw);
+    const buf = await new Response(new Blob([raw]).stream().pipeThrough(new CompressionStream('deflate-raw'))).arrayBuffer();
+    return 'z' + toB64(new Uint8Array(buf));
+  }
+  async function unpackMd(code) {
+    const bin = atob(code.slice(1).replace(/-/g, '+').replace(/_/g, '/'));
+    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+    if (code[0] === 'b') return new TextDecoder().decode(bytes);
+    return await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).text();
+  }
+
+  async function openShare() {
+    if (!App.scenario) { openLibrary(); return; }
+    const base = baseUrl(), isLocal = base !== location.origin + location.pathname;
+    if (!App.origin) { try { App.origin = { packed: await packMd(App.scenarioSrc) }; } catch (e) { toast('Encodage du scénario impossible dans ce navigateur.'); return; } }
+    const lib = new URL(base); lib.searchParams.set('scenarios', '');
+    const links = [
+      ['Cette étape', `Ouvre « ${esc(App.scenario.title)} » directement à l'étape ${App.step + 1}.`, scenarioUrl(base, App.step)],
+      ['Début du scénario', 'Ouvre le scénario à sa première étape.', scenarioUrl(base, 0)],
+      ['Bibliothèque', 'Ouvre le choix des scénarios.', lib.toString().replace('scenarios=', 'scenarios')]
+    ];
+    const long = App.origin.packed && links[0][2].length > 6000;
+    const c = App.modal(`<h2>🔗 Partager</h2>
+      ${App.origin.packed ? '<p class="small muted">Ce scénario ne fait pas partie de la bibliothèque : son texte est encodé dans le lien lui-même (après le #). Aucun serveur ne le reçoit.</p>' : ''}
+      ${long ? '<p class="small" style="color:var(--warn)">⚠ Lien très long : certaines messageries peuvent le couper. Pour un long scénario, publiez plutôt le fichier .md et utilisez ?md=adresse-du-fichier.</p>' : ''}
+      ${isLocal ? `<p class="small muted">Liens construits sur l'adresse publique <b>${esc(PUBLIC_BASE)}</b>${App.origin.id ? ' : le scénario doit y avoir été publié' : ''}.</p>` : ''}
+      ${links.map(([t, d, u], i) => `<div class="share-row"><div><b>${t}</b><span class="small muted"> — ${d}</span></div><div class="share-line"><input type="text" readonly value="${esc(u)}" id="sh-${i}"><button data-copy="${i}">📋 Copier</button><a class="btnlink" href="${esc(u)}" target="_blank" rel="noopener">↗</a></div></div>`).join('')}`, 'narrow');
+    c.addEventListener('click', ev => { const b = ev.target.closest('[data-copy]'); if (b) copyText($('#sh-' + b.dataset.copy, c).value); });
+    $$('input[readonly]', c).forEach(i => i.addEventListener('focus', () => i.select()));
+  }
+  $('#btn-share').onclick = openShare;
 
   const curQuestion = () => App.mode === 'cinema' && App.scenario && App.scenario.steps[App.step] ? App.scenario.steps[App.step].question : null;
 
@@ -938,10 +1032,9 @@
     App.schedule();
   };
 
-  function renderQSheet() {
-    const el = $('#qsheet'), q = curQuestion(), Q = App.q;
-    if (!q) { el.hidden = true; stage.style.setProperty('--sheet-h', '0px'); return; }
-    const inl = t => P.md(t, { nameOf });
+  /** Contenu de la question : en feuille sur le canevas (écran large) ou dans le texte (téléphone). */
+  function qsheetHTML(q, inline) {
+    const Q = App.q, inl = t => P.md(t, { nameOf });
     let h = `<div class="qs-head" data-qs="toggle" title="Réduire / agrandir"><span class="qs-badge">❓ Question</span><div class="qs-text">${inl(q.text)}</div><div class="qs-actions">`;
     h += Q.revealed ? '<span class="qs-done">✔ Réponse révélée</span>' : '<button class="primary" data-qs="reveal" title="Révéler la réponse (→)">💡 Révéler la réponse</button>';
     h += `<button class="qs-min" data-qs="toggle" title="${Q.collapsed ? 'Agrandir' : 'Réduire'}">${Q.collapsed ? '▴' : '▾'}</button></div></div><div class="qs-body">`;
@@ -954,13 +1047,19 @@
           <div class="qc-face qc-back"><div class="qc-verdict">${c.correct ? '✓ Bonne réponse' : '✗ Mauvaise réponse'}</div><div class="qc-txt">${c.explain ? inl(c.explain) : ''}</div></div>
         </div></div>`;
       }).join('') + '</div>';
-      h += `<p class="qs-hint">${Q.revealed ? (q.choices.some(c => c.explain) ? 'Cliquez sur une carte (ou tapez son numéro) pour la retourner et lire son explication.' : 'Cliquez sur une carte pour la retourner.') : 'Cliquez sur la réponse choisie par la salle (ou tapez son numéro), puis révélez la réponse (→).'} Le canevas reste déplaçable au-dessus.</p>`;
+      h += `<p class="qs-hint">${Q.revealed ? (q.choices.some(c => c.explain) ? 'Cliquez sur une carte (ou tapez son numéro) pour la retourner et lire son explication.' : 'Cliquez sur une carte pour la retourner.') : 'Cliquez sur la réponse choisie par la salle (ou tapez son numéro), puis révélez la réponse (→).'}${inline ? '' : ' Le canevas reste déplaçable au-dessus.'}</p>`;
     } else {
-      h += `<p class="qs-open">${Q.revealed ? 'La réponse est affichée dans le panneau de droite.' : 'Question ouverte : échangez avec la salle, puis révélez la réponse (→).'}</p>`;
+      h += `<p class="qs-open">${Q.revealed ? (inline ? 'La réponse est affichée ci-dessous.' : 'La réponse est affichée dans le panneau de droite.') : 'Question ouverte : échangez avec la salle, puis révélez la réponse (→).'}</p>`;
     }
-    el.innerHTML = h + '</div>';
+    return h + '</div>';
+  }
+  function renderQSheet() {
+    const el = $('#qsheet'), q = curQuestion();
+    // sur téléphone, la question s'affiche dans le texte (voir renderCommentary)
+    if (!q || isMobile()) { el.hidden = true; stage.style.setProperty('--sheet-h', '0px'); return; }
+    el.innerHTML = qsheetHTML(q, false);
     el.hidden = false;
-    el.classList.toggle('collapsed', Q.collapsed);
+    el.classList.toggle('collapsed', App.q.collapsed);
     stage.style.setProperty('--sheet-h', el.offsetHeight + 'px');
   }
 
@@ -975,8 +1074,12 @@
     const q = curQuestion(); if (!q || !q.choices[i]) return;
     if (App.q.revealed) {
       App.q.flipped[i] = !App.q.flipped[i];
-      const el = $(`#qsheet [data-card="${i}"]`); if (el) el.classList.toggle('flipped', App.q.flipped[i]);
-    } else { App.q.picked = App.q.picked === i ? null : i; renderQSheet(); }
+      $$(`[data-card="${i}"]`).forEach(el => el.classList.toggle('flipped', App.q.flipped[i]));
+    } else { App.q.picked = App.q.picked === i ? null : i; refreshQuestion(); }
+  }
+  function refreshQuestion() {
+    renderQSheet();
+    if (isMobile() && App.mode === 'cinema') { const y = $('#side').scrollTop; App.renderCommentary(); $('#side').scrollTop = y; }
   }
 
   App.schedule = function () {
@@ -1020,7 +1123,7 @@
     $('#pl-reset').hidden = !Object.keys(App.cinePos).length && !Object.keys(App.noteOff).length;
     $('#pl-prev').disabled = App.step <= 0;
     const pending = !!curQuestion() && !App.q.revealed;
-    $('#pl-next').textContent = pending ? '💡 Réponse ▶' : 'Suivant ▶';
+    $('#pl-next').textContent = pending ? (isMobile() ? '💡 Réponse' : '💡 Réponse ▶') : (isMobile() ? 'Suivant' : 'Suivant ▶');
     $('#pl-next').title = pending ? 'Révéler la réponse (→)' : 'Étape suivante (→)';
     $('#pl-next').disabled = !pending && App.step >= sc.steps.length - 1;
   }
@@ -1058,7 +1161,8 @@
     h += `<h2 class="step-title">${s.question ? '❓ ' : ''}${esc(s.title)}</h2><div class="md">${P.md(s.md, { nameOf })}</div>`;
     if (s.question) {
       const q = s.question, good = q.choices.map((c, i) => c.correct ? `<b>${'ABCDEFGHIJ'[i] || i + 1}</b> — ${P.md(c.text, { nameOf }).replace(/^<p>|<\/p>$/g, '')}` : null).filter(Boolean);
-      if (!App.q.revealed) h += '<div class="answer-wait">La réponse s\'affichera ici. <button class="small" data-act="reveal">💡 Révéler la réponse</button></div>';
+      if (isMobile()) h += `<div class="qinline">${qsheetHTML(q, true)}</div>`;
+      if (!App.q.revealed) { if (!isMobile()) h += '<div class="answer-wait">La réponse s\'affichera ici. <button class="small" data-act="reveal">💡 Révéler la réponse</button></div>'; }
       else if (good.length || q.answerMd) {
         h += `<details class="answer" open><summary>💡 Réponse</summary>${good.length ? `<p class="good">${good.length > 1 ? 'Bonnes réponses' : 'Bonne réponse'} : ${good.join(' ; ')}</p>` : ''}<div class="md">${P.md(q.answerMd, { nameOf })}</div></details>`;
       }
@@ -1074,6 +1178,8 @@
   };
   const com = $('#commentary');
   com.addEventListener('click', ev => {
+    const qs = ev.target.closest('[data-qs="reveal"]'); if (qs) { App.reveal(); return; }
+    const card = ev.target.closest('[data-card]'); if (card) { clickCard(+card.dataset.card); return; }
     const g = ev.target.closest('[data-go]'); if (g) { App.goStep(+g.dataset.go); return; }
     const r = ev.target.closest('.ref'); if (r) { const id = P.resolve(App.state, { v: r.dataset.ref }); if (id) App.select({ kind: 'node', id }); return; }
     const b = ev.target.closest('[data-act]'); if (!b) return;
@@ -1252,6 +1358,37 @@
     else if (ev.key === 'Escape') App.select(null);
   });
 
+  /* ============================================================ téléphone */
+  // vue « split » (schéma en haut, explications en bas), « schema » ou « texte » seuls
+  function setMobileView(v) {
+    App.mview = v;
+    document.body.classList.toggle('m-schema', v === 'schema');
+    document.body.classList.toggle('m-texte', v === 'texte');
+    $$('#pl-view button').forEach(b => b.classList.toggle('on', b.dataset.v === v));
+  }
+  $('#pl-view').addEventListener('click', ev => { const b = ev.target.closest('[data-v]'); if (b) setMobileView(b.dataset.v); });
+  setMobileView('split');
+
+  // balayer horizontalement les explications pour changer d'étape
+  let swipe = null;
+  $('#side').addEventListener('touchstart', ev => {
+    if (App.mode !== 'cinema' || ev.touches.length !== 1) { swipe = null; return; }
+    swipe = { x: ev.touches[0].clientX, y: ev.touches[0].clientY, t: Date.now() };
+  }, { passive: true });
+  $('#side').addEventListener('touchend', ev => {
+    if (!swipe) return;
+    const t = ev.changedTouches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y;
+    const ok = Math.abs(dx) > 60 && Math.abs(dx) > 1.6 * Math.abs(dy) && Date.now() - swipe.t < 800;
+    swipe = null;
+    if (ok) { if (dx < 0) next(); else prev(); }
+  }, { passive: true });
+
+  // passage écran large ↔ téléphone (rotation, fenêtre redimensionnée)
+  if (mqMobile && mqMobile.addEventListener) mqMobile.addEventListener('change', () => {
+    if (App.mode !== 'cinema') return;
+    renderQSheet(); App.renderCommentary(); App.fit(false);
+  });
+
   /* ============================================================ démarrage */
   function init() {
     buildLegend();
@@ -1266,13 +1403,20 @@
     requestAnimationFrame(() => App.fit(false));
     const q = new URLSearchParams(location.search);
     const sid = q.get('scenario'), url = q.get('md');
+    const step = Math.max(0, (parseInt(q.get('etape') || q.get('step'), 10) || 1) - 1);
+    const hash = (location.hash.match(/(?:^#|&)md=([A-Za-z0-9_-]+)/) || [])[1];
     if (sid) {
       const s = P.LIBRARY.find(x => x.id === sid);
-      if (s) App.loadScenario(s.md); else toast('Scénario introuvable : ' + esc(sid));
+      if (s) App.loadScenario(s.md, { id: sid }, step); else { toast('Scénario introuvable : ' + esc(sid)); setMode('cinema'); }
+    } else if (hash) {
+      unpackMd(hash).then(t => App.loadScenario(t, { packed: hash }, step))
+        .catch(() => { toast('⚠ Lien de scénario illisible (incomplet ?)'); setMode('cinema'); });
     } else if (url) {
       fetch(url).then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
-        .then(t => App.loadScenario(t))
+        .then(t => App.loadScenario(t, { url }, step))
         .catch(() => toast('⚠ Impossible de charger ' + esc(url)));
+    } else if (q.has('scenarios') || q.has('bibliotheque') || isMobile()) {
+      setMode('cinema');   // ouvre la bibliothèque ; sur téléphone, le mode cinéma est le point d'entrée
     }
   }
   init();
