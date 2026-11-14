@@ -1,0 +1,12 @@
+- [Accueil](README.md)
+- **Utiliser l'atelier**
+  - [Prise en main (mode libre)](prise-en-main.md)
+  - [Mode cinéma](mode-cinema.md)
+  - [Scénarios disponibles](scenarios.md)
+- **Comprendre**
+  - [Règles de calcul](regles-de-calcul.md)
+- **Créer des scénarios**
+  - [Format des scénarios](format-scenario.md)
+  - [Avec une IA : la skill](ia-et-skill.md)
+- **Maintenir**
+  - [Développeurs](developpeurs.md)
