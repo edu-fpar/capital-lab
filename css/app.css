@@ -455,3 +455,5 @@ details.answer .good { margin: 8px 0 4px; }
 .doc-link:hover { border-color: var(--accent-line); text-decoration: none; background: var(--accent-soft); }
 .help-thanks { margin-top: 18px; font-size: 12.5px; color: var(--muted); }
 @media (max-width: 760px) { .help-cols { grid-template-columns: 1fr; } }
+.help-card img { display: block; width: 100%; border-radius: 8px; border: 1px solid var(--line); margin: 2px 0 4px; transition: transform .15s, box-shadow .15s; }
+.help-card a:hover img { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(15, 23, 42, .18); }

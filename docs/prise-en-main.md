@@ -8,6 +8,10 @@ Le mode libre ✏️ sert à construire une structure, à faire varier les pourc
 - **au centre**, le canevas ;
 - **à droite**, l'inspecteur : propriétés et analyse de l'élément sélectionné, ou vue d'ensemble si rien n'est sélectionné.
 
+![Mode libre : palette, canevas et inspecteur avec les curseurs et l'analyse](images/libre-analyse-jour.jpg)
+<p class="caption">Le mode libre : palette à gauche, structure au centre, curseurs et analyse de la société sélectionnée à droite.</p>
+
+
 Le bouton 🌙 / ☀️ en haut à droite bascule entre le **mode jour** et le **mode nuit**. Par défaut, l'atelier suit le réglage du système ; une fois choisi, le mode est mémorisé dans le navigateur.
 
 ## Construire une structure

@@ -324,9 +324,11 @@
       // la feuille de question occupe le bas du canevas : on cadre dans l'espace restant au-dessus
       const sheet = $('#qsheet');
       const inset = App.mode === 'cinema' && !sheet.hidden ? Math.min(sheet.offsetHeight, r.height * 0.7) : 0;
-      const pad = 50, h = Math.max(120, r.height - inset);
+      // le bandeau « point de vue » occupe le haut : on réserve aussi sa place
+      const banner = $('#banner'), top = banner.hidden ? 0 : banner.offsetHeight + 12;
+      const pad = 50, h = Math.max(120, r.height - inset - top);
       const k = clamp(Math.min(r.width / (x1 - x0 + 2 * pad), h / (y1 - y0 + 2 * pad)), 0.25, 1.3);
-      t = { x: (x0 + x1) / 2, y: (y0 + y1) / 2 + inset / 2 / k, k };
+      t = { x: (x0 + x1) / 2, y: (y0 + y1) / 2 + (inset - top) / 2 / k, k };
     }
     if (animate) App.camT = t; else { App.cam = Object.assign({}, t); App.camT = null; }
     requestRender();
@@ -903,8 +905,8 @@
     const doc = (page, label) => `<a class="doc-link" href="docs/index.html#/${page}" target="_blank" rel="noopener">${label}</a>`;
     const c = App.modal(`<h2>❔ Aide</h2>
       <div class="help-cols">
-        <div class="help-card"><h3>✏️ Mode libre</h3>${P.md(P.HELP_LIBRE)}</div>
-        <div class="help-card"><h3>🎬 Mode cinéma</h3>${P.md(P.HELP_CINEMA)}</div>
+        <div class="help-card"><h3>✏️ Mode libre</h3><a href="docs/index.html#/prise-en-main" target="_blank" rel="noopener" title="Voir la page « Mode libre » de la documentation"><img src="docs/images/libre-analyse-jour.jpg" alt="Mode libre : palette, structure et analyse" loading="lazy"></a>${P.md(P.HELP_LIBRE)}</div>
+        <div class="help-card"><h3>🎬 Mode cinéma</h3><a href="docs/index.html#/mode-cinema" target="_blank" rel="noopener" title="Voir la page « Mode cinéma » de la documentation"><img src="docs/images/question-revelee-nuit.jpg" alt="Mode cinéma : une question révélée, en mode nuit" loading="lazy"></a>${P.md(P.HELP_CINEMA)}</div>
       </div>
       <div class="help-ai">
         <h3>🤖 Préparer son cours avec une IA</h3>

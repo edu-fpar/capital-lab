@@ -44,6 +44,16 @@ node skill/scenario-capital-lab/scripts/verifier.js docs/scenarios/<id>.md
 python tools/package_skill.py
 ```
 
+## Captures d'écran
+
+Les captures de la documentation (`docs/images/*.jpg`) sont produites par un script, pour pouvoir les refaire quand l'interface change :
+
+```bash
+node tools/screenshots.js
+```
+
+Il pilote Microsoft Edge ou Chrome sans fenêtre (variable `BROWSER` pour un autre chemin), sans rien installer. Chaque capture est décrite dans le tableau `SHOTS` du script : page, taille (écran ou téléphone), thème jour ou nuit, et mise en scène (étape, question révélée, carte retournée…). L'aide de l'atelier réutilise deux de ces images.
+
 ## Documentation
 
 Ce site utilise [Docsify](https://docsify.js.org) 4.13.1, chargé depuis un CDN : chaque page est un simple fichier `.md` de `docs/`, et la barre latérale est `docs/_sidebar.md`. Le fichier `.nojekyll` à la racine est indispensable : sans lui, GitHub Pages ignore les fichiers commençant par `_`, et la barre latérale disparaît. L'encart « Préparer son cours avec une IA » est du HTML dans le markdown ; ses boutons sont gérés par le script de `docs/index.html`. Le fichier `llms.txt` à la racine oriente les IA qui explorent le site. La page `regles-de-calcul.md` sert aussi de référence à la skill : gardez-la exacte.

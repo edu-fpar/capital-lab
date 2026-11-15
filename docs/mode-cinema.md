@@ -9,6 +9,9 @@ Bouton **📚 Scénarios** :
 - ou **coller** le markdown fourni par un collègue ou une IA, puis « ▶ Lancer » ;
 - ou **ouvrir un fichier** `.md`. On peut aussi le déposer directement sur la fenêtre.
 
+![La bibliothèque des scénarios](images/bibliotheque-jour.jpg)
+<p class="caption">La bibliothèque : dix scénarios intégrés, et en dessous la zone pour coller votre propre scénario.</p>
+
 ## Partager un lien
 
 L'atelier est en ligne à l'adresse **https://edu-fpar.github.io/capital-lab/**. Le bouton **🔗 Partager** propose trois liens à copier : vers **l'étape affichée**, vers **le début du scénario**, ou vers **la bibliothèque**. Pendant la lecture, l'adresse du navigateur suit d'ailleurs l'étape en cours : on peut aussi la copier directement.
@@ -26,11 +29,14 @@ Pour un scénario personnel, le lien contient le texte compressé du scénario a
 ## Sur téléphone
 
 L'atelier s'adapte aux écrans étroits. Sur téléphone, il s'ouvre directement sur la bibliothèque des scénarios :
+
 - le **schéma** occupe le haut de l'écran, les **explications** le bas ;
 - les boutons **🗺 / ◫ / 📖** de la barre du bas affichent le schéma seul, les deux, ou le texte seul ;
 - on **balaie** les explications vers la gauche ou la droite pour changer d'étape ; les boutons **◀ / Suivant** restent disponibles ;
 - on **pince** le schéma pour zoomer, on le fait glisser pour se déplacer, et on touche une entité pour afficher son analyse sous le texte ;
 - les **questions** s'affichent dans le texte, avec les choix empilés : toucher un choix pour indiquer sa réponse, « Révéler la réponse », puis toucher une carte pour la retourner.
+
+<div class="shots-phone"><figure><img src="images/telephone-schema-jour.jpg" alt="Téléphone, mode jour : schéma en haut, explications en bas"><figcaption>Schéma et explications</figcaption></figure><figure><img src="images/telephone-question-nuit.jpg" alt="Téléphone, mode nuit : une question révélée dans le texte"><figcaption>Une question, en mode nuit</figcaption></figure></div>
 
 Le mode libre reste accessible, mais il est conçu pour un écran plus large.
 
@@ -54,6 +60,10 @@ Clavier : **→** / **←** pour avancer ou reculer, **Espace** pour avancer (pa
 ## Étapes questions
 
 Certaines étapes interrogent l'audience. Leur titre est précédé de ❓, et une fenêtre monte en bas du canevas avec la question et les choix en grandes cartes (A, B, C…).
+
+![Étape question en mode nuit : cartes retournées et réponse dans le panneau de droite](images/question-revelee-nuit.jpg)
+<p class="caption">Une question après révélation (mode nuit) : la bonne réponse en vert, deux cartes retournées sur leur explication, la réponse détaillée à droite et le point de vue du fonds sur le canevas.</p>
+
 
 1. **Laisser la salle répondre** : à main levée, à l'oral… Cliquez sur la carte choisie par la majorité, ou tapez son numéro : elle est marquée « 👥 choix de la salle ».
 2. **Révéler la réponse** : bouton « 💡 Révéler la réponse », touche **→**, ou bouton « 💡 Réponse ▶ » de la barre du bas. Une télécommande de présentation fonctionne donc : un premier appui révèle, le suivant passe à l'étape d'après.

@@ -22,13 +22,16 @@ const write = (file, text) => { fs.mkdirSync(path.dirname(file), { recursive: tr
 const copy = (from, to) => { fs.mkdirSync(path.dirname(to), { recursive: true }); fs.copyFileSync(from, to); console.log('copié  ' + path.relative(root, to)); };
 // les scénarios intégrés utilisent ~~~scene ; les fichiers publiés utilisent la forme usuelle ```scene
 const toFences = md => md.replace(/^~~~scene\s*$/gm, '```scene').replace(/^~~~\s*$/gm, '```');
+// les captures d'écran de la doc n'ont pas de sens pour une IA : on les retire des copies
+const noImages = md => md.replace(/^!\[[^\]]*\]\([^)]*\)\n(<p class="caption">.*<\/p>\n)?\n?/gm, '');
+const regles = noImages(fs.readFileSync(r('docs', 'regles-de-calcul.md'), 'utf8'));
 
 write(r('docs', 'format-scenario.md'), P.FORMAT_DOC);
 P.LIBRARY.forEach(s => write(r('docs', 'scenarios', s.id + '.md'), toFences(s.md)));
 
 const skill = r('skill', 'scenario-capital-lab');
 write(path.join(skill, 'references', 'format.md'), P.FORMAT_DOC);
-copy(r('docs', 'regles-de-calcul.md'), path.join(skill, 'references', 'regles-de-calcul.md'));
+write(path.join(skill, 'references', 'regles-de-calcul.md'), regles);
 write(path.join(skill, 'references', 'exemple.md'), toFences(P.LIBRARY.find(s => s.id === 'pyramide').md));
 /* Page d'instructions pour n'importe quelle IA (lisible par URL) : mission + format + règles + exemple.
  * C'est la version « sans outils » de la skill : l'IA ne peut pas lancer le vérificateur, elle refait les calculs. */
@@ -57,7 +60,7 @@ L'enseignant te fournit un support de cours (texte, PDF, diapositives, notes, ca
 
 `;
 write(r('docs', 'instructions-ia.md'), IA_INTRO + P.FORMAT_DOC.replace(/^# /, '# Annexe 1 — ') + '\n\n---\n\n' +
-  fs.readFileSync(r('docs', 'regles-de-calcul.md'), 'utf8').replace(/^# /, '# Annexe 2 — ') + '\n\n---\n\n' +
+  regles.replace(/^# /, '# Annexe 2 — ') + '\n\n---\n\n' +
   '# Annexe 3 — Exemple complet\n\nUn scénario réel de l\'atelier (la pyramide de holdings), avec une étape question :\n\n````markdown\n' +
   toFences(P.LIBRARY.find(s => s.id === 'pyramide').md).trim() + '\n````\n');
 

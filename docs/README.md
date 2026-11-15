@@ -6,6 +6,10 @@ Il montre notamment comment on peut être **minoritaire en capital** et pourtant
 
 [▶ Ouvrir l'atelier](../index.html ':ignore') — en ligne : **https://edu-fpar.github.io/capital-lab/**, utilisable aussi sur téléphone.
 
+![Mode cinéma : la pyramide de holdings, avec le point de vue de la famille Martin](images/cinema-pyramide-jour.jpg)
+<p class="caption">Le mode cinéma : la pyramide de holdings, étape 3. Chaque entité affiche l'intérêt et le contrôle de la famille Martin.</p>
+
+
 ## 🤖 Préparer son cours avec une IA
 
 <div class="ai-box">

@@ -41,6 +41,7 @@ Exactement 50 % ne donne **pas** le contrôle : 50/50 signifie qu'aucun associé
 
 L'intérêt d'un actionnaire dans une société est la somme, sur tous les chemins de détention, du produit des pourcentages de **capital** :
 
+
 > 51 % × 51 % × 51 % ≈ 13,27 %
 
 Les participations croisées sont prises en compte (calcul itératif). Les actions auto-détenues sont retirées de la base.
