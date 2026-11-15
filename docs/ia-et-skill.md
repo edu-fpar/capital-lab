@@ -1,14 +1,25 @@
-# Créer un scénario avec une IA
+# Préparer son cours avec une IA
 
-Deux possibilités, de la plus simple à la plus fiable.
+Deux possibilités : n'importe quelle IA avec la page d'instructions, ou Claude avec la skill, qui vérifie en plus les chiffres.
 
-## 1. Le prompt prêt à copier
+## 1. Avec n'importe quelle IA
 
-Dans l'atelier : **❔ Aide** ou **📚 Scénarios**, puis **🤖 Copier le prompt pour une IA**. Le texte copié contient la [spécification du format](format-scenario.md). Collez-le dans l'assistant de votre choix, complétez la dernière section (sujet, public, nombre d'étapes) et joignez votre support si l'assistant accepte les fichiers.
+<div class="ai-box">
+<p>Donnez à votre IA (ChatGPT, Claude, Gemini, Mistral, Copilot…) l'adresse de la <strong>page d'instructions pour IA</strong> : elle y trouve sa mission, le format des scénarios, les règles de calcul et un exemple complet.</p>
+<p class="ai-line"><code class="js-ia-url">https://edu-fpar.github.io/capital-lab/docs/instructions-ia.md</code> <button class="ai-btn" data-copy-sel=".js-ia-url">📋 Copier l'adresse</button> <a class="ai-btn ghost" href="instructions-ia.md" target="_blank" rel="noopener">👁 Voir la page</a></p>
+<p class="ai-sub">Puis écrivez par exemple :</p>
+<div class="ai-prompt js-ia-prompt">Lis les instructions sur <span class="js-ia-url">https://edu-fpar.github.io/capital-lab/docs/instructions-ia.md</span> et prépare un scénario Capital Lab à partir du cours ci-dessous. Public : L3 droit des affaires, 6 étapes environ, avec une ou deux questions pour la salle.<br>[collez ici votre cours, votre plan ou votre cas pratique — ou joignez le fichier]</div>
+<button class="ai-btn" data-copy-sel=".js-ia-prompt">📋 Copier la consigne</button>
+<p class="ai-sub">L'IA répond avec un bloc de markdown : dans l'<a href="../index.html?scenarios" target="_blank" rel="noopener">atelier</a>, ouvrez 🎬 Cinéma → 📚 Scénarios, collez-le et lancez. Vous pouvez coller la réponse entière, bloc de code compris.</p>
+<p class="ai-note js-ia-local" hidden>ℹ️ Vous consultez cette documentation en local : l'adresse ci-dessus est celle de la version publiée, qu'une IA en ligne peut lire.</p>
+<button class="ai-btn warn" data-copy-file="instructions-ia.md">📄 Copier toutes les instructions (pour les IA sans accès web)</button>
+</div>
 
-Le résultat se colle ensuite dans 📚 Scénarios → « Votre propre scénario ». **Relisez les chiffres** : avec cette méthode, l'IA n'a pas vérifié ses calculs.
+Une IA générale ne peut pas exécuter le moteur de l'atelier : **relisez les chiffres** du commentaire en les comparant à ce que l'atelier affiche (cliquez sur une entité pour son analyse). Les avertissements de syntaxe s'affichent sous le commentaire.
 
-## 2. La skill « scenario-capital-lab » (recommandé)
+Les IA qui explorent un site peuvent aussi partir du fichier [`llms.txt`](https://edu-fpar.github.io/capital-lab/llms.txt ':ignore'), qui pointe vers les pages utiles.
+
+## 2. Avec Claude : la skill « scenario-capital-lab » (recommandé)
 
 Une *skill* est un mode d'emploi que Claude charge automatiquement quand la demande s'y rapporte. Celle-ci apprend à Claude à :
 1. lire votre **support de cours** (PDF, diapositives, polycopié, cas pratique) ;

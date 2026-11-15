@@ -246,7 +246,11 @@
   }
 
   P.parseScenario = function (src) {
-    const lines = String(src || '').replace(/\r/g, '').split('\n');
+    let lines = String(src || '').replace(/\r/g, '').split('\n');
+    // réponse d'IA copiée avec son bloc englobant (````markdown … ````) : on retire ce bloc
+    const first = lines.findIndex(l => l.trim()), last = lines.length - 1 - lines.slice().reverse().findIndex(l => l.trim());
+    const open = first >= 0 && lines[first].trim().match(/^(`{3,}|~{3,})\s*(markdown|md)?\s*$/i);
+    if (open && last > first && lines[last].trim() === open[1]) lines = lines.slice(first + 1, last);
     const sc = { title: 'Scénario', description: '', steps: [], errors: [], meta: {} };
     const newCur = (title, intro) => ({ title, md: [], commands: [], duration: null, intro: !!intro, hasAnswer: false, answer: [], reveal: [] });
     let cur = newCur('Introduction', true);

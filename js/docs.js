@@ -4,41 +4,20 @@
  * ============================================================ */
 window.P = window.P || {};
 
-P.HELP_DOC = `## Prise en main
+/* Aide rapide (fenêtre ❔ Aide) : l'essentiel, le détail est dans la documentation (docs/). */
+P.HELP_LIBRE = `- Glissez une **entité** de la palette sur le canevas, puis tirez la poignée **+** d'un actionnaire vers une société.
+- Cliquez sur une entité ou un lien : **curseurs** capital / droits de vote et **analyse** du contrôle à droite.
+- **👁 Point de vue**, **🤝 Pacte**, **📸 Studio** (transformer une construction en scénario).`;
 
-**Mode libre ✏️**
-- Glissez une entité de la palette (à gauche) sur le canevas — ou cliquez dessus.
-- Tirez la poignée **+** située sous une entité vers une autre entité : la première devient **actionnaire** de la seconde. Tirez-la sur l'entité elle-même pour de l'**auto-détention**.
-- Cliquez sur une entité ou un lien : le panneau de droite permet de régler le **capital** et les **droits de vote** avec des curseurs, et affiche l'**analyse** (qui contrôle, par quelle chaîne, avec quel intérêt économique).
-- **👁 Point de vue** : choisissez un actionnaire ; chaque entité affiche alors son intérêt économique et son contrôle.
-- **🤝 Pacte** : regroupez des actionnaires qui agissent de concert (contrôle conjoint).
-- Molette = zoom, glisser le fond = déplacer la vue, **F** = tout afficher, **Suppr** = supprimer, **Ctrl+Z / Ctrl+Y** = annuler / rétablir.
-- **📸 Studio** : capturez des étapes successives avec un commentaire, puis exportez-les en scénario markdown.
+P.HELP_CINEMA = `- **📚 Scénarios** : choisir, coller ou déposer un scénario markdown.
+- **→ / Espace** : étape suivante (révèle d'abord la réponse d'une question) ; **←** : précédente.
+- **🔗 Partager** : lien vers une étape ou un scénario. Fonctionne aussi sur téléphone.`;
 
-**Mode cinéma 🎬**
-- Choisissez un scénario dans la bibliothèque, collez le markdown d'un enseignant ou d'une IA, ou déposez un fichier .md sur la fenêtre.
-- **Pas à pas** : l'utilisateur passe lui-même à l'étape suivante (→ ou Espace).
-- **Lecture continue** : les étapes s'enchaînent ; le curseur **Rythme** accélère ou ralentit.
-- ← / → : étape précédente / suivante. Cliquez sur une entité pour afficher son analyse.
-- **Étapes questions** : une fenêtre monte en bas du canevas. Cliquez sur le choix de la salle (ou tapez son numéro), puis → révèle la réponse ; cliquez sur une carte pour lire son explication. ▾ réduit la fenêtre ; le canevas reste déplaçable au-dessus.
-- **🔗 Partager** : liens vers l'étape affichée, le début du scénario ou la bibliothèque (ex. ?scenario=pyramide&etape=6, ?scenarios). Un scénario personnel est encodé dans le lien lui-même.
-- **Sur téléphone** : schéma en haut, explications en bas (boutons 🗺 / ◫ / 📖), balayer le texte pour changer d'étape, pincer le schéma pour zoomer.
+P.HELP_THANKS = `Merci à **Tao**, dont l'outil imaginé pour montrer à sa classe de droit financier comment on peut contrôler une société tout en y étant minoritaire est à l'origine de ce projet, et à **Yannick**, qui nous a transmis cette idée.`;
 
-## Couleurs et règles de calcul
-
-- **Couleur d'un lien** : seuil atteint par les droits de vote *effectifs* (voir la légende). Pointillés gris : voix neutralisées (autocontrôle).
-- **Bordure épaisse colorée** : contrôleur ultime. **Fond teinté de la même couleur** : entité qu'il contrôle, directement ou en chaîne.
-- **Contrôle** : un bloc contrôle une société s'il dispose de **plus de 50 %** des droits de vote, en additionnant ses propres voix et celles des sociétés qu'il contrôle déjà (contrôle en chaîne, art. L233-3 et L233-4 C. com.).
-- **Contrôle de fait** (option) : plus de 40 % des voix et aucun autre associé n'en détient davantage (art. L233-3, II).
-- **Action de concert** : les membres d'un pacte forment un seul bloc ; s'il contrôle, c'est un **contrôle conjoint**.
-- **Autocontrôle** : les voix des actions détenues par la société elle-même ou par une société qu'elle contrôle sont neutralisées ; les pourcentages des autres actionnaires sont recalculés.
-- **Intérêt économique** : somme, sur tous les chemins, du produit des pourcentages de capital (ex. 51 % × 51 % = 26 %).
-- Les actionnaires non représentés sont regroupés dans « autres ». Une entité **Public / flottant** vote, mais ne forme jamais un bloc de contrôle (actionnariat dispersé).
-
-## Remerciements
-
-Merci à **Tao**, dont l'outil imaginé pour montrer à sa classe de droit financier comment on peut contrôler une société tout en y étant minoritaire est à l'origine de ce projet, et à **Yannick**, qui nous a transmis cette idée.
-`;
+P.IA_INSTRUCTIONS_URL = 'https://edu-fpar.github.io/capital-lab/docs/instructions-ia.md';
+P.IA_CONSIGNE = `Lis les instructions sur ${P.IA_INSTRUCTIONS_URL} et prépare un scénario Capital Lab à partir du cours ci-dessous. Public : L3 droit des affaires, 6 étapes environ, avec une ou deux questions pour la salle.
+[collez ici votre cours, votre plan ou votre cas pratique — ou joignez le fichier]`;
 
 P.FORMAT_DOC = `# Format des scénarios « cinéma »
 

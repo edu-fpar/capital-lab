@@ -66,6 +66,27 @@
     [data-theme="dark"] .search p, [data-theme="dark"] .search h2 { color: #cbd5e1; }
     [data-theme="dark"] .token.punctuation, [data-theme="dark"] .token.operator { color: #94a3b8; }
     [data-theme="dark"] #theme-toggle { background: #141c2f; border-color: #2a3550; }
+
+    /* ---- encart « Préparer son cours avec une IA » (identique en jour et en nuit) ---- */
+    .markdown-section .ai-box {
+      background: linear-gradient(135deg, #2a2752, #4b2fb8); color: #fff; border-radius: 20px;
+      padding: 1.4rem 1.6rem; margin: 1rem 0 2rem; box-shadow: 0 10px 30px rgba(43, 32, 120, .25);
+    }
+    [data-theme] .markdown-section .ai-box p, [data-theme] .markdown-section .ai-box strong { color: #fff; }
+    [data-theme] .markdown-section .ai-box code { background: rgba(0, 0, 0, .25); color: #ffd166; word-break: break-all; padding: 2px 6px; }
+    [data-theme] .markdown-section .ai-box a:not(.ai-btn) { color: #fff; text-decoration: underline; font-weight: 600; }
+    .markdown-section .ai-box .ai-line { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    [data-theme] .markdown-section .ai-box .ai-sub { margin: 1rem 0 .4rem; }
+    .markdown-section .ai-prompt { background: rgba(255, 255, 255, .12); border-radius: 12px; padding: .85rem 1rem; line-height: 1.6; }
+    [data-theme] .markdown-section .ai-box .ai-note { font-size: .88em; opacity: .85; margin: .8rem 0 .2rem; }
+    .markdown-section .ai-btn {
+      display: inline-flex; align-items: center; gap: 4px; margin-top: .5rem; padding: 5px 12px; border-radius: 8px;
+      border: 1px solid #fff; background: #fff; color: #2a2752; font: 600 13px/1.4 inherit; cursor: pointer; text-decoration: none;
+    }
+    .markdown-section .ai-btn.ghost { background: transparent; color: #fff; }
+    .markdown-section .ai-btn.warn { background: #ffc107; border-color: #ffc107; color: #2a2752; }
+    .markdown-section .ai-btn:hover { filter: brightness(1.08); }
+    .markdown-section .ai-line .ai-btn { margin-top: 0; }
   </style>
 </head>
 <body>
@@ -99,8 +120,41 @@
       subMaxLevel: 2,
       auto2top: true,
       relativePath: true,
-      search: { placeholder: 'Rechercher…', noData: 'Aucun résultat', depth: 3 }
+      search: { placeholder: 'Rechercher…', noData: 'Aucun résultat', depth: 3 },
+      plugins: [function (hook) { hook.doneEach(fillAiBox); }]
     };
+
+    /* Encart IA : adresse de la page d'instructions (publique si la doc est consultée en local) et boutons Copier */
+    var PUBLIC_DOCS = 'https://edu-fpar.github.io/capital-lab/docs/';
+    function isLocal() { return location.protocol === 'file:' || /^(localhost|127\.|\[::1\])/.test(location.hostname); }
+    function docsBase() { return isLocal() ? PUBLIC_DOCS : location.href.split('#')[0].split('?')[0].replace(/[^/]*$/, ''); }
+    function fillAiBox() {
+      var url = docsBase() + 'instructions-ia.md';
+      document.querySelectorAll('.js-ia-url').forEach(function (e) { e.textContent = url; });
+      document.querySelectorAll('.js-ia-local').forEach(function (e) { e.hidden = !isLocal(); });
+    }
+    function copyText(text, btn) {
+      var done = function () { var old = btn.innerHTML; btn.innerHTML = '✅ Copié !'; setTimeout(function () { btn.innerHTML = old; }, 1600); };
+      var fallback = function () {
+        var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) { alert('Copie impossible : sélectionnez le texte manuellement.'); }
+        ta.remove();
+      };
+      if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
+    }
+    document.addEventListener('click', function (ev) {
+      var b = ev.target.closest('[data-copy-sel], [data-copy-file]');
+      if (!b) return;
+      var box = b.closest('.ai-box') || document;
+      if (b.hasAttribute('data-copy-sel')) { copyText(box.querySelector(b.getAttribute('data-copy-sel')).innerText.trim(), b); return; }
+      var f = b.getAttribute('data-copy-file');
+      // fichier local d'abord ; sinon (ouverture en file://) la version publiée
+      fetch(f).then(function (r) { if (!r.ok) throw 0; return r.text(); })
+        .catch(function () { return fetch(PUBLIC_DOCS + f).then(function (r) { if (!r.ok) throw 0; return r.text(); }); })
+        .then(function (t) { copyText(t, b); })
+        .catch(function () { alert('Lecture impossible : ouvrez la page d\'instructions (bouton « Voir la page ») et copiez son contenu.'); });
+    });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/docsify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/plugins/search.min.js"></script>

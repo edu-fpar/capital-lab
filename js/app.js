@@ -854,7 +854,7 @@
       <h3>Votre propre scénario</h3>
       <p class="muted small">Collez le markdown fourni par un enseignant ou généré par une IA, ou ouvrez / déposez un fichier .md.</p>
       <textarea id="md-input" placeholder="# Mon scénario&#10;&#10;## 1. Première étape&#10;Commentaire…&#10;&#10;\`\`\`scene&#10;personne FAM &quot;Famille&quot;&#10;societe A &quot;Alpha SA&quot;&#10;lien FAM -> A 51%&#10;\`\`\`"></textarea>
-      <div class="btns"><button class="primary" id="md-run">▶ Lancer ce scénario</button><button id="md-file">📂 Ouvrir un fichier .md</button><button id="md-prompt">🤖 Copier le prompt pour une IA</button><button id="md-spec">📄 Format des scénarios</button></div>`);
+      <div class="btns"><button class="primary" id="md-run">▶ Lancer ce scénario</button><button id="md-file">📂 Ouvrir un fichier .md</button><button id="md-prompt" title="Consigne à donner à une IA avec votre cours">🤖 Consigne pour une IA</button><button id="md-spec">📄 Format des scénarios</button></div>`);
     c.addEventListener('click', ev => {
       const b = ev.target.closest('button'); if (!b) return;
       const get = id => P.LIBRARY.find(s => s.id === id);
@@ -863,7 +863,7 @@
       else if (b.dataset.dl) download(b.dataset.dl + '.md', get(b.dataset.dl).md.replace(/~~~scene/g, '```scene').replace(/^~~~$/gm, '```'));
       else if (b.id === 'md-run') { const v = $('#md-input', c).value; if (v.trim()) { App.closeModal(); App.loadScenario(v); } }
       else if (b.id === 'md-file') $('#file-input').click();
-      else if (b.id === 'md-prompt') copyText(P.AI_PROMPT);
+      else if (b.id === 'md-prompt') copyText(P.IA_CONSIGNE);
       else if (b.id === 'md-spec') openHelp('format');
     });
   }
@@ -886,11 +886,44 @@
     $('#ed-spec', c).onclick = () => openHelp('format');
   }
 
+  /* Instructions complètes pour une IA : la page publiée (à jour), sinon la version embarquée (hors ligne). */
+  function copyAllInstructions() {
+    fetch('docs/instructions-ia.md').then(r => { if (!r.ok) throw 0; return r.text(); })
+      .catch(() => fetch(P.IA_INSTRUCTIONS_URL).then(r => { if (!r.ok) throw 0; return r.text(); }))
+      .then(copyText, () => copyText(P.AI_PROMPT));
+  }
+
   function openHelp(which) {
-    const c = App.modal(`<div class="help-doc md">${which === 'format' ? '' : P.md(P.HELP_DOC)}${P.md(P.FORMAT_DOC, { shift: which === 'format' ? 0 : 1 })}</div>
-      <div class="btns"><button class="primary" id="hp-prompt">🤖 Copier le prompt pour une IA</button><button id="hp-dl">⬇ Télécharger la spécification (.md)</button><a class="btnlink" href="docs/index.html" target="_blank" rel="noopener">📖 Documentation complète</a></div>`);
-    $('#hp-prompt', c).onclick = () => copyText(P.AI_PROMPT);
-    $('#hp-dl', c).onclick = () => download('format-scenario.md', P.FORMAT_DOC);
+    if (which === 'format') {
+      const c = App.modal(`<div class="help-doc md">${P.md(P.FORMAT_DOC)}</div>
+        <div class="btns"><button class="primary" id="hp-dl">⬇ Télécharger la spécification (.md)</button><a class="btnlink" href="docs/index.html#/format-scenario" target="_blank" rel="noopener">📖 Dans la documentation</a></div>`);
+      $('#hp-dl', c).onclick = () => download('format-scenario.md', P.FORMAT_DOC);
+      return;
+    }
+    const doc = (page, label) => `<a class="doc-link" href="docs/index.html#/${page}" target="_blank" rel="noopener">${label}</a>`;
+    const c = App.modal(`<h2>❔ Aide</h2>
+      <div class="help-cols">
+        <div class="help-card"><h3>✏️ Mode libre</h3>${P.md(P.HELP_LIBRE)}</div>
+        <div class="help-card"><h3>🎬 Mode cinéma</h3>${P.md(P.HELP_CINEMA)}</div>
+      </div>
+      <div class="help-ai">
+        <h3>🤖 Préparer son cours avec une IA</h3>
+        <p>Donnez cette consigne à n'importe quelle IA (ChatGPT, Claude, Gemini, Mistral…) avec votre cours, puis collez sa réponse dans 📚 Scénarios :</p>
+        <div class="help-prompt">${esc(P.IA_CONSIGNE).replace(/\n/g, '<br>')}</div>
+        <div class="btns"><button id="hp-consigne">📋 Copier la consigne</button><button id="hp-all" class="warn">📄 Copier toutes les instructions (IA sans accès web)</button>${doc('ia-et-skill', 'En savoir plus →')}</div>
+      </div>
+      <h3>📖 Documentation complète</h3>
+      <div class="doc-links">
+        ${doc('mode-cinema', '🎬 Mode cinéma<small>lecture, questions, téléphone, partage</small>')}
+        ${doc('prise-en-main', '✏️ Mode libre<small>construire, analyser, studio</small>')}
+        ${doc('scenarios', '📚 Scénarios<small>les 10 scénarios intégrés</small>')}
+        ${doc('regles-de-calcul', '🧮 Règles de calcul<small>contrôle, intérêts, couleurs, limites</small>')}
+        ${doc('format-scenario', '📄 Format des scénarios<small>écrire ou corriger un scénario</small>')}
+        ${doc('', '🏠 Accueil de la documentation<small>tout le reste</small>')}
+      </div>
+      <p class="help-thanks">${P.md(P.HELP_THANKS).replace(/^<p>|<\/p>$/g, '')}</p>`);
+    $('#hp-consigne', c).onclick = () => copyText(P.IA_CONSIGNE);
+    $('#hp-all', c).onclick = copyAllInstructions;
   }
 
   /* ============================================================ fichiers */

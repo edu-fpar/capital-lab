@@ -1,0 +1,14 @@
+# Capital Lab
+
+> Atelier pédagogique 100 % navigateur pour visualiser les structures de contrôle entre sociétés (chaînes de participations, holdings, pactes, droits de vote double, autocontrôle, LBO, consolidation) et les présenter en classe sous forme de scénarios animés pas à pas, écrits en markdown.
+
+## Pour les IA
+
+- [Instructions : créer un scénario à partir d'un cours](https://edu-fpar.github.io/capital-lab/docs/instructions-ia.md): mission, format complet des scénarios, règles de calcul du contrôle et des intérêts, exemple commenté.
+- [Format des scénarios](https://edu-fpar.github.io/capital-lab/docs/format-scenario.md): syntaxe des étapes, des commandes et des questions.
+- [Règles de calcul](https://edu-fpar.github.io/capital-lab/docs/regles-de-calcul.md): ce que l'outil calcule et ce qu'il ne représente pas.
+
+## Pour les humains
+
+- [Atelier en ligne](https://edu-fpar.github.io/capital-lab/)
+- [Documentation](https://edu-fpar.github.io/capital-lab/docs/)
