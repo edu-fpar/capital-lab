@@ -16,8 +16,9 @@ P.HELP_CINEMA = `- **📚 Scénarios** : choisir, coller ou déposer un scénari
 P.HELP_THANKS = `Merci à **Tao**, dont l'outil imaginé pour montrer à sa classe de droit financier comment on peut contrôler une société tout en y étant minoritaire est à l'origine de ce projet, et à **Yannick**, qui nous a transmis cette idée.`;
 
 P.IA_INSTRUCTIONS_URL = 'https://edu-fpar.github.io/capital-lab/docs/instructions-ia.md';
-P.IA_CONSIGNE = `Lis les instructions sur ${P.IA_INSTRUCTIONS_URL} et prépare un scénario Capital Lab à partir du cours ci-dessous. Public : L3 droit des affaires, 6 étapes environ, avec une ou deux questions pour la salle.
-[collez ici votre cours, votre plan ou votre cas pratique — ou joignez le fichier]`;
+P.IA_CONSIGNE = `Lis les instructions sur ${P.IA_INSTRUCTIONS_URL} et prépare un scénario Capital Lab à partir du cours ci-dessous (ou du fichier joint). Public : L3 droit des affaires, 6 étapes environ, avec une ou deux questions pour la salle.`;
+/** Version pour une IA qui n'ouvre pas les liens : la consigne sans le lien, à placer après les instructions. */
+P.iaConsigneSansLien = c => c.trim().replace(/^Lis les instructions sur \S+ et prépare/, 'En suivant les instructions ci-dessus, prépare');
 
 P.FORMAT_DOC = `# Format des scénarios « cinéma »
 

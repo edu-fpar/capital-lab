@@ -5,14 +5,19 @@ Deux possibilités : n'importe quelle IA avec la page d'instructions, ou Claude 
 ## 1. Avec n'importe quelle IA
 
 <div class="ai-box">
-<p>Donnez à votre IA (ChatGPT, Claude, Gemini, Mistral, Copilot…) l'adresse de la <strong>page d'instructions pour IA</strong> : elle y trouve sa mission, le format des scénarios, les règles de calcul et un exemple complet.</p>
-<p class="ai-line"><code class="js-ia-url">https://edu-fpar.github.io/capital-lab/docs/instructions-ia.md</code> <button class="ai-btn" data-copy-sel=".js-ia-url">📋 Copier l'adresse</button> <a class="ai-btn ghost" href="instructions-ia.md" target="_blank" rel="noopener">👁 Voir la page</a></p>
-<p class="ai-sub">Puis écrivez par exemple :</p>
-<div class="ai-prompt js-ia-prompt">Lis les instructions sur <span class="js-ia-url">https://edu-fpar.github.io/capital-lab/docs/instructions-ia.md</span> et prépare un scénario Capital Lab à partir du cours ci-dessous. Public : L3 droit des affaires, 6 étapes environ, avec une ou deux questions pour la salle.<br>[collez ici votre cours, votre plan ou votre cas pratique — ou joignez le fichier]</div>
-<button class="ai-btn" data-copy-sel=".js-ia-prompt">📋 Copier la consigne</button>
-<p class="ai-sub">L'IA répond avec un bloc de markdown : dans l'<a href="../index.html?scenarios" target="_blank" rel="noopener">atelier</a>, ouvrez 🎬 Cinéma → 📚 Scénarios, collez-le et lancez. Vous pouvez coller la réponse entière, bloc de code compris.</p>
-<p class="ai-note js-ia-local" hidden>ℹ️ Vous consultez cette documentation en local : l'adresse ci-dessus est celle de la version publiée, qu'une IA en ligne peut lire.</p>
-<button class="ai-btn warn" data-copy-file="instructions-ia.md">📄 Copier toutes les instructions (pour les IA sans accès web)</button>
+<ol class="ai-steps">
+<li><strong>Copiez la consigne.</strong> Elle contient déjà le lien vers les instructions pour l'IA. Le texte est modifiable : adaptez le public ou le nombre d'étapes avant de copier.
+<div class="ai-prompt js-ia-prompt" contenteditable="true" spellcheck="false" title="Texte modifiable">Lis les instructions sur <span class="js-ia-url">https://edu-fpar.github.io/capital-lab/docs/instructions-ia.md</span> et prépare un scénario Capital Lab à partir du cours ci-dessous (ou du fichier joint). Public : L3 droit des affaires, 6 étapes environ, avec une ou deux questions pour la salle.</div>
+<button class="ai-btn big" data-copy-sel=".js-ia-prompt">📋 Copier la consigne</button></li>
+<li><strong>Collez-la dans votre IA</strong> (ChatGPT, Claude, Gemini, Mistral, Copilot…), puis ajoutez votre cours : texte collé à la suite, ou fichier joint.</li>
+<li><strong>Copiez la réponse de l'IA</strong> et collez-la dans l'<a href="../index.html?scenarios" target="_blank" rel="noopener">atelier</a> : 🎬 Cinéma → 📚 Scénarios → Lancer. Vous pouvez coller la réponse entière.</li>
+</ol>
+<details class="ai-more"><summary>Votre IA ne peut pas ouvrir de lien ?</summary>
+<p>Copiez à la place la version complète : les instructions et la consigne réunies en un seul texte. Collez-le dans votre IA, puis ajoutez votre cours.</p>
+<button class="ai-btn warn" data-copy-full="instructions-ia.md">📄 Copier la version complète</button> <a class="ai-link" href="instructions-ia.md" target="_blank" rel="noopener">voir les instructions</a>
+</details>
+<p class="ai-note">💡 Vous utilisez Claude ? La <a href="#/ia-et-skill">skill Capital Lab</a> vérifie en plus chaque chiffre avec le moteur de l'atelier.</p>
+<p class="ai-note js-ia-local" hidden>ℹ️ Vous consultez cette documentation en local : la consigne pointe vers la version publiée, qu'une IA en ligne peut lire.</p>
 </div>
 
 Une IA générale ne peut pas exécuter le moteur de l'atelier : **relisez les chiffres** du commentaire en les comparant à ce que l'atelier affiche (cliquez sur une entité pour son analyse). Les avertissements de syntaxe s'affichent sous le commentaire.

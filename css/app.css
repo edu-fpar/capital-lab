@@ -457,3 +457,12 @@ details.answer .good { margin: 8px 0 4px; }
 @media (max-width: 760px) { .help-cols { grid-template-columns: 1fr; } }
 .help-card img { display: block; width: 100%; border-radius: 8px; border: 1px solid var(--line); margin: 2px 0 4px; transition: transform .15s, box-shadow .15s; }
 .help-card a:hover img { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(15, 23, 42, .18); }
+.help-steps { counter-reset: hs; list-style: none; padding: 0; margin: 8px 0 10px; }
+.help-steps > li { counter-increment: hs; position: relative; padding-left: 38px; margin-bottom: 10px; line-height: 1.5; }
+.help-steps > li::before { content: counter(hs); position: absolute; left: 0; top: -1px; width: 26px; height: 26px; border-radius: 50%; background: #ffd166; color: #2a2752; font-weight: 800; display: grid; place-items: center; font-size: 13px; }
+.help-prompt[contenteditable] { margin: 6px 0; outline: 2px dashed rgba(255, 255, 255, .25); outline-offset: -2px; cursor: text; }
+.help-prompt[contenteditable]:focus { outline-color: #ffd166; background: rgba(255, 255, 255, .18); }
+.help-ai button.big { background: #fff; color: #2a2752; border-color: #fff; font-weight: 700; padding: 7px 16px; }
+.help-more { margin: 4px 0 2px; padding: 6px 12px; border-radius: 10px; background: rgba(0, 0, 0, .18); }
+.help-more summary { cursor: pointer; font-weight: 600; }
+.help-more p { margin: 6px 0; }

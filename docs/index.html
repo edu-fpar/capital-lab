@@ -96,6 +96,20 @@
     .markdown-section .ai-btn.warn { background: #ffc107; border-color: #ffc107; color: #2a2752; }
     .markdown-section .ai-btn:hover { filter: brightness(1.08); }
     .markdown-section .ai-line .ai-btn { margin-top: 0; }
+    .markdown-section .ai-steps { counter-reset: ai; list-style: none; padding: 0; margin: 0; }
+    .markdown-section .ai-steps > li { counter-increment: ai; position: relative; padding: 0 0 0 46px; margin: 0 0 1.1rem; color: #fff; line-height: 1.6; }
+    .markdown-section .ai-steps > li::before {
+      content: counter(ai); position: absolute; left: 0; top: -2px; width: 32px; height: 32px; border-radius: 50%;
+      background: #ffd166; color: #2a2752; font-weight: 800; display: grid; place-items: center;
+    }
+    [data-theme] .markdown-section .ai-steps strong { color: #fff; }
+    .markdown-section .ai-prompt[contenteditable] { margin: .6rem 0 .2rem; outline: 2px dashed rgba(255, 255, 255, .25); outline-offset: -2px; cursor: text; }
+    .markdown-section .ai-prompt[contenteditable]:focus { outline-color: #ffd166; background: rgba(255, 255, 255, .18); }
+    .markdown-section .ai-btn.big { font-size: 15px; padding: 8px 18px; }
+    .markdown-section .ai-more { margin: .2rem 0 .6rem; padding: .6rem .9rem; border-radius: 12px; background: rgba(0, 0, 0, .18); }
+    .markdown-section .ai-more summary { cursor: pointer; font-weight: 600; }
+    [data-theme] .markdown-section .ai-more p { margin: .5rem 0; }
+    [data-theme] .markdown-section .ai-box a.ai-link { margin-left: 8px; font-weight: 400; }
   </style>
 </head>
 <body>
@@ -153,16 +167,19 @@
       if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
     }
     document.addEventListener('click', function (ev) {
-      var b = ev.target.closest('[data-copy-sel], [data-copy-file]');
+      var b = ev.target.closest('[data-copy-sel], [data-copy-full]');
       if (!b) return;
       var box = b.closest('.ai-box') || document;
+      var consigne = (box.querySelector('.js-ia-prompt') || {}).innerText || '';
       if (b.hasAttribute('data-copy-sel')) { copyText(box.querySelector(b.getAttribute('data-copy-sel')).innerText.trim(), b); return; }
-      var f = b.getAttribute('data-copy-file');
+      // Version complète, pour une IA qui n'ouvre pas les liens : instructions + consigne (sans le lien)
+      var f = b.getAttribute('data-copy-full');
+      var suite = consigne.trim().replace(/^Lis les instructions sur \S+ et prépare/, 'En suivant les instructions ci-dessus, prépare');
       // fichier local d'abord ; sinon (ouverture en file://) la version publiée
       fetch(f).then(function (r) { if (!r.ok) throw 0; return r.text(); })
         .catch(function () { return fetch(PUBLIC_DOCS + f).then(function (r) { if (!r.ok) throw 0; return r.text(); }); })
-        .then(function (t) { copyText(t, b); })
-        .catch(function () { alert('Lecture impossible : ouvrez la page d\'instructions (bouton « Voir la page ») et copiez son contenu.'); });
+        .then(function (t) { copyText(t.trim() + '\n\n---\n\n# Ma demande\n\n' + suite + '\n\n', b); })
+        .catch(function () { alert('Lecture impossible : ouvrez la page des instructions (lien « voir les instructions ») et copiez son contenu.'); });
     });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/docsify.min.js"></script>

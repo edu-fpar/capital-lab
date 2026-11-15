@@ -889,10 +889,11 @@
   }
 
   /* Instructions complètes pour une IA : la page publiée (à jour), sinon la version embarquée (hors ligne). */
-  function copyAllInstructions() {
+  function copyAllInstructions(consigne) {
+    const demande = '\n\n---\n\n# Ma demande\n\n' + P.iaConsigneSansLien(consigne) + '\n\n';
     fetch('docs/instructions-ia.md').then(r => { if (!r.ok) throw 0; return r.text(); })
       .catch(() => fetch(P.IA_INSTRUCTIONS_URL).then(r => { if (!r.ok) throw 0; return r.text(); }))
-      .then(copyText, () => copyText(P.AI_PROMPT));
+      .then(t => copyText(t.trim() + demande), () => copyText(P.AI_PROMPT.trim() + demande));
   }
 
   function openHelp(which) {
@@ -910,9 +911,17 @@
       </div>
       <div class="help-ai">
         <h3>🤖 Préparer son cours avec une IA</h3>
-        <p>Donnez cette consigne à n'importe quelle IA (ChatGPT, Claude, Gemini, Mistral…) avec votre cours, puis collez sa réponse dans 📚 Scénarios :</p>
-        <div class="help-prompt">${esc(P.IA_CONSIGNE).replace(/\n/g, '<br>')}</div>
-        <div class="btns"><button id="hp-consigne">📋 Copier la consigne</button><button id="hp-all" class="warn">📄 Copier toutes les instructions (IA sans accès web)</button>${doc('ia-et-skill', 'En savoir plus →')}</div>
+        <ol class="help-steps">
+          <li><b>Copiez la consigne</b> (elle contient le lien vers les instructions ; le texte est modifiable) :
+            <div class="help-prompt" id="hp-text" contenteditable="true" spellcheck="false">${esc(P.IA_CONSIGNE)}</div>
+            <button id="hp-consigne" class="big">📋 Copier la consigne</button></li>
+          <li><b>Collez-la dans votre IA</b> (ChatGPT, Claude, Gemini, Mistral…), puis ajoutez votre cours.</li>
+          <li><b>Collez la réponse</b> dans 📚 Scénarios, puis Lancer.</li>
+        </ol>
+        <details class="help-more"><summary>Votre IA ne peut pas ouvrir de lien ?</summary>
+          <p>Copiez la version complète (instructions et consigne en un seul texte), puis ajoutez votre cours.</p>
+          <div class="btns"><button id="hp-all" class="warn">📄 Copier la version complète</button>${doc('ia-et-skill', 'En savoir plus →')}</div>
+        </details>
       </div>
       <h3>📖 Documentation complète</h3>
       <div class="doc-links">
@@ -924,8 +933,8 @@
         ${doc('', '🏠 Accueil de la documentation<small>tout le reste</small>')}
       </div>
       <p class="help-thanks">${P.md(P.HELP_THANKS).replace(/^<p>|<\/p>$/g, '')}</p>`);
-    $('#hp-consigne', c).onclick = () => copyText(P.IA_CONSIGNE);
-    $('#hp-all', c).onclick = copyAllInstructions;
+    $('#hp-consigne', c).onclick = () => copyText($('#hp-text', c).innerText.trim());
+    $('#hp-all', c).onclick = () => copyAllInstructions($('#hp-text', c).innerText);
   }
 
   /* ============================================================ fichiers */
