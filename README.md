@@ -1,6 +1,6 @@
 # Capital Lab — atelier capital & pouvoir
 
-[![Capital Lab en mode cinéma : une pyramide de holdings et une question posée à la salle](capital-lab.png)](https://edu-fpar.github.io/capital-lab/)
+[![Capital Lab en mode libre : un groupe avec filiale, associée, sous-filiale et coentreprise sous pacte, le point de vue de la société mère et l'analyse de la filiale sélectionnée](capital-lab-libre.png)](https://edu-fpar.github.io/capital-lab/)
 
 Outil pédagogique pour visualiser et expliquer les structures de participations entre sociétés :
 on peut être **minoritaire** dans une société et pourtant la **contrôler** via des chaînes de participations,
@@ -19,7 +19,10 @@ Aucune installation : ouvrez `index.html` (double-clic) ou servez le dossier ave
   intérêt économique, minorité de blocage, autocontrôle), point de vue d'un actionnaire, pactes.
   Le **📸 Studio** capture des étapes commentées et les exporte en scénario markdown.
 - **🎬 Cinéma** : déroule un scénario markdown, en **pas à pas** ou en **lecture continue**
-  (rythme réglable). Lien direct : `index.html?scenario=pyramide` ou `index.html?md=chemin/vers/fichier.md`.
+  (rythme réglable), avec des **questions à la salle** et une vue adaptée au téléphone.
+  Lien direct : `?scenario=pyramide&etape=6`, `?scenarios`, ou le bouton 🔗 Partager.
+
+  ![Capital Lab en mode cinéma : une pyramide de holdings et une question posée à la salle](capital-lab.png)
 
 ## Scénarios intégrés
 

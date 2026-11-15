@@ -6,8 +6,8 @@ Il montre notamment comment on peut être **minoritaire en capital** et pourtant
 
 [▶ Ouvrir l'atelier](../index.html ':ignore') — en ligne : **https://edu-fpar.github.io/capital-lab/**, utilisable aussi sur téléphone.
 
-![Mode cinéma : la pyramide de holdings, avec le point de vue de la famille Martin](images/cinema-pyramide-jour.jpg)
-<p class="caption">Le mode cinéma : la pyramide de holdings, étape 3. Chaque entité affiche l'intérêt et le contrôle de la famille Martin.</p>
+![Mode libre : un groupe de sociétés avec pacte, point de vue de la société mère et analyse de la filiale sélectionnée](../capital-lab-libre.png)
+<p class="caption">Le mode libre (nuit) : une coentreprise sous pacte, le point de vue de Mère SA sur chaque entité, et à droite les curseurs et l'analyse de la filiale sélectionnée.</p>
 
 
 ## 🤖 Préparer son cours avec une IA
@@ -33,6 +33,9 @@ Il montre notamment comment on peut être **minoritaire en capital** et pourtant
 | Rythme | libre | pas à pas, ou lecture continue à vitesse réglable |
 
 Les deux modes partagent le même moteur de calcul : contrôle en chaîne, intérêt économique, seuils, autocontrôle, pactes.
+
+![Mode cinéma : la pyramide de holdings, avec le point de vue de la famille Martin](images/cinema-pyramide-jour.jpg)
+<p class="caption">Le mode cinéma (jour) : la pyramide de holdings, étape 3. Le commentaire est à droite ; chaque entité affiche l'intérêt et le contrôle de la famille Martin.</p>
 
 ## Par où commencer ?
 

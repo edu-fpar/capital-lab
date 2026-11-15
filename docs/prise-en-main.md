@@ -39,6 +39,9 @@ En sélectionnant un actionnaire, on voit ce qu'il contrôle et ses intérêts s
 
 Choisissez un actionnaire (bouton « Point de vue » ou liste de la vue d'ensemble) : chaque entité affiche alors **son intérêt économique** et **ses droits de vote / son contrôle** du point de vue de cet actionnaire. Les entités qui ne le concernent pas sont estompées.
 
+![Point de vue de la société mère sur son groupe, avec une coentreprise sous pacte](../capital-lab-libre.png)
+<p class="caption">Point de vue de Mère SA (mode nuit) : intérêt et contrôle sur chaque entité. Le cadre en pointillés regroupe les membres d'un pacte, qui contrôlent ensemble JV Co. Partenaire, qui ne concerne pas Mère SA, est estompé.</p>
+
 ## Option « Contrôle de fait (40 %) »
 
 En haut à droite. Active la présomption de contrôle du Code de commerce : plus de 40 % des voix, sans autre associé au-dessus. Voir [Règles de calcul](regles-de-calcul.md).
