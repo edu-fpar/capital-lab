@@ -466,3 +466,6 @@ details.answer .good { margin: 8px 0 4px; }
 .help-more { margin: 4px 0 2px; padding: 6px 12px; border-radius: 10px; background: rgba(0, 0, 0, .18); }
 .help-more summary { cursor: pointer; font-weight: 600; }
 .help-more p { margin: 6px 0; }
+
+/* paquet SCORM : un seul scénario, sans changement de mode ni bibliothèque */
+body.embed .modes, body.embed #actions-cinema, body.embed #btn-help, body.embed .plan + .hint { display: none !important; }

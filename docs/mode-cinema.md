@@ -26,6 +26,17 @@ L'atelier est en ligne à l'adresse **https://edu-fpar.github.io/capital-lab/**.
 
 Pour un scénario personnel, le lien contient le texte compressé du scénario après le `#` : il n'est envoyé à aucun serveur et fonctionne sans rien publier. Pour un très long scénario, le lien peut devenir trop long pour certaines messageries : publiez plutôt le fichier `.md` et utilisez `?md=`. Dans tous les cas, `&etape=N` choisit l'étape d'arrivée.
 
+## Exporter en SCORM (Moodle)
+
+Le bouton **📦 SCORM** produit un paquet `.zip` à déposer dans Moodle (activité « Paquetage SCORM ») ou dans toute plateforme compatible SCORM. Le paquet contient l'atelier et le scénario affiché, y compris un scénario personnel ou modifié : les élèves le suivent seuls, en pas à pas, sans connexion au site.
+
+- **Version** : SCORM 1.2 (recommandé pour Moodle) ou SCORM 2004 4ᵉ édition.
+- **Achèvement** : l'activité est « terminée » quand l'élève atteint la dernière étape.
+- **Reprise** : en revenant, l'élève reprend à l'étape où il s'était arrêté.
+- **Note** (facultative, si le scénario a des questions à choix) : sur 100, la part des questions où l'élève a cliqué une bonne carte *avant* de révéler la réponse. Seule la première tentative compte.
+
+Dans le paquet, seul le lecteur reste visible : pas de mode libre, de bibliothèque ni de partage. Le paquet se construit à partir des fichiers de l'atelier : depuis un fichier ouvert par double-clic, il les récupère sur le site en ligne.
+
 ## Sur téléphone
 
 L'atelier s'adapte aux écrans étroits. Sur téléphone, il s'ouvre directement sur la bibliothèque des scénarios :

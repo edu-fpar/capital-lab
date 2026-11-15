@@ -11,7 +11,8 @@ P.HELP_LIBRE = `- Glissez une **entité** de la palette sur le canevas, puis tir
 
 P.HELP_CINEMA = `- **📚 Scénarios** : choisir, coller ou déposer un scénario markdown.
 - **→ / Espace** : étape suivante (révèle d'abord la réponse d'une question) ; **←** : précédente.
-- **🔗 Partager** : lien vers une étape ou un scénario. Fonctionne aussi sur téléphone.`;
+- **🔗 Partager** : lien vers une étape ou un scénario. Fonctionne aussi sur téléphone.
+- **📦 SCORM** : paquet .zip pour Moodle ou un autre LMS (achèvement, reprise, note).`;
 
 P.HELP_THANKS = `Merci à **Tao**, dont l'outil imaginé pour montrer à sa classe de droit financier comment on peut contrôler une société tout en y étant minoritaire est à l'origine de ce projet, et à **Yannick**, qui nous a transmis cette idée.`;
 

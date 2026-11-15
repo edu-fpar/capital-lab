@@ -11,6 +11,8 @@ Application statique, sans dépendance ni compilation. Les scripts sont chargés
 | `js/docs.js` | aide intégrée, spécification du format (`P.FORMAT_DOC`), prompt IA |
 | `js/library.js` | scénarios intégrés (`P.LIBRARY`) |
 | `js/app.js` | canevas SVG et animations, interactions, inspecteur, lecteur cinéma, studio, modales |
+| `js/scorm.js` | export SCORM : écriture du zip, manifeste `imsmanifest.xml` (1.2 ou 2004), assemblage du paquet (`P.scormPackage`) |
+| `js/scorm-runtime.js` | chargé seulement dans un paquet SCORM : dialogue avec la plateforme (reprise, achèvement, note) via `window.CapitalLabHost` |
 | `css/app.css` | styles |
 
 ### Principes
@@ -18,6 +20,10 @@ Application statique, sans dépendance ni compilation. Les scripts sont chargés
 - **L'état** (`App.state`) est un objet JSON : `entities`, `links` (`from`, `to`, `capital`, `votes` — `null` = égal au capital), `concerts`, `options`, `view` (point de vue, focus, bulles). Toute modification passe par `App.commit()`, qui relance l'analyse et le rendu.
 - **En mode cinéma**, l'état de l'étape *n* est reconstruit en rejouant les commandes des étapes 0 à *n* (`P.buildState`). Revenir en arrière est donc exact. Les déplacements manuels faits pendant la présentation sont stockés à part (`App.cinePos`, `App.noteOff`) et appliqués après la disposition automatique.
 - **Le rendu** reconstruit le SVG à chaque image tant qu'une animation est en cours ; les positions affichées (`App.disp`) glissent vers les positions cibles.
+
+### Paquet SCORM
+
+`P.scormPackage` relit `index.html` et les fichiers `js/` et `css/` qu'il charge (à côté de la page, sinon sur le site public), ajoute `js/scenario-data.js` (`window.CAPITAL_LAB_EMBED` : markdown, titre, version, note) et `js/scorm-runtime.js` avant `app.js`, et marque `<body>` de la classe `embed`. Au démarrage, `app.js` lit ce scénario au lieu de l'adresse, à l'étape fournie par `CapitalLabHost.startStep`, et appelle `CapitalLabHost.step` / `reveal` à chaque étape et à chaque révélation. Un nouveau fichier chargé par `index.html` est donc embarqué automatiquement.
 
 ## Ajouter un scénario intégré
 

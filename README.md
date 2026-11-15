@@ -21,6 +21,7 @@ Aucune installation : ouvrez `index.html` (double-clic) ou servez le dossier ave
 - **🎬 Cinéma** : déroule un scénario markdown, en **pas à pas** ou en **lecture continue**
   (rythme réglable), avec des **questions à la salle** et une vue adaptée au téléphone.
   Lien direct : `?scenario=pyramide&etape=6`, `?scenarios`, ou le bouton 🔗 Partager.
+  Le bouton **📦 SCORM** exporte le scénario en paquet pour Moodle ou un autre LMS (achèvement, reprise, note).
 
   ![Capital Lab en mode cinéma : une pyramide de holdings et une question posée à la salle](capital-lab.png)
 
@@ -64,6 +65,7 @@ focus H1
 | `js/app.js` | interface : canevas SVG, inspecteur, lecteur cinéma, studio |
 | `js/library.js` | scénarios intégrés |
 | `js/docs.js` | aide, spécification du format, prompt IA |
+| `js/scorm.js`, `js/scorm-runtime.js` | export SCORM et dialogue avec la plateforme dans le paquet |
 
 ## Remerciements
 

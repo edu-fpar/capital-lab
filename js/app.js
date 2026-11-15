@@ -10,6 +10,8 @@
   const NW = 190, NH = 78;
   const PALETTE = ['#2563eb', '#dc2626', '#059669', '#9333ea', '#ea580c', '#0891b2', '#db2777', '#65a30d', '#7c3aed', '#b45309'];
   const LS_KEY = 'capital-lab.libre.v1';
+  /* paquet SCORM exporté : scénario embarqué (js/scenario-data.js) et plateforme (js/scorm-runtime.js) */
+  const EMBED = window.CAPITAL_LAB_EMBED || null, host = window.CapitalLabHost || null;
   const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
   /* téléphone en portrait : disposition empilée (voir css, @media max-width 760px) */
   const mqMobile = window.matchMedia ? window.matchMedia('(max-width: 760px)') : null;
@@ -998,7 +1000,20 @@
     if (changed) $('#side').scrollTop = 0;
     App.schedule();
     syncUrl();
+    notifyHost('step');
   };
+
+  /* informe la plateforme d'apprentissage (paquet SCORM) de la progression */
+  function notifyHost(kind) {
+    const sc = App.scenario;
+    if (!host || !sc || !host[kind]) return;
+    const q = sc.steps[App.step].question;
+    host[kind]({
+      step: App.step, total: sc.steps.length,
+      questions: sc.steps.filter(s => s.question && s.question.choices.some(c => c.correct)).length,
+      correct: q && q.choices.some(c => c.correct) ? App.q.picked != null && !!(q.choices[App.q.picked] || {}).correct : null
+    });
+  }
 
   /* ---- liens profonds : ?scenario=id | ?md=url | #md=texte-encodé, + &etape=N ; ?scenarios ouvre la bibliothèque */
   const PUBLIC_BASE = 'https://edu-fpar.github.io/capital-lab/';
@@ -1059,6 +1074,38 @@
   }
   $('#btn-share').onclick = openShare;
 
+  /* ---- export SCORM : l'atelier et le scénario dans un paquet pour Moodle ou un autre LMS (js/scorm.js) */
+  function openScorm() {
+    if (!App.scenario) { openLibrary(); return; }
+    const sc = App.scenario, nq = sc.steps.filter(s => s.question && s.question.choices.some(c => c.correct)).length;
+    const c = App.modal(`<h2>📦 Exporter en SCORM</h2>
+      <p class="small muted">Un fichier .zip à déposer dans Moodle (activité « Paquetage SCORM ») ou dans une autre plateforme d'apprentissage. Il contient l'atelier et ce scénario : les élèves le suivent seuls, en pas à pas, sans connexion à ce site.</p>
+      <label class="field"><span>Titre dans la plateforme</span><input type="text" id="sc-title" value="${esc(sc.title)}"></label>
+      <label class="field"><span>Version</span><select id="sc-ver"><option value="1.2">SCORM 1.2 (recommandé, Moodle)</option><option value="2004">SCORM 2004 4ᵉ édition</option></select></label>
+      ${nq ? `<label class="chk"><input type="checkbox" id="sc-score" checked> Transmettre une note sur 100 : ${nq > 1 ? `part des ${nq} questions où l'élève choisit` : "100 si l'élève choisit"} une bonne carte avant de révéler la réponse</label>` : ''}
+      <ul class="small muted">
+        <li>Activité <b>terminée</b> quand l'élève atteint la dernière étape (${sc.steps.length}).</li>
+        <li>En revenant, l'élève reprend à l'étape où il s'était arrêté.</li>
+      </ul>
+      <div class="btns"><button class="primary" id="sc-ok">⬇ Télécharger le paquet SCORM</button></div>`, 'narrow');
+    $('#sc-ok', c).onclick = async () => {
+      const b = $('#sc-ok', c), title = $('#sc-title', c).value.trim() || sc.title, version = $('#sc-ver', c).value;
+      b.disabled = true; b.textContent = '⏳ Préparation…';
+      try {
+        const blob = await P.scormPackage({ md: App.scenarioSrc, title, version, score: !!($('#sc-score', c) || {}).checked, publicBase: PUBLIC_BASE });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = 'scorm-' + (P.slug(title).toLowerCase().replace(/_/g, '-') || 'scenario') + '.zip';
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+        App.closeModal(); toast('📦 Paquet SCORM téléchargé');
+      } catch (e) {
+        b.disabled = false; b.textContent = '⬇ Télécharger le paquet SCORM';
+        toast('⚠ Paquet impossible à construire : fichiers de l’atelier inaccessibles (ouvrez l’atelier depuis un serveur web ou en ligne).', 6000);
+      }
+    };
+  }
+  $('#btn-scorm').onclick = openScorm;
+
   const curQuestion = () => App.mode === 'cinema' && App.scenario && App.scenario.steps[App.step] ? App.scenario.steps[App.step].question : null;
 
   /** Révèle la réponse de l'étape question : cartes, explication et commandes « réponse » du canevas. */
@@ -1074,6 +1121,7 @@
     App.fit(true);
     updatePlayer();
     App.schedule();
+    notifyHost('reveal');
   };
 
   /** Contenu de la question : en feuille sur le canevas (écran large) ou dans le texte (téléphone). */
@@ -1445,6 +1493,10 @@
     App.commit({ animate: false });
     updatePlayer();
     requestAnimationFrame(() => App.fit(false));
+    if (EMBED) {   // paquet SCORM : uniquement ce scénario, en mode cinéma
+      App.loadScenario(EMBED.md, null, host ? host.startStep : 0);
+      return;
+    }
     const q = new URLSearchParams(location.search);
     const sid = q.get('scenario'), url = q.get('md');
     const step = Math.max(0, (parseInt(q.get('etape') || q.get('step'), 10) || 1) - 1);
