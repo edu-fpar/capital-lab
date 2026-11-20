@@ -380,7 +380,9 @@
   let saveT;
   function saveLocal() {
     clearTimeout(saveT);
-    saveT = setTimeout(() => { try { localStorage.setItem(LS_KEY, JSON.stringify(App.state)); } catch (e) { /* stockage indisponible */ } }, 300);
+    // l'état est capturé maintenant : dans 300 ms, App.state peut être celui d'un scénario (mode cinéma)
+    const snap = App.state;
+    saveT = setTimeout(() => { try { localStorage.setItem(LS_KEY, JSON.stringify(snap)); } catch (e) { /* stockage indisponible */ } }, 300);
   }
 
   /* ============================================================ interactions canevas */
