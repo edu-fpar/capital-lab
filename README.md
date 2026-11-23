@@ -1,5 +1,7 @@
 # Capital Lab — atelier capital & pouvoir
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24464409.svg)](https://doi.org/10.5281/zenodo.24464409)
+
 [![Capital Lab en mode libre : un groupe avec filiale, associée, sous-filiale et coentreprise sous pacte, le point de vue de la société mère et l'analyse de la filiale sélectionnée](capital-lab-libre.png)](https://edu-fpar.github.io/capital-lab/)
 
 Outil pédagogique pour visualiser et expliquer les structures de participations entre sociétés :
@@ -79,7 +81,7 @@ Merci à **Tao**, dont l'outil imaginé pour montrer à sa classe de droit finan
 
 **Citer cet outil** (bouton *Cite this repository* de GitHub, d'après [CITATION.cff](CITATION.cff)) :
 
-> Parlant, F. (2026). *Capital Lab* [Logiciel pédagogique]. https://github.com/edu-fpar/capital-lab
+> Parlant, F. (2026). *Capital Lab* [Logiciel pédagogique]. Zenodo. https://doi.org/10.5281/zenodo.24464409
 
 Vous l'utilisez en cours ? [Dites-le-moi](https://www.linkedin.com/in/francois-parlant/) : ces retours m'aident à faire connaître et améliorer l'outil.
 
@@ -91,6 +93,6 @@ Vous l'utilisez en cours ? [Dites-le-moi](https://www.linkedin.com/in/francois-p
 
 **How to cite** (GitHub's *Cite this repository* button, from [CITATION.cff](CITATION.cff)):
 
-> Parlant, F. (2026). *Capital Lab* [Educational software]. https://github.com/edu-fpar/capital-lab
+> Parlant, F. (2026). *Capital Lab* [Educational software]. Zenodo. https://doi.org/10.5281/zenodo.24464409
 
 Using it in class? [Let me know](https://www.linkedin.com/in/francois-parlant/): this feedback helps me improve the tool and spread the word.
