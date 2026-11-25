@@ -174,13 +174,20 @@
   };
   /** Toutes les catégories de tous les droits (marqueurs SVG des flèches) */
   P.CATS_ALL = Object.values(P.JURIS).reduce((a, j) => a.concat(j.cats), []);
-  /** Droit en vigueur pour l'affichage (seuils, légende, textes) */
+  /** Traduction des textes d'un droit dans la langue de l'interface (js/juris-i18n.js), s'il en a une */
+  const jurL10n = code => ((P.JURIS_I18N || {})[code] || {})[P.lang] || null;
+  /** Droit en vigueur pour l'affichage (seuils, légende, textes), dans la langue de l'interface */
   P.setJuris = function (code) {
     if (!P.JURIS[code]) code = 'fr';
-    P.juris = code; P.CATS = P.JURIS[code].cats;
+    const L = jurL10n(code);
+    P.juris = code;
+    P.CATS = P.JURIS[code].cats.map(c => (L && L.cats && L.cats[c.key]) ? Object.assign({}, c, { label: L.cats[c.key][0], text: L.cats[c.key][1] }) : c);
     return P.JURIS[code];
   };
-  P.jur = () => P.JURIS[P.juris] || P.JURIS.fr;
+  P.jur = () => {
+    const J = P.JURIS[P.juris] || P.JURIS.fr, L = jurL10n(J.code);
+    return L && L.txt ? Object.assign({}, J, { txt: Object.assign({}, J.txt, L.txt) }) : J;
+  };
   P.setJuris(P.defaultJuris());
   P.category = v => P.CATS.find(c => c.test(v));
 

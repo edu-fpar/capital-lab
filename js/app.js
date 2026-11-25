@@ -96,10 +96,11 @@
     if (EMBED && EMBED.droit && P.JURIS[EMBED.droit]) return EMBED.droit;   // paquet SCORM
     return P.defaultJuris();
   }
-  /** Applique le droit de l'état affiché ; en mode libre, il doit être l'un des droits de la langue de l'interface. */
+  /** Applique le droit de l'état affiché. Le droit appartient au contenu (canevas, scénario), pas à la langue de
+   *  l'interface : changer de langue ne change pas le droit de ce qui est affiché. */
   function applyJuris() {
-    const st = App.state, laws = P.lawsFor(P.lang);
-    if (App.mode === 'libre' && !laws.includes(st.options.droit)) st.options.droit = P.defaultJuris();
+    const st = App.state;
+    if (!P.JURIS[st.options.droit]) st.options.droit = P.defaultJuris();
     P.setJuris(st.options.droit || P.defaultJuris());
     const legend = $('#legend');
     if (legend.dataset.juris && legend.dataset.juris !== P.juris) buildLegend(true);
@@ -109,10 +110,9 @@
     const lab = $('#opt-defacto').closest('label');
     if (lab) lab.hidden = !P.jur().deFacto;
     const sel = $('#opt-droit'); if (!sel) return;
-    const laws = P.lawsFor(P.lang);
-    sel.hidden = laws.length < 2;
-    if (sel.hidden) return;
-    const codes = laws.includes(P.juris) ? laws : laws.concat(P.juris);
+    // tous les droits sont proposés : un canevas ou un scénario garde son droit quelle que soit la langue
+    const codes = Object.keys(P.JURIS);
+    sel.hidden = false;
     if (sel.dataset.codes !== codes.join()) {
       sel.innerHTML = codes.map(c => `<option value="${c}">${P.JURIS[c].flag} ${c.toUpperCase()}</option>`).join('');
       sel.dataset.codes = codes.join();
@@ -686,8 +686,9 @@
       const BK = BLOCKING[P.juris];
       if (BK) {
         const blockers = blocs.filter(b => b.pct > BK.lo && !(u && u.block.id === b.block.id) && b.pct < BK.hi);
-        if (blockers.length) h += `<div class="warnbox">${BK.minority.replace('{names}', blockers.map(b => `<b>${esc(blockLabel(b.block))}</b>`).join(', '))}</div>`;
-        if (u && an.pct(u.block.id, id) < BK.hi) h += `<div class="muted small">${BK.controller}</div>`;
+        const JT = P.jur().txt;   // traduction dans la langue de l'interface, sinon le texte du droit
+        if (blockers.length) h += `<div class="warnbox">${(JT.blockMinority || BK.minority).replace('{names}', blockers.map(b => `<b>${esc(blockLabel(b.block))}</b>`).join(', '))}</div>`;
+        if (u && an.pct(u.block.id, id) < BK.hi) h += `<div class="muted small">${JT.blockController || BK.controller}</div>`;
       }
       const sp = an.supp[id];
       if (sp.total > 0) h += `<div class="warnbox">${t('🔁 <b>Autocontrôle / auto-détention</b> : {v} des droits de vote sont neutralisés ({why}). Les pourcentages effectifs sont calculés sur {base}.', { v: fmt(sp.total), why: P.jur().txt.autocontrol.replace('{name}', esc(e.name)), base: fmt(100 - sp.total) })}</div>`;
@@ -945,13 +946,14 @@
   App.closeModal = () => { $('#modal').hidden = true; };
   $('#modal').addEventListener('click', ev => { if (ev.target.id === 'modal' || ev.target.closest('.close')) App.closeModal(); });
 
-  function openLibrary() {
+  /** Cartes des scénarios d'une langue ; en anglais, un groupe par droit (Royaume-Uni, États-Unis), celui en vigueur d'abord. */
+  function libCards(lang) {
     const card = s => {
       const sc = P.parseScenario(s.md);
       return `<div class="lib-card"><h4>${esc(sc.title)}</h4><p>${esc(sc.description)}</p><span class="small muted">${t('{n} étapes', { n: sc.steps.length })}</span>
         <div class="btns"><button class="primary" data-run="${s.id}">${t('▶ Lancer')}</button><button data-see="${s.id}">📝 Markdown</button><button data-dl="${s.id}" title="${esc(t('Télécharger le fichier .md'))}">⬇</button></div></div>`;
     };
-    const list = langLibrary(), laws = P.lawsFor(P.lang);
+    const list = (P.LIBRARY || []).filter(s => libLang(s) === lang), laws = P.lawsFor(lang);
     let cards;
     if (laws.length > 1) {
       // plusieurs droits pour cette langue (anglais : Royaume-Uni, États-Unis) : un groupe par droit, celui en vigueur d'abord
@@ -964,13 +966,26 @@
       const other = list.filter(s => !laws.includes(libDroit(s)));
       if (other.length) cards += `<div class="lib-grid">${other.map(card).join('')}</div>`;
     } else cards = `<div class="lib-grid">${list.map(card).join('')}</div>`;
-    const c = App.modal(`<h2>${t('📚 Scénarios')}</h2>${cards}
+    return cards;
+  }
+  function openLibrary() {
+    const langs = Object.keys(P.LANGS).filter(l => (P.LIBRARY || []).some(s => libLang(s) === l));
+    const tab = langs.includes(P.lang) ? P.lang : langs[0];
+    // onglets : la langue du scénario et le droit qu'il applique, dans leur propre langue
+    const tabs = langs.length > 1 ? `<div class="lib-tabs" role="tablist">${langs.map(l =>
+      `<button type="button" role="tab" data-tab="${l}" aria-selected="${l === tab}" lang="${l}">${esc(P.LANGS[l])}<small>${esc(P.lawsFor(l).map(c => P.JURIS[c].name).join(' · '))}</small></button>`).join('')}</div>` : '';
+    const c = App.modal(`<h2>${t('📚 Scénarios')}</h2>${tabs}<div id="lib-cards">${libCards(tab)}</div>
       <h3>${t('Votre propre scénario')}</h3>
       <p class="muted small">${t('Collez le markdown fourni par un enseignant ou généré par une IA, ou ouvrez / déposez un fichier .md.')}</p>
       <textarea id="md-input" placeholder="${esc(t('# Mon scénario\n\n## 1. Première étape\nCommentaire…')).replace(/\n/g, '&#10;')}&#10;&#10;\`\`\`scene&#10;${esc(t('personne FAM "Famille"\nsociete A "Alpha SA"\nlien FAM -> A 51%')).replace(/\n/g, '&#10;')}&#10;\`\`\`"></textarea>
       <div class="btns"><button class="primary" id="md-run">${t('▶ Lancer ce scénario')}</button><button id="md-file">${t('📂 Ouvrir un fichier .md')}</button><button id="md-prompt" title="${esc(t('Consigne à donner à une IA avec votre cours'))}">${t('🤖 Consigne pour une IA')}</button><button id="md-spec">${t('📄 Format des scénarios')}</button></div>`);
     c.addEventListener('click', ev => {
       const b = ev.target.closest('button'); if (!b) return;
+      if (b.dataset.tab) {
+        $$('.lib-tabs [data-tab]', c).forEach(x => x.setAttribute('aria-selected', x === b));
+        $('#lib-cards', c).innerHTML = libCards(b.dataset.tab);
+        return;
+      }
       const get = libFind;
       if (b.dataset.run) { App.closeModal(); App.loadScenario(get(b.dataset.run).md, { id: b.dataset.run }); }
       else if (b.dataset.see) openEditor(get(b.dataset.see).md, false);
@@ -1545,7 +1560,35 @@
   };
   /* langue de l'interface (la page est rechargée) et droit applicable (anglais : Royaume-Uni ou États-Unis) */
   const langSel = $('#opt-lang');
-  if (langSel) { langSel.value = P.lang; langSel.onchange = () => P.setLang(langSel.value); }
+  if (langSel) { langSel.value = P.lang; langSel.onchange = () => changeLang(langSel.value); }
+  /** La page est rechargée dans la nouvelle langue : on garde de côté ce qui est affiché (canevas libre,
+   *  scénario en cours, étape, réponse révélée) pour le retrouver tel quel après le rechargement. */
+  const RESTORE_KEY = 'capital-lab.restore';
+  function changeLang(l) {
+    endEdit();
+    const snap = {
+      mode: App.mode,
+      libre: App.mode === 'libre' ? App.state : App.libreState,
+      scenario: App.scenario ? { md: App.scenarioSrc, origin: App.origin, step: App.mode === 'cinema' ? App.step : (App._lastStep || 0), revealed: App.mode === 'cinema' && App.q.revealed, picked: App.q.picked } : null
+    };
+    try { sessionStorage.setItem(RESTORE_KEY, JSON.stringify(snap)); } catch (e) { /* stockage indisponible : on recharge sans */ }
+    P.setLang(l);
+  }
+  /** Après un changement de langue : remet le canevas et le scénario affichés avant le rechargement. */
+  function restoreAfterLang() {
+    let snap = null;
+    try { snap = JSON.parse(sessionStorage.getItem(RESTORE_KEY) || 'null'); sessionStorage.removeItem(RESTORE_KEY); } catch (e) { return false; }
+    if (!snap) return false;
+    if (snap.libre) { App.state = sanitize(snap.libre); App.commit({ animate: false }); }
+    const sc = snap.scenario;
+    if (sc && sc.md) {
+      App.loadScenario(sc.md, sc.origin, sc.step || 0);
+      if (sc.revealed) { App.q.picked = sc.picked; App.reveal(); }
+      if (snap.mode === 'libre') setMode('libre');
+    } else if (snap.mode === 'cinema') setMode('cinema');
+    requestAnimationFrame(() => App.fit(false));
+    return true;
+  }
   const lawSel = $('#opt-droit');
   if (lawSel) lawSel.onchange = () => {
     const d = lawSel.value;
@@ -1625,6 +1668,7 @@
       App.loadScenario(EMBED.md, null, host ? host.startStep : 0);
       return;
     }
+    if (restoreAfterLang()) return;
     const q = new URLSearchParams(location.search);
     const sid = q.get('scenario'), url = q.get('md');
     const step = Math.max(0, (parseInt(q.get('etape') || q.get('step'), 10) || 1) - 1);

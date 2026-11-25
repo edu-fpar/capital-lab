@@ -106,6 +106,12 @@ a:hover { text-decoration: underline; }
 .hsel[hidden] { display: none; }
 .hsel option { background: var(--panel); color: var(--ink); }
 .lib-law { margin: 14px 0 0; font-size: 15px; }
+/* bibliothèque : un onglet par langue */
+.lib-tabs { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0 2px; border-bottom: 1px solid var(--line); }
+.lib-tabs button { border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: none; padding: 7px 14px 6px; font-weight: 700; color: var(--muted); cursor: pointer; text-align: left; }
+.lib-tabs button small { display: block; font-weight: 400; font-size: 11px; }
+.lib-tabs button:hover { color: var(--ink); background: var(--panel-2); }
+.lib-tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
 
 /* ---------------- disposition */
 #main { display: grid; grid-template-columns: 210px 1fr 370px; min-height: 0; }
