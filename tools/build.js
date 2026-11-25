@@ -5,6 +5,8 @@
  *
  *  - docs/format-scenario.md            ← P.FORMAT_DOC (js/docs.js)
  *  - docs/scenarios/<id>.md             ← scénarios de js/library.js
+ *  - docs/en/scenarios/<id>.md, docs/es/scenarios/<id>.md ← js/library-uk.js, library-us.js, library-es.js
+ *  - docs/en/format-scenario.md, docs/es/format-scenario.md ← P.DOCS_I18N.en|es.FORMAT_DOC (js/docs-en.js, docs-es.js)
  *  - skill/scenario-capital-lab/references/format.md, regles-de-calcul.md, exemple.md
  *  - skill/scenario-capital-lab/scripts/lib/model.js, scenario.js (moteur utilisé par verifier.js)
  */
@@ -16,7 +18,10 @@ const root = path.join(__dirname, '..');
 const r = (...p) => path.join(root, ...p);
 global.window = global;
 ['model', 'scenario', 'docs', 'library'].forEach(f => require(r('js', f + '.js')));
+// versions anglaise et espagnole (facultatives : ignorées si absentes)
+['docs-en', 'docs-es', 'library-uk', 'library-us', 'library-es'].forEach(f => { if (fs.existsSync(r('js', f + '.js'))) require(r('js', f + '.js')); });
 const P = global.P;
+const LIB_FR = P.LIBRARY.filter(s => (s.lang || 'fr') === 'fr');
 
 const write = (file, text) => { fs.mkdirSync(path.dirname(file), { recursive: true }); fs.writeFileSync(file, text, 'utf8'); console.log('écrit  ' + path.relative(root, file)); };
 const copy = (from, to) => { fs.mkdirSync(path.dirname(to), { recursive: true }); fs.copyFileSync(from, to); console.log('copié  ' + path.relative(root, to)); };
@@ -27,12 +32,17 @@ const noImages = md => md.replace(/^!\[[^\]]*\]\([^)]*\)\n(<p class="caption">.*
 const regles = noImages(fs.readFileSync(r('docs', 'regles-de-calcul.md'), 'utf8'));
 
 write(r('docs', 'format-scenario.md'), P.FORMAT_DOC);
-P.LIBRARY.forEach(s => write(r('docs', 'scenarios', s.id + '.md'), toFences(s.md)));
+LIB_FR.forEach(s => write(r('docs', 'scenarios', s.id + '.md'), toFences(s.md)));
+['en', 'es'].forEach(l => {
+  P.LIBRARY.filter(s => s.lang === l).forEach(s => write(r('docs', l, 'scenarios', s.id + '.md'), toFences(s.md)));
+  const D = (P.DOCS_I18N || {})[l];
+  if (D && D.FORMAT_DOC) write(r('docs', l, 'format-scenario.md'), D.FORMAT_DOC);
+});
 
 const skill = r('skill', 'scenario-capital-lab');
 write(path.join(skill, 'references', 'format.md'), P.FORMAT_DOC);
 write(path.join(skill, 'references', 'regles-de-calcul.md'), regles);
-write(path.join(skill, 'references', 'exemple.md'), toFences(P.LIBRARY.find(s => s.id === 'pyramide').md));
+write(path.join(skill, 'references', 'exemple.md'), toFences(LIB_FR.find(s => s.id === 'pyramide').md));
 /* Page d'instructions pour n'importe quelle IA (lisible par URL) : mission + format + règles + exemple.
  * C'est la version « sans outils » de la skill : l'IA ne peut pas lancer le vérificateur, elle refait les calculs. */
 const IA_INTRO = `# Instructions pour une IA : créer un scénario Capital Lab
@@ -62,7 +72,7 @@ L'enseignant te fournit un support de cours (texte, PDF, diapositives, notes, ca
 write(r('docs', 'instructions-ia.md'), IA_INTRO + P.FORMAT_DOC.replace(/^# /, '# Annexe 1 — ') + '\n\n---\n\n' +
   regles.replace(/^# /, '# Annexe 2 — ') + '\n\n---\n\n' +
   '# Annexe 3 — Exemple complet\n\nUn scénario réel de l\'atelier (la pyramide de holdings), avec une étape question :\n\n````markdown\n' +
-  toFences(P.LIBRARY.find(s => s.id === 'pyramide').md).trim() + '\n````\n');
+  toFences(LIB_FR.find(s => s.id === 'pyramide').md).trim() + '\n````\n');
 
 copy(r('js', 'model.js'), path.join(skill, 'scripts', 'lib', 'model.js'));
 copy(r('js', 'scenario.js'), path.join(skill, 'scripts', 'lib', 'scenario.js'));

@@ -93,6 +93,19 @@ a:hover { text-decoration: underline; }
 .actions[hidden] { display: none; }
 .actions.right { margin-left: auto; }
 .opt { display: flex; align-items: center; gap: 5px; font-size: 13px; color: var(--muted); cursor: pointer; }
+.opt[hidden] { display: none; }
+/* langue de l'interface et droit applicable */
+.hsel {
+  border: 1px solid var(--line); background: var(--panel); border-radius: 8px; padding: 4px 6px; cursor: pointer;
+  font-size: 12.5px; font-weight: 600; color: var(--ink); transition: background .12s, border-color .12s;
+}
+.hsel:hover { background: var(--accent-soft); border-color: var(--accent-line); }
+.hsel:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.hsel:disabled { opacity: .55; cursor: default; }
+.hsel:disabled:hover { background: var(--panel); border-color: var(--line); }
+.hsel[hidden] { display: none; }
+.hsel option { background: var(--panel); color: var(--ink); }
+.lib-law { margin: 14px 0 0; font-size: 15px; }
 
 /* ---------------- disposition */
 #main { display: grid; grid-template-columns: 210px 1fr 370px; min-height: 0; }
@@ -383,6 +396,7 @@ details.answer .good { margin: 8px 0 4px; }
   .modes button { padding: 4px 10px; }
   .actions { gap: 4px; }
   .actions button { padding: 4px 8px; }
+  .hsel { padding: 3px 4px; font-size: 12px; }
 
   /* cinéma : schéma en haut, explications en bas (ou l'un des deux seul) */
   body.cinema #main { grid-template-columns: 1fr; grid-template-rows: minmax(0, 46fr) minmax(0, 54fr); }
@@ -468,4 +482,4 @@ details.answer .good { margin: 8px 0 4px; }
 .help-more p { margin: 6px 0; }
 
 /* paquet SCORM : un seul scénario, sans changement de mode ni bibliothèque */
-body.embed .modes, body.embed #actions-cinema, body.embed #btn-help, body.embed .plan + .hint { display: none !important; }
+body.embed .modes, body.embed #actions-cinema, body.embed #btn-help, body.embed .plan + .hint, body.embed .hsel { display: none !important; }

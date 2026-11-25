@@ -1,0 +1,1288 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Capital Lab – Visite guidée</title>
+<meta name="description" content="Capital Lab en une minute : contrôler une société en étant minoritaire, le mode cinéma, le mode libre et la préparation d'un scénario avec une IA.">
+<link rel="canonical" href="https://edu-fpar.github.io/capital-lab/intro.html">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 6 94 50 50 94 6 50z' fill='%234f46e5'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="intro/kit/anim.css">
+<style>
+ /* ================= page de présentation (autour de l'animation) =================
+    Couleurs reprises de css/app.css (jour / nuit) pour rester dans l'identité de l'application. */
+ :root { --pg-bg: #f3f5fa; --pg-surface: #fff; --pg-surface2: #f8fafc; --pg-line: #e2e8f0; --pg-ink: #1e293b; --pg-muted: #64748b;
+  --pg-accent: #4f46e5; --pg-accent-soft: #eef2ff; --pg-ok: #15803d; --pg-ok-soft: #ecfdf5; color-scheme: light; }
+ @media (prefers-color-scheme: dark) { :root { --pg-bg: #0b1120; --pg-surface: #141c2f; --pg-surface2: #1a2338; --pg-line: #2a3550; --pg-ink: #e2e8f0; --pg-muted: #94a3b8;
+  --pg-accent: #818cf8; --pg-accent-soft: #252a4d; --pg-ok: #4ade80; --pg-ok-soft: #12291f; color-scheme: dark; } }
+ [hidden] { display: none !important; }
+ html, body { margin: 0; }
+ body { background: var(--pg-bg); color: var(--pg-ink); font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+ a { color: var(--pg-accent); }
+ :focus-visible { outline: 3px solid var(--pg-accent); outline-offset: 2px; border-radius: 6px; }
+ .wrap { max-width: 1180px; margin: 0 auto; padding: 0 20px; }
+ .pg-top { background: var(--pg-surface); border-bottom: 1px solid var(--pg-line); }
+ .pg-top .wrap { display: flex; align-items: center; gap: 14px; min-height: 68px; flex-wrap: wrap; padding-block: 8px; }
+ .pg-brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; margin-right: auto; }
+ .pg-logo { width: 42px; height: 42px; border-radius: 11px; background: linear-gradient(145deg, #a5b4fc, #6366f1 55%, #4338ca); display: grid; place-items: center; flex: none; }
+ .pg-logo svg { width: 22px; height: 22px; }
+ .pg-brand b { display: block; font-size: 18px; }
+ .pg-brand small { display: block; color: var(--pg-muted); font-size: 13px; }
+ .pg-langs { display: flex; border: 1px solid var(--pg-line); border-radius: 8px; overflow: hidden; }
+ .pg-langs button { border: 0; background: transparent; padding: 6px 11px; cursor: pointer; font: 600 14px system-ui; color: var(--pg-muted); }
+ .pg-langs button[aria-pressed="true"] { background: var(--pg-accent); color: #fff; }
+ .pg-btn { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--pg-line); background: var(--pg-surface); border-radius: 8px; padding: 8px 14px;
+  font: 600 15px system-ui, sans-serif; text-decoration: none; color: var(--pg-ink); cursor: pointer; }
+ .pg-btn.primary { background: var(--pg-accent); border-color: var(--pg-accent); color: #fff; }
+ @media (prefers-color-scheme: dark) { .pg-btn.primary, .pg-langs button[aria-pressed="true"] { color: #0b1120; } }
+ .pg-btn svg { width: 18px; height: 18px; }
+ .pg-hero { padding: 34px 20px 18px; }
+ .pg-hero h1 { margin: 0; font-size: clamp(28px, 4vw, 40px); letter-spacing: -.02em; line-height: 1.15; }
+ .pg-hero p { color: var(--pg-muted); max-width: 780px; margin: 8px 0 0; }
+ .pg-blk { padding: 44px 0 8px; }
+ .pg-blk h2 { margin: 0; font-size: 26px; letter-spacing: -.01em; }
+ .pg-blk .wrap > p { color: var(--pg-muted); margin: 6px 0 20px; max-width: 780px; }
+ .pg-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+ .pg-card { background: var(--pg-surface); border: 1px solid var(--pg-line); border-radius: 12px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+ .pg-card h3 { margin: 0; font-size: 18px; display: flex; align-items: center; gap: 10px; }
+ .pg-card h3 span { width: 32px; height: 32px; border-radius: 9px; background: var(--pg-accent-soft); display: grid; place-items: center; flex: none; font-size: 17px; }
+ .pg-card p { margin: 0; color: var(--pg-muted); font-size: 15px; }
+ .pg-card .pg-btn { margin-top: auto; align-self: flex-start; font-size: 14px; padding: 6px 12px; }
+ .pg-note { font-size: 14px; color: var(--pg-muted); }
+ .pg-foot { padding: 40px 0; color: var(--pg-muted); font-size: 14px; }
+ .pg-foot .wrap { display: flex; gap: 16px; justify-content: space-between; flex-wrap: wrap; border-top: 1px solid var(--pg-line); padding-top: 18px; }
+
+ /* lecteur du kit : aux couleurs de Capital Lab, sans les commandes de fabrication (format, coulisses), sauf ?dev=1 */
+ .ap { --apa: #4f46e5; --aps: #eef2ff; }
+ @media (prefers-color-scheme: dark) { .ap { --apb: #141c2f; --apl: #2a3550; --apt: #e2e8f0; --apm: #94a3b8; --apa: #818cf8; --aps: #252a4d; } }
+ .ap-view { background: #060a17; box-shadow: 0 14px 40px rgba(15, 23, 42, .3); }
+ .ap-big { background: rgba(79, 70, 229, .92); }
+ body:not(.dev) .ap-seg, body:not(.dev) .ap [data-act="dbg"], body:not(.dev) .ap-dbg { display: none !important; }
+ .ap-end { gap: 12px; flex-wrap: wrap; }
+ .ap-end .pg-btn { font-size: 17px; padding: 12px 20px; }
+ .ap-end .ap-btn { font-size: 17px; padding: 12px 20px; }
+
+ /* mode intégré (?embed=app) : ouverte par l'application dans une fenêtre, à la première visite ou par le bouton 🎬 Intro */
+ .pg-embedbar { display: none; }
+ body.embed { background: #060a17; color: #e2e8f0; min-height: 100vh; }
+ body.embed .pg-top, body.embed .pg-hero, body.embed .pg-blk, body.embed .pg-foot { display: none !important; }
+ body.embed .pg-embedbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; }
+ body.embed .pg-embedbar .pg-brand small { color: #94a3b8; }
+ body.embed .ap { --apb: #141c2f; --apl: #2a3550; --apt: #e2e8f0; --apm: #94a3b8; --apa: #818cf8; }
+ .pg-embed-r { display: flex; align-items: center; gap: 10px; }
+ body.embed .pg-langs { border-color: rgba(255,255,255,.25); }
+ body.embed .pg-langs button { color: #94a3b8; }
+ body.embed .pg-langs button[aria-pressed="true"] { background: #818cf8; color: #0b1120; }
+ .pg-skip { display: inline-flex; align-items: center; gap: 8px; border: 1px solid rgba(255,255,255,.3); background: rgba(255,255,255,.08); color: #fff;
+  border-radius: 8px; padding: 8px 14px; font: 600 15px system-ui, sans-serif; cursor: pointer; }
+ .pg-skip svg { width: 16px; height: 16px; }
+ @media (max-width: 640px) { .pg-top .pg-btn span { display: none; } }
+ /* rendu (?render=1 : planche contact, export vidéo) : l'animation seule */
+ .anim-render .pg-top, .anim-render .pg-hero, .anim-render .pg-blk, .anim-render .pg-foot, .anim-render .pg-embedbar { display: none !important; }
+ .anim-render .wrap { max-width: none; padding: 0; }
+
+ /* ================= thème Capital Lab (couleurs du mode nuit de l'application) ================= */
+ .anim {
+  --bg1: #060a17; --bg2: #191d48; --glow: 129, 140, 248;
+  --ink: #eef2ff; --soft: #c7d2fe; --muted: #94a3b8;
+  --accent: #6366f1; --accent2: #a5b4fc; --pur: #8b5cf6; --ok: #16a34a; --okL: #4ade80; --warn: #fbbf24;
+  /* application */
+  --a-bg: #0b1120; --a-panel: #141c2f; --a-panel2: #1a2338; --a-ink: #e2e8f0; --a-muted: #94a3b8; --a-line: #2a3550;
+  --a-accent: #818cf8; --a-soft: #252a4d; --a-node: #182136; --a-dot: #263149;
+  --c-green: #22c55e; --c-orange: #f97316; --c-grey: #8b95a8; --c-blue: #3b82f6;
+ }
+ .anim .k-logo { background: linear-gradient(145deg, #a5b4fc, #6366f1 55%, #4338ca); }
+ .anim .k-logo svg { width: 52%; height: 52%; filter: drop-shadow(0 4px 8px rgba(30,27,75,.45)); }
+ .anim .k-pill { background: var(--accent); }
+ .anim .k-pill.is-green { background: #15803d; } .anim .k-pill.is-amber { background: #f59e0b; }
+ .anim .k-stat b { background: linear-gradient(#e0e7ff, #a5b4fc); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+ /* effets propres à cette animation (le moteur règle --p) */
+ .fx-ring { stroke-dasharray: 1 1; stroke-dashoffset: calc(1 - .133 * var(--p, 0)); }
+ .fx-half { transform-origin: left center; scale: calc(1 - .49 * var(--p, 0)) 1; }
+ .fx-move { left: calc(var(--x) + var(--p, 0) * var(--mx, 0%)) !important; top: calc(var(--y) + var(--p, 0) * var(--my, 0%)) !important; }
+ .fx-spin { rotate: calc((1 - var(--p, 1)) * -90deg); opacity: clamp(0, var(--p, 1), 1); scale: calc(.6 + .4 * var(--p, 1)); }
+ .fx-fill { transform-origin: left center; scale: var(--p, 0) 1; }
+
+ /* ================= 1. accroche ================= */
+ .s-hook { place-content: center; justify-items: center; text-align: center; gap: .6em; }
+ .ring { position: relative; width: 12em; height: 12em; margin: .5em 0 .2em; }
+ .ring svg { width: 100%; height: 100%; rotate: -90deg; overflow: visible; }
+ .ring .trk { fill: none; stroke: rgba(255,255,255,.1); stroke-width: 9; }
+ .ring .arc { fill: none; stroke: url(#ringGrad); stroke-width: 9; stroke-linecap: round; filter: drop-shadow(0 0 10px rgba(var(--glow), .8)); }
+ .ring .num { position: absolute; inset: 0; display: grid; place-content: center; }
+ .ring .num b { font-size: 3.6em; font-weight: 800; letter-spacing: -.03em; line-height: 1; font-variant-numeric: tabular-nums; }
+ .ring .num small { color: var(--soft); font-size: 1em; font-weight: 600; }
+ .ring .crown { position: absolute; left: 76%; top: -4%; font-size: 2.6em; rotate: 22deg; filter: drop-shadow(0 6px 14px rgba(251,191,36,.55)); }
+ .s-hook .k-h2 { max-width: 20em; text-wrap: balance; }
+ .anim[data-format="9x16"] .ring { width: 12.5em; height: 12.5em; }
+ .anim[data-format="1x1"] .ring { width: 10em; height: 10em; }
+
+ /* ================= 2. titre ================= */
+ .s-title .k-h1 { font-size: 3.6em; background: linear-gradient(90deg, #fff, #c7d2fe 60%, #a5b4fc); -webkit-background-clip: text; background-clip: text; color: transparent; padding-bottom: .05em; }
+
+ /* ================= nœuds, liens et pourcentages (communs aux schémas) ================= */
+ .cl-pos { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); z-index: 2; }
+ .cl-node { width: 11em; background: var(--a-node); color: var(--a-ink); border: .13em solid #3a4560; border-radius: .7em; padding: .55em .75em .6em;
+  display: grid; gap: .12em; text-align: left; box-shadow: 0 .6em 1.4em rgba(0,0,0,.35); font-size: 1em; line-height: 1.25; }
+ .cl-node b { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+ .cl-node b i { font-style: normal; margin-right: .3em; }
+ .cl-node small { color: var(--a-muted); font-size: .8em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+ .cl-node em { font-style: normal; color: #60a5fa; font-size: .8em; font-weight: 600; white-space: nowrap; }
+ .cl-node em.g { color: #4ade80; }
+ .cl-node.is-blue { border-color: var(--c-blue); box-shadow: 0 0 0 .08em rgba(59,130,246,.35), 0 .6em 1.4em rgba(0,0,0,.35); }
+ .cl-node.is-dim { border-color: #2a3346; background: #131a2b; }
+ .cl-node.is-dim > * { opacity: .5; }
+ .cl-ring { position: absolute; inset: -.42em; border-radius: 1em; border: .2em solid #d97706; pointer-events: none; }
+ .cl-sel { position: absolute; inset: -.3em; border-radius: .9em; border: .16em dashed var(--a-accent); box-shadow: 0 0 1.2em rgba(129,140,248,.55); pointer-events: none; }
+ .cl-links { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; z-index: 1; }
+ .cl-link { stroke-width: .2em; stroke-linecap: round; fill: none; }
+ .cl-link.is-green { stroke: var(--c-green); } .cl-link.is-orange { stroke: var(--c-orange); } .cl-link.is-grey { stroke: var(--c-grey); stroke-width: .12em; }
+ .cl-link.is-chain { stroke-width: .5em; stroke-opacity: .85; }
+ .cl-head.is-green { fill: var(--c-green); } .cl-head.is-orange { fill: var(--c-orange); } .cl-head.is-grey { fill: var(--c-grey); }
+ .cl-pct { position: absolute; z-index: 3; transform: translate(-50%, -50%); padding: .08em .55em; border-radius: 999px; font-size: .78em; font-weight: 700; white-space: nowrap;
+  background: var(--a-bg); color: var(--a-ink); border: .14em solid var(--c-grey); }
+ .cl-pct.is-green { border-color: var(--c-green); } .cl-pct.is-orange { border-color: var(--c-orange); }
+ .cl-note { position: absolute; z-index: 4; transform: translate(-50%, -50%); width: 10em; padding: .45em .7em; border-radius: .6em; font-size: .78em; font-weight: 600; line-height: 1.3;
+  background: #2e2615; color: #fde68a; border: .1em solid #6b4e1a; box-shadow: 0 .5em 1.2em rgba(0,0,0,.4); }
+
+ /* ================= 3. pyramide ================= */
+ .s-pyr { grid-template-columns: 1fr 1.05fr; gap: 4%; align-items: center; }
+ .pyr { position: relative; height: 100%; font-size: .86em; }
+ .pyr .cl-node { width: 13.5em; }
+ .pyr .cl-pos { --x: 50%; }
+ #p-fam { --y: 8%; } #p-h1 { --y: 29%; } #p-h2 { --y: 50%; } #p-alpha { --y: 71%; } #p-beta { --y: 92%; }
+ .pyr-side { display: grid; gap: .8em; align-content: center; }
+ .gauge { display: grid; gap: .35em; }
+ .gauge-h { display: flex; justify-content: space-between; align-items: baseline; gap: 1em; }
+ .gauge-h span { color: var(--soft); font-weight: 600; font-size: .85em; }
+ .gauge-v { display: grid; justify-items: end; } .gauge-v > b { grid-area: 1 / 1; font-size: 1.9em; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+ .gauge-v.amber > b { color: #fdba74; }
+ .track { height: .7em; border-radius: 999px; background: rgba(255,255,255,.1); overflow: hidden; }
+ .track .h { width: 100%; height: 100%; }
+ .track .fill { display: block; width: 100%; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #f97316, #fbbf24); }
+ .track .fill.green { background: linear-gradient(90deg, #16a34a, #4ade80); }
+ .crowns { display: flex; gap: .4em; flex-wrap: wrap; }
+ .crowns .k-pill { font-size: .72em; }
+ .moral { font-size: 1.15em; font-weight: 700; color: #fff; line-height: 1.3; padding: .2em .1em; }
+ .anim[data-format="9x16"] .s-pyr { grid-template-columns: 1fr; grid-template-rows: 1.25fr auto; gap: 1.2em; }
+ .anim[data-format="9x16"] .pyr { font-size: .62em; }
+ .anim[data-format="9x16"] .pyr-side { font-size: .85em; }
+ .anim[data-format="1x1"] .s-pyr { grid-template-columns: 1fr 1.15fr; font-size: .9em; }
+ .anim[data-format="1x1"] .pyr { font-size: .66em; }
+ .anim[data-format="1x1"] .pyr .cl-node { width: 12em; }
+
+ /* ================= maquette de l'application (scènes 4 et 5) ================= */
+ .g-app { grid-template-rows: auto minmax(0, 1fr); grid-template-columns: minmax(0, 1fr); gap: .7em; min-height: 0; }
+ .hd { display: flex; align-items: baseline; gap: .3em 1em; flex-wrap: wrap; }
+ .hd .k-h2 { font-size: 1.45em; }
+ .anim[data-format="9x16"] .hd { display: grid; gap: .3em; }
+ .anim[data-format="9x16"] .hd .k-h2 { font-size: 1.35em; }
+ .anim[data-format="1x1"] .hd .k-h2 { font-size: 1.25em; }
+ .cl-app { position: relative; min-height: 0; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-columns: minmax(0, 1fr); overflow: hidden; border-radius: 18px;
+  background: var(--a-bg); color: var(--a-ink); border: 1px solid #2f3b5c; font-size: .72em; line-height: 1.4;
+  box-shadow: 0 30px 80px rgba(0,0,0,.55), 0 0 0 1px rgba(129,140,248,.08); }
+ .anim[data-format="9x16"] .cl-app { font-size: .56em; }
+ .anim[data-format="1x1"] .cl-app { font-size: .62em; }
+ .cl-top { display: flex; align-items: center; gap: .6em; padding: .55em .9em; border-bottom: 1px solid var(--a-line); background: #0e1528; white-space: nowrap; overflow: hidden; min-width: 0; }
+ .cl-brand { font-weight: 800; font-size: 1.1em; display: flex; align-items: center; gap: .45em; }
+ .cl-brand i { color: var(--a-accent); font-style: normal; }
+ .cl-brand small { color: var(--a-muted); font-weight: 400; font-size: .75em; }
+ .cl-modes { position: relative; display: grid; grid-auto-flow: column; background: #070b16; border-radius: .6em; padding: .2em; }
+ .cl-modes span { position: relative; z-index: 1; padding: .3em .8em; font-weight: 600; }
+ .cl-modes .hl { position: absolute; top: .2em; bottom: .2em; width: calc(50% - .2em); border-radius: .45em; background: var(--a-soft); z-index: 0; }
+ .cl-modes .hl.l { left: .2em; } .cl-modes .hl.r { right: .2em; }
+ .cl-modes .on { color: var(--a-accent); }
+ .cl-tools { display: grid; flex: 1; min-width: 0; }
+ .cl-tools > div { grid-area: 1 / 1; display: flex; gap: .4em; align-items: center; }
+ .cl-b { border: 1px solid var(--a-line); background: var(--a-panel); border-radius: .5em; padding: .3em .7em; font-weight: 600; font-size: .92em; }
+ .cl-b.pri { background: var(--a-accent); color: #0b1120; border-color: var(--a-accent); }
+ .cl-help { margin-left: auto; }
+ .anim[data-format="9x16"] .cl-b .lbl, .anim[data-format="1x1"] .cl-b .lbl { display: none; }
+ .anim[data-format="9x16"] .cl-brand small, .anim[data-format="1x1"] .cl-brand small { display: none; }
+ .cl-body { display: grid; grid-template-columns: minmax(0, 1fr) 35%; min-height: 0; }
+ .anim[data-format="1x1"] .cl-body { grid-template-columns: minmax(0, 1fr) 41%; }
+ .anim[data-format="9x16"] .cl-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: 52% minmax(0, 1fr); }
+ .anim[data-format="9x16"] .s-fait .cl-body { grid-template-rows: 62% minmax(0, 1fr); }
+ .anim[data-format="9x16"] .cl-b.x, .anim[data-format="1x1"] .cl-b.x { display: none; }
+ .cl-canvas { position: relative; overflow: hidden; min-height: 0;
+  background: radial-gradient(var(--a-dot) 1.2px, transparent 1.4px) 0 0 / 22px 22px, var(--a-bg); }
+ .cl-panel { position: relative; display: grid; min-height: 0; overflow: hidden; background: var(--a-panel); border-left: 1px solid var(--a-line); padding: 1em 1.2em; }
+ .anim[data-format="9x16"] .cl-panel { border-left: 0; border-top: 1px solid var(--a-line); }
+ .cl-panel > .pg { grid-area: 1 / 1; display: grid; gap: .65em; align-content: start; min-height: 0; }
+ .cl-panel h3 { margin: 0; font-size: 1.3em; line-height: 1.25; }
+ .cl-panel p { color: #cbd5e1; }
+ .cl-panel strong { color: #fff; }
+ .cl-sc { display: flex; justify-content: space-between; gap: 1em; color: var(--a-accent); font-weight: 700; border-bottom: 1px solid var(--a-line); padding-bottom: .5em; }
+ .cl-sc span:last-child { display: grid; white-space: nowrap; color: var(--a-muted); font-weight: 500; } .cl-sc span:last-child > span { grid-area: 1 / 1; text-align: right; }
+ .cl-bot { display: flex; align-items: center; gap: .6em; padding: .55em .9em; border-top: 1px solid var(--a-line); background: #0e1528; }
+ .cl-segs { flex: 1; display: grid; grid-template-columns: repeat(6, 1fr); gap: .3em; }
+ .cl-segs i { height: .45em; border-radius: 999px; background: var(--a-line); overflow: hidden; display: block; }
+ .cl-segs i.on::before, .cl-segs i .f { content: ""; display: block; height: 100%; background: var(--a-accent); border-radius: 999px; }
+ .cl-count { display: grid; color: var(--a-muted); font-weight: 600; } .cl-count > span { grid-area: 1 / 1; }
+ .cl-pov { position: absolute; z-index: 5; left: 50%; top: .8em; transform: translateX(-50%); white-space: nowrap; padding: .35em 1em; border-radius: 999px;
+  background: var(--a-panel); border: 1px solid #3a4670; font-size: .9em; }
+ .cl-toast { position: absolute; z-index: 6; left: 50%; top: 3.4em; margin-left: -9.5em; width: 19em; padding: .6em .9em; border-radius: .7em; background: #e2e8f0; color: #0b1120; font-weight: 600;
+  box-shadow: 0 .8em 2em rgba(0,0,0,.5); }
+
+ /* question à la salle */
+ .qtag { justify-self: start; padding: .15em .7em; border-radius: 999px; background: var(--a-soft); color: var(--a-accent); font-weight: 700; font-size: .9em; }
+ .ans { display: grid; gap: .45em; }
+ .an { position: relative; display: flex; gap: .65em; align-items: flex-start; padding: .55em .7em; border: 1px solid var(--a-line); border-radius: .7em; background: var(--a-panel2); }
+ .an > b { flex: none; width: 1.7em; height: 1.7em; border-radius: 50%; display: grid; place-items: center; background: var(--a-accent); color: #0b1120; font-size: .85em; }
+ .an .pick { position: absolute; inset: -1px; border-radius: .7em; border: .15em solid var(--a-accent); box-shadow: 0 0 1em rgba(129,140,248,.45); }
+ .an .good { position: absolute; inset: -1px; border-radius: .7em; border: .15em solid #4ade80; background: rgba(74,222,128,.12); }
+ .an .dim { position: absolute; inset: -1px; border-radius: .7em; background: rgba(11,17,32,.62); }
+ .an .tick { position: absolute; right: -.5em; top: -.6em; width: 1.6em; height: 1.6em; border-radius: 50%; display: grid; place-items: center; background: #22c55e; color: #052e16; font-weight: 900; }
+ .why { color: #86efac !important; font-size: .9em; }
+ .reveal { justify-self: start; }
+
+ /* palette du mode libre */
+ .cl-palette { position: absolute; z-index: 5; left: .8em; right: .8em; bottom: .8em; display: flex; gap: .5em; padding: .45em; border-radius: .8em; background: rgba(20,28,47,.92); border: 1px solid var(--a-line); }
+ .cl-palette span { flex: 1; display: flex; align-items: center; justify-content: center; gap: .35em; padding: .45em .3em; border-radius: .55em; background: var(--a-panel2); border: 1px solid var(--a-line); font-weight: 700; white-space: nowrap; font-size: .92em; }
+ .anim[data-format="9x16"] .cl-palette span .lbl, .anim[data-format="1x1"] .cl-palette span .lbl { display: none; }
+ .ov-h { color: var(--a-muted); font-weight: 700; letter-spacing: .06em; text-transform: uppercase; font-size: .8em; }
+ .ov-who { color: var(--a-accent); font-weight: 700; font-size: 1.1em; }
+ .ov-sel { border: 1px solid var(--a-accent); border-radius: .6em; padding: .45em .8em; color: var(--a-accent); background: var(--a-panel2); }
+ .pov-t { width: 100%; border-collapse: collapse; font-size: .92em; }
+ .pov-t th { color: var(--a-muted); font-weight: 500; text-align: right; padding: .3em .4em; border-bottom: 1px solid var(--a-line); }
+ .pov-t th:first-child, .pov-t td:first-child { text-align: left; }
+ .pov-t td { text-align: right; padding: .35em .4em; border-bottom: 1px solid #222c42; }
+ .pov-t td:first-child span { background: var(--a-soft); color: var(--a-accent); font-weight: 700; padding: .1em .45em; border-radius: .35em; }
+ .pov-box { border: 1px solid var(--a-line); border-radius: .7em; padding: .7em .8em; background: #111829; display: grid; gap: .3em; }
+
+ /* scène 4 : positions */
+ #m-marie { --x: 24%; --y: 36%; } #m-paul { --x: 74%; --y: 36%; } #m-gamma { --x: 49%; --y: 78%; }
+ #m-np { left: 74%; top: 13%; } #m-nm { left: 24%; top: 13%; }
+ 
+ /* scène 5 : positions */
+ .s-fait .cl-node { width: 10.5em; font-size: .92em; }
+ #f-lef { --x: 50%; --y: 26%; } #f-orion { --x: 14%; --y: 49%; --mx: 4%; --my: 26%; } #f-kappa { --x: 38%; --y: 49%; } #f-sirius { --x: 62%; --y: 49%; } #f-pub { --x: 86%; --y: 49%; } #f-zeta { --x: 50%; --y: 71%; }
+ .anim[data-format="9x16"] .s-fait .cl-node { width: 8.4em; font-size: .9em; }
+ .anim[data-format="1x1"] .s-fait .cl-node { width: 7.6em; font-size: .8em; }
+ .anim[data-format="1x1"] #f-orion { --x: 13%; } .anim[data-format="1x1"] #f-pub { --x: 87%; }
+
+ /* ================= 6. aide / IA ================= */
+ .s-help { grid-template-columns: 1.3fr 1fr; gap: 3%; align-items: center; }
+ .help { background: var(--a-panel); color: var(--a-ink); border: 1px solid #2f3b5c; border-radius: 18px; padding: .9em 1em 1em; display: grid; gap: .6em; font-size: .74em; line-height: 1.45;
+  box-shadow: 0 30px 80px rgba(0,0,0,.55); }
+ .help-t { display: flex; justify-content: space-between; align-items: center; font-size: 1.5em; font-weight: 800; }
+ .help-t span:last-child { color: var(--a-muted); font-weight: 400; }
+ .help-ai { border-radius: 14px; padding: 1em 1.2em 1.2em; background: linear-gradient(135deg, #3b2a8f, #4c1d95 45%, #3730a3); border: 1px solid #6d5dd3; display: grid; gap: .7em; }
+ .help-ai h4 { margin: 0; font-size: 1.25em; }
+ .st { display: grid; grid-template-columns: 1.8em 1fr; gap: .6em; align-items: start; }
+ .st > b { width: 1.8em; height: 1.8em; border-radius: 50%; display: grid; place-items: center; background: #fbbf24; color: #3b2300; font-size: .9em; }
+ .st > div { display: grid; gap: .5em; }
+ .prompt { min-height: 6.2em; white-space: pre-wrap; border: 1.5px dashed rgba(255,255,255,.35); border-radius: 10px; padding: .7em .9em; background: rgba(15,10,50,.45); color: #ede9fe; font-size: .95em; }
+ .copy { justify-self: start; background: #fff; color: #1e1b4b; font-weight: 700; border-radius: 9px; padding: .45em 1em; display: flex; gap: .45em; }
+ .copied { justify-self: start; display: flex; gap: .45em; align-items: center; padding: .3em .8em; border-radius: 999px; background: #dcfce7; color: #166534; font-weight: 700; font-size: .9em; }
+ .ais { display: flex; gap: .4em; flex-wrap: wrap; }
+ .ais span { padding: .15em .7em; border-radius: 999px; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.25); font-weight: 600; font-size: .9em; }
+ .md-card { background: #0b1120; border: 1px solid #2f3b5c; border-radius: 16px; overflow: hidden; box-shadow: 0 30px 80px rgba(0,0,0,.5); font-size: .74em; color: var(--a-ink); }
+ .md-card header { display: flex; justify-content: space-between; align-items: center; gap: 1em; padding: .6em .9em; border-bottom: 1px solid var(--a-line); background: #0e1528; font-weight: 700; }
+ .md-card pre { margin: 0; padding: .9em 1em; min-height: 13.5em; font: .95em/1.55 var(--mono); white-space: pre-wrap; color: #c7d2fe; }
+ .help-side { display: grid; gap: .8em; align-content: center; }
+ .anim[data-format="9x16"] .s-help { grid-template-columns: 1fr; align-content: center; gap: 1em; }
+ .anim[data-format="9x16"] .help-side { display: contents; } .anim[data-format="9x16"] .help-hd { order: -1; }
+ .anim[data-format="9x16"] .help, .anim[data-format="9x16"] .md-card { font-size: .58em; }
+ .anim[data-format="1x1"] .s-help { grid-template-columns: 1fr; align-content: center; gap: .7em; }
+ .anim[data-format="1x1"] .help { font-size: .68em; }
+ .anim[data-format="1x1"] .help-hd { display: none; }
+
+
+ /* décor : un réseau de participations qui se dessine en fond (titre, fin) */
+ .deco { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; opacity: .55; }
+ .fx-drift { translate: calc(var(--p, 0) * -36px) calc(var(--p, 0) * -14px); }
+ .deco line { stroke: #818cf8; stroke-width: 2.5; stroke-opacity: .55; }
+ .deco line.o { stroke: #f97316; } .deco line.g { stroke: #22c55e; }
+ .deco rect { fill: #182136; stroke: #6366f1; stroke-width: 2.5; }
+ .deco text { fill: #a5b4fc; font: 700 22px system-ui, sans-serif; }
+ .s-title > :not(.deco), .s-cta > :not(.deco) { position: relative; z-index: 1; }
+ /* ================= 7–8. chiffres, appel à l'action ================= */
+ .k-stat span { max-width: 9em; }
+ .s-cta .k-h1 { background: linear-gradient(90deg, #fff, #c7d2fe); -webkit-background-clip: text; background-clip: text; color: transparent; }
+ .s-cta .doi { color: var(--muted); font-size: .7em; }
+</style>
+</head>
+<body>
+
+<header class="pg-top">
+ <div class="wrap">
+  <a class="pg-brand" href="index.html" data-app><span class="pg-logo">LOGO</span><span><b>Capital Lab</b><small data-p="tagline">Visite guidée en vidéo</small></span></a>
+  <div class="pg-langs" role="group" aria-label="Langue / Language / Idioma">
+   <button type="button" data-plang="fr" aria-pressed="false">FR</button><button type="button" data-plang="en" aria-pressed="false">EN</button><button type="button" data-plang="es" aria-pressed="false">ES</button>
+  </div>
+  <a class="pg-btn primary" href="index.html" data-app><span data-p="openApp">Ouvrir l'application</span></a>
+ </div>
+</header>
+
+<main>
+ <div class="wrap pg-hero">
+  <h1 data-p="h1">Capital Lab en une minute</h1>
+  <p data-p="lead"></p>
+ </div>
+
+ <div class="wrap">
+  <div class="pg-embedbar">
+   <span class="pg-brand"><span class="pg-logo">LOGO</span><span><b>Capital Lab</b><small data-p="tagline">Visite guidée en vidéo</small></span></span>
+   <span class="pg-embed-r"><span class="pg-langs" role="group" aria-label="Langue / Language / Idioma"><button type="button" data-plang="fr" aria-pressed="false">FR</button><button type="button" data-plang="en" aria-pressed="false">EN</button><button type="button" data-plang="es" aria-pressed="false">ES</button></span>
+   <button class="pg-skip" id="pg-skip" type="button"><span data-p="skip">Passer l'introduction</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 6 6 6-6 6M13 6l6 6-6 6"/></svg></button></span>
+  </div>
+
+<!-- L'animation : une .anim de scènes (anim-kit). Le lecteur se construit autour. -->
+<div class="anim" data-title="title">
+
+ <!-- ============ 1. Accroche : 13 % du capital, le contrôle quand même ============ -->
+ <section class="scene s-hook" data-dur="5.5" data-chapter="ch1" data-say="say1" data-key="4.6">
+  <p class="k-kicker" data-in="fade 0.2 0.5" data-t="hookK"></p>
+  <div class="ring" data-in="zoom 0.1 0.7">
+   <svg viewBox="0 0 100 100" aria-hidden="true">
+    <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a5b4fc"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
+    <circle class="trk" cx="50" cy="50" r="44"/>
+    <circle class="arc" cx="50" cy="50" r="44" pathLength="1" data-in="ring 0.6 1.6"/>
+   </svg>
+   <div class="num"><b><span data-count="0.6 1.6">13</span> %</b><small data-in="fade 1.4 0.5" data-t="hookCap"></small></div>
+   <div class="crown" data-in="pop 2.4 0.6">👑</div>
+  </div>
+  <h2 class="k-h2" data-in="fade-up 2.0 0.6" data-t="hookQ"></h2>
+  <span class="k-pill is-amber" data-in="pop 3.4 0.5" data-t="hookA"></span>
+ </section>
+
+ <!-- ============ 2. Titre ============ -->
+ <section class="scene g-center s-title" data-dur="4.5" data-chapter="ch2" data-say="say2">
+  <svg class="deco" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><g data-in="drift 0 4.5 linear">
+  <line class="g" x1="260" y1="210" x2="470" y2="420" pathLength="1" data-in="draw 0.35 0.7"/>
+  <line class="" x1="150" y1="420" x2="470" y2="420" pathLength="1" data-in="draw 0.47 0.7"/>
+  <line class="g" x1="470" y1="420" x2="200" y2="640" pathLength="1" data-in="draw 0.59 0.7"/>
+  <line class="o" x1="470" y1="420" x2="430" y2="860" pathLength="1" data-in="draw 0.71 0.7"/>
+  <line class="g" x1="1480" y1="230" x2="1690" y2="440" pathLength="1" data-in="draw 0.83 0.7"/>
+  <line class="g" x1="1690" y1="440" x2="1500" y2="660" pathLength="1" data-in="draw 0.95 0.7"/>
+  <line class="o" x1="1780" y1="640" x2="1500" y2="660" pathLength="1" data-in="draw 1.07 0.7"/>
+  <line class="" x1="1500" y1="660" x2="1720" y2="870" pathLength="1" data-in="draw 1.19 0.7"/>
+  <rect x="200" y="186" width="120" height="48" rx="12" data-in="fade 0.10 0.5"/>
+  <rect x="410" y="396" width="120" height="48" rx="12" data-in="fade 0.18 0.5"/>
+  <rect x="140" y="616" width="120" height="48" rx="12" data-in="fade 0.26 0.5"/>
+  <rect x="370" y="836" width="120" height="48" rx="12" data-in="fade 0.34 0.5"/>
+  <rect x="1420" y="206" width="120" height="48" rx="12" data-in="fade 0.42 0.5"/>
+  <rect x="1630" y="416" width="120" height="48" rx="12" data-in="fade 0.50 0.5"/>
+  <rect x="1440" y="636" width="120" height="48" rx="12" data-in="fade 0.58 0.5"/>
+  <rect x="1660" y="846" width="120" height="48" rx="12" data-in="fade 0.66 0.5"/>
+  <rect x="90" y="396" width="120" height="48" rx="12" data-in="fade 0.74 0.5"/>
+  <rect x="1720" y="616" width="120" height="48" rx="12" data-in="fade 0.82 0.5"/>
+  <text x="379" y="323" data-in="fade 1.00 0.4">51 %</text>
+  <text x="324" y="428" data-in="fade 1.12 0.4">8 %</text>
+  <text x="349" y="538" data-in="fade 1.24 0.4">51 %</text>
+  <text x="464" y="648" data-in="fade 1.36 0.4">42 %</text>
+  <text x="1599" y="343" data-in="fade 1.48 0.4">60 %</text>
+  <text x="1609" y="558" data-in="fade 1.60 0.4">51 %</text>
+  </g></svg>
+  <div class="k-logo" data-in="spin 0.1 0.8"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4 36 20 20 36 4 20Z" fill="#fff"/><path d="M20 4 36 20 20 20Z" fill="#e0e7ff" opacity=".7"/></svg></div>
+  <p class="k-kicker" data-in="fade 0.6" data-t="kicker"></p>
+  <h1 class="k-h1" data-in="blur 0.75 0.7">Capital Lab</h1>
+  <p class="k-sub" data-in="fade-up 1.2" data-t="sub"></p>
+  <div class="k-row k-center" data-stagger="1.9 0.15">
+   <span class="k-pill" data-in="pop" data-t="chip1"></span>
+   <span class="k-pill is-green" data-in="pop" data-t="chip2"></span>
+   <span class="k-pill is-amber" data-in="pop" data-t="chip3"></span>
+   <span class="k-pill is-glass" data-in="pop" data-t="chip4"></span>
+  </div>
+ </section>
+
+ <!-- ============ 3. La pyramide de holdings ============ -->
+ <section class="scene s-pyr" data-dur="9" data-chapter="ch3" data-say="say3" data-key="8.4">
+  <div class="pyr cl-stage">
+   <svg class="cl-links" aria-hidden="true">
+    <line class="cl-link is-green" id="pl1" data-from="#p-fam" data-to="#p-h1" pathLength="1" data-in="draw 0.7 0.4"/>
+    <line class="cl-link is-green" id="pl2" data-from="#p-h1" data-to="#p-h2" pathLength="1" data-in="draw 2.1 0.4"/>
+    <line class="cl-link is-green" id="pl3" data-from="#p-h2" data-to="#p-alpha" pathLength="1" data-in="draw 3.5 0.4"/>
+    <line class="cl-link is-green" id="pl4" data-from="#p-alpha" data-to="#p-beta" pathLength="1" data-in="draw 4.9 0.4"/>
+   </svg>
+   <span class="cl-pct is-green" data-at="#pl1" data-in="pop 1.0 0.4">51 %</span>
+   <span class="cl-pct is-green" data-at="#pl2" data-in="pop 2.4 0.4">51 %</span>
+   <span class="cl-pct is-green" data-at="#pl3" data-in="pop 3.8 0.4">51 %</span>
+   <span class="cl-pct is-green" data-at="#pl4" data-in="pop 5.2 0.4">51 %</span>
+   <div class="cl-pos" id="p-fam"><div class="cl-node is-blue" data-in="pop 0.2 0.5"><b><i>👤</i>Famille Martin</b><small data-t="tPers"></small><em data-t="pCtrl"></em></div></div>
+   <div class="cl-pos" id="p-h1"><div class="cl-node is-blue" data-in="pop 1.0 0.5"><b><i>🏛</i>Martin Participations</b><small data-t="tHold"></small><em class="g" data-t="iH1"></em></div></div>
+   <div class="cl-pos" id="p-h2"><div class="cl-node is-blue" data-in="pop 2.4 0.5"><b><i>🏛</i>Martin Industrie</b><small data-t="tHold"></small><em class="g" data-t="iH2"></em></div></div>
+   <div class="cl-pos" id="p-alpha"><div class="cl-node is-blue" data-in="pop 3.8 0.5"><b><i>🏢</i>Alpha SA</b><small data-t="tListed"></small><em class="g" data-t="iAl"></em></div></div>
+   <div class="cl-pos" id="p-beta"><div class="cl-node is-blue" data-in="pop 5.2 0.5"><b><i>🏢</i>Beta SAS</b><small data-t="tSoc"></small><em class="g" data-t="iBe"></em></div></div>
+  </div>
+  <div class="pyr-side">
+   <p class="k-kicker" data-in="fade 0.2" data-t="pyrK"></p>
+   <h2 class="k-h2" data-in="fade-up 0.35" data-t="pyrT"></h2>
+   <div class="gauge" data-in="fade-up 0.6 0.5">
+    <div class="gauge-h"><span data-t="gEco"></span>
+     <div class="gauge-v amber">
+      <b data-in="fade 0.6 0.2" data-out="fade 1.2 0.25" data-t="g100"></b>
+      <b data-in="fade 1.4 0.3" data-out="fade 2.6 0.25" data-t="g51"></b>
+      <b data-in="fade 2.8 0.3" data-out="fade 4.0 0.25" data-t="g26"></b>
+      <b data-in="fade 4.2 0.3" data-out="fade 5.4 0.25" data-t="g13"></b>
+      <b data-in="fade 5.6 0.3" data-t="g7"></b>
+     </div></div>
+    <div class="track"><div class="h" data-in="half 1.1 0.7"><div class="h" data-in="half 2.5 0.7"><div class="h" data-in="half 3.9 0.7"><div class="h" data-in="half 5.3 0.7"><i class="fill"></i></div></div></div></div></div>
+   </div>
+   <div class="gauge" data-in="fade-up 0.8 0.5">
+    <div class="gauge-h"><span data-t="gPow"></span><div class="gauge-v"><b style="color:#86efac">✓</b></div></div>
+    <div class="track"><i class="fill green"></i></div>
+    <div class="crowns">
+     <span class="k-pill is-green" data-in="pop 1.3 0.4">👑 Participations</span>
+     <span class="k-pill is-green" data-in="pop 2.7 0.4">👑 Industrie</span>
+     <span class="k-pill is-green" data-in="pop 4.1 0.4">👑 Alpha</span>
+     <span class="k-pill is-green" data-in="pop 5.5 0.4">👑 Beta</span>
+    </div>
+   </div>
+   <p class="moral" data-in="fade-up 6.4 0.6"><span data-in="mark 6.9 0.8" data-t="moral"></span></p>
+  </div>
+ </section>
+
+ <!-- ============ 4. Mode cinéma : majorites, étapes 2 et 3 ============ -->
+ <section class="scene g-app" data-dur="10.5" data-chapter="ch4" data-say="say4" data-key="8.6">
+  <div class="hd"><p class="k-kicker" data-in="fade 0.1" data-t="cinK"></p><h2 class="k-h2" data-in="fade-up 0.2" data-t="cinT"></h2></div>
+  <div class="cl-app" data-in="fade-up 0.25 0.6">
+   <div class="cl-top">
+    <span class="cl-brand"><i>◆</i>Capital Lab <small data-t="appSub"></small></span>
+    <span class="cl-modes"><i class="hl r"></i><span>✏️ <span data-t="mLibre"></span></span><span class="on">🎬 <span data-t="mCine"></span></span></span>
+    <div class="cl-tools"><div>
+     <span class="cl-b">📚 <span class="lbl" data-t="bScen"></span></span><span class="cl-b x">🔗 <span class="lbl" data-t="bShare"></span></span><span class="cl-b x">📦 <span class="lbl">SCORM</span></span><span class="cl-b x">✏️ <span class="lbl" data-t="bExplore"></span></span>
+     <span class="cl-b cl-help">❔ <span class="lbl" data-t="bHelp"></span></span></div></div>
+   </div>
+   <div class="cl-body">
+    <div class="cl-canvas cl-stage">
+     <svg class="cl-links" aria-hidden="true">
+      <line class="cl-link is-green" id="ml1" data-from="#m-marie" data-to="#m-gamma" pathLength="1" data-in="draw 1.0 0.5"/>
+      <line class="cl-link is-orange" id="ml2" data-from="#m-paul" data-to="#m-gamma" pathLength="1" data-in="draw 1.15 0.5"/>
+     </svg>
+     <span class="cl-pct is-green" data-at="#ml1" data-in="pop 1.4 0.4">60 %</span>
+     <span class="cl-pct is-orange" data-at="#ml2" data-in="pop 1.55 0.4">40 %</span>
+     <div class="cl-pos" id="m-marie"><div class="cl-node is-blue" data-in="pop 0.5 0.5"><b><i>👤</i>Marie</b><small data-t="tPers"></small><em data-t="mCtrl1"></em></div></div>
+     <div class="cl-pos" id="m-paul"><div class="cl-node" data-in="pop 0.65 0.5"><b><i>👤</i>Paul</b><small data-t="tPers"></small></div></div>
+     <div class="cl-pos" id="m-gamma"><div class="cl-node is-blue" data-in="pop 0.8 0.5"><b><i>🏢</i><span data-t="gName"></span></b><small data-t="tSoc100"></small><em>🎯 Marie</em><i class="cl-ring" data-in="fade 1.7 0.4"></i></div></div>
+     <div class="cl-note" id="m-np" data-in="pop 7.4 0.5" data-t="noteP"></div>
+     <div class="cl-note" id="m-nm" data-in="pop 7.7 0.5" data-t="noteM"></div>
+    </div>
+    <div class="cl-panel">
+     <div class="cl-sc" style="position:absolute;left:1.2em;right:1.2em;top:1em"><span data-t="scMaj"></span><span><span data-out="fade 3.5 0.2" data-t="step2"></span><span data-in="fade 3.6 0.2" data-t="step3"></span></span></div>
+     <div class="pg" style="padding-top:2.6em" data-in="fade 0.7 0.4" data-out="fade 3.45 0.3">
+      <h3 data-t="m1T"></h3>
+      <p data-t-html="m1P1"></p>
+      <p data-t-html="m1P2"></p>
+     </div>
+     <div class="pg" style="padding-top:2.6em" data-in="fade-up 3.6 0.4">
+      <span class="qtag" data-t="qTag"></span>
+      <h3 data-t="qT"></h3>
+      <div class="ans" data-stagger="3.9 0.15">
+       <div class="an" id="ma" data-in="fade-left"><b>A</b><span data-t="qA"></span><i class="dim" data-in="fade 7.0 0.3"></i></div>
+       <div class="an" id="mb" data-in="fade-left"><b>B</b><span data-t="qB"></span><i class="pick" data-in="fade 5.45 0.2" data-out="fade 6.9 0.2"></i><i class="good" data-in="fade 6.9 0.3"></i><i class="tick" data-in="pop 7.0 0.4">✓</i></div>
+       <div class="an" id="mc" data-in="fade-left"><b>C</b><span data-t="qC"></span><i class="dim" data-in="fade 7.0 0.3"></i></div>
+      </div>
+      <span class="cl-b pri reveal" id="m-rev" data-in="press 6.75 0.3" data-t="reveal"></span>
+      <p class="why hide-1x1" data-in="fade-up 7.6 0.5" data-t="qWhy"></p>
+     </div>
+    </div>
+   </div>
+   <div class="cl-bot">
+    <span class="cl-b">⏮</span><span class="cl-b">◀</span><span class="cl-b pri" id="m-next" data-in="press 3.3 0.3"><span data-t="next"></span> ▶</span>
+    <span class="cl-segs"><i class="on"></i><i class="on"></i><i><span class="f" data-in="fill 3.4 0.5"></span></i><i></i><i></i><i></i></span>
+    <span class="cl-count"><span data-out="fade 3.5 0.2">2 / 6</span><span data-in="fade 3.6 0.2">3 / 6</span></span>
+   </div>
+  </div>
+  <div class="k-pointer" data-in="fade 2.3 0.3" data-out="fade 9.2 0.3" data-moves="#m-next 3.15, #mb 5.3, #m-rev 6.6" data-clicks="3.3 5.45 6.75"></div>
+ </section>
+
+ <!-- ============ 5. Contrôle de fait, étape 4 → Explorer librement ============ -->
+ <section class="scene g-app s-fait" data-dur="8.5" data-chapter="ch5" data-say="say5" data-key="7.2">
+  <div class="hd"><p class="k-kicker" data-in="fade 0.1" data-t="libK"></p><h2 class="k-h2" data-in="fade-up 0.2" data-t="libT"></h2></div>
+  <div class="cl-app" data-in="fade-up 0.25 0.6">
+   <div class="cl-top">
+    <span class="cl-brand"><i>◆</i>Capital Lab <small data-t="appSub"></small></span>
+    <span class="cl-modes"><i class="hl l" data-in="fade 2.5 0.3"></i><i class="hl r" data-out="fade 2.5 0.3"></i><span>✏️ <span data-t="mLibre"></span></span><span>🎬 <span data-t="mCine"></span></span></span>
+    <div class="cl-tools">
+     <div data-out="fade 2.5 0.25"><span class="cl-b">📚 <span class="lbl" data-t="bScen"></span></span><span class="cl-b x">🔗 <span class="lbl" data-t="bShare"></span></span><span class="cl-b x">📦 <span class="lbl">SCORM</span></span><span class="cl-b" id="f-explore" data-in="press 2.3 0.3">✏️ <span data-t="bExplore"></span></span></div>
+     <div data-in="fade 2.7 0.3"><span class="cl-b">📄 <span class="lbl" data-t="bNew"></span></span><span class="cl-b">↶</span><span class="cl-b">↷</span><span class="cl-b x">⇅ <span class="lbl" data-t="bLayout"></span></span><span class="cl-b x">💾 <span class="lbl" data-t="bSave"></span></span><span class="cl-b">📸 <span class="lbl">Studio</span></span></div>
+    </div>
+    <span class="cl-b">❔</span>
+   </div>
+   <div class="cl-body">
+    <div class="cl-canvas cl-stage">
+     <svg class="cl-links" aria-hidden="true">
+      <line class="cl-link is-green is-chain" id="fl1" data-from="#f-lef" data-to="#f-kappa" pathLength="1" data-in="draw 0.9 0.4"/>
+      <line class="cl-link is-orange is-chain" id="fl2" data-from="#f-kappa" data-to="#f-zeta" pathLength="1" data-in="draw 1.1 0.4"/>
+      <line class="cl-link is-grey" id="fl3" data-from="#f-orion" data-to="#f-zeta" pathLength="1" data-in="draw 1.2 0.4"/>
+      <line class="cl-link is-grey" id="fl4" data-from="#f-sirius" data-to="#f-zeta" pathLength="1" data-in="draw 1.25 0.4"/>
+      <line class="cl-link is-orange" id="fl5" data-from="#f-pub" data-to="#f-zeta" pathLength="1" data-in="draw 1.3 0.4"/>
+     </svg>
+     <span class="cl-pct is-green" data-at="#fl1" data-in="pop 1.3 0.3">60 %</span>
+     <span class="cl-pct is-orange" data-at="#fl2" data-in="pop 1.45 0.3" data-t="pK"></span>
+     <span class="cl-pct" data-at="#fl3" data-in="pop 1.55 0.3">8 %</span>
+     <span class="cl-pct" data-at="#fl4" data-in="pop 1.6 0.3">6 %</span>
+     <span class="cl-pct is-orange" data-at="#fl5" data-in="pop 1.65 0.3" data-t="pP"></span>
+     <div class="cl-pov" data-in="fade-down 0.5 0.4">👁 <span data-t="pov"></span> <b>M. Lefèvre</b> · <span data-t="pov2"></span></div>
+     <div class="cl-pos" id="f-lef"><div class="cl-node is-blue" data-in="pop 0.5 0.4"><b><i>👤</i>M. Lefèvre</b><small data-t="tPers"></small><em data-t="povMark"></em></div></div>
+     <div class="cl-pos fx-move" id="f-orion" data-in="move 4.3 1.3 inout"><div class="cl-node is-dim" data-in="pop 0.6 0.4"><b><i>💼</i>Fonds Orion</b><small data-t="tFund"></small><i class="cl-sel" data-in="fade 4.1 0.2"></i></div></div>
+     <div class="cl-pos" id="f-kappa"><div class="cl-node is-blue" data-in="pop 0.65 0.4"><b><i>🏛</i>Kappa Holding</b><small data-t="tHold"></small><em class="g" data-t="fKap"></em></div></div>
+     <div class="cl-pos" id="f-sirius"><div class="cl-node is-dim" data-in="pop 0.7 0.4"><b><i>💼</i>Fonds Sirius</b><small data-t="tFund"></small></div></div>
+     <div class="cl-pos" id="f-pub"><div class="cl-node is-dim" data-in="pop 0.75 0.4"><b><i>👥</i><span data-t="pubN"></span></b><small data-t="tPub"></small></div></div>
+     <div class="cl-pos" id="f-zeta"><div class="cl-node is-blue" data-in="pop 0.8 0.4"><b><i>🏢</i>Zeta SA <span data-t="listed"></span></b><small data-t="tSoc100"></small><em class="g" data-t="fZeta"></em></div></div>
+     <div class="cl-palette" data-in="fade-up 2.7 0.4"><span>👤 <span class="lbl" data-t="pPers"></span></span><span>🏢 <span class="lbl" data-t="pSoc"></span></span><span>🏛 <span class="lbl">Holding</span></span><span>💼 <span class="lbl" data-t="pFund"></span></span><span>🏛️ <span class="lbl" data-t="pState"></span></span></div>
+     <div class="cl-toast" data-in="pop 2.7 0.4" data-out="fade 5.2 0.4">✏️ <span data-t="toast"></span></div>
+    </div>
+    <div class="cl-panel">
+     <div class="pg" data-in="fade 0.6 0.4" data-out="fade 2.5 0.3">
+      <div class="cl-sc"><span data-t="scFait"></span><span><span data-t="step4"></span></span></div>
+      <h3 data-t="f3T"></h3>
+      <p data-t-html="f3P"></p>
+      <div class="pov-box hide-9x16"><b>👁 <span data-t="pov"></span> M. Lefèvre</b>
+       <table class="pov-t"><thead><tr><th data-t="thEnt"></th><th data-t="thInt"></th><th data-t="thCtl"></th></tr></thead>
+        <tbody><tr><td><span>Kappa Holding</span></td><td data-t="i60"></td><td>✓</td></tr><tr><td><span>Zeta SA</span></td><td data-t="i25"></td><td>✓</td></tr></tbody></table></div>
+     </div>
+     <div class="pg" data-in="fade-up 2.8 0.4">
+      <h3 data-t="ovT"></h3>
+      <p data-t="ovN"></p>
+      <span class="ov-h" data-t="ovC"></span>
+      <span class="ov-who">● M. Lefèvre</span>
+      <p data-t-html="ovD"></p>
+      <span class="ov-h" data-t="ovP"></span>
+      <span class="ov-sel">👤 M. Lefèvre</span>
+     </div>
+    </div>
+   </div>
+  </div>
+  <div class="k-pointer" data-in="fade 1.6 0.3" data-out="fade 7.4 0.3" data-moves="#f-explore 2.15, #f-orion 3.9" data-clicks="2.3 4.15 5.65"></div>
+ </section>
+
+ <!-- ============ 6. Aide : préparer son cours avec une IA ============ -->
+ <section class="scene s-help" data-dur="9" data-chapter="ch6" data-say="say6" data-key="8.2">
+  <div class="help" data-in="zoom 0.1 0.6">
+   <div class="help-t"><span>❔ <span data-t="bHelp"></span></span><span>✕</span></div>
+   <div class="help-ai">
+    <h4>🤖 <span data-t="aiT"></span></h4>
+    <div class="st"><b>1</b><div><span data-t-html="ai1"></span>
+     <div class="prompt" data-t="consigne" data-type="0.8 2.2"></div>
+     <span class="copy" id="h-copy" data-in="press 3.75 0.3">📋 <span data-t="copyB"></span></span>
+     <span class="copied" data-in="pop 3.9 0.4">✓ <span data-t="copied"></span></span></div></div>
+    <div class="st" data-in="fade-up 4.4 0.5"><b>2</b><div><span data-t-html="ai2"></span>
+     <div class="ais" data-stagger="4.7 0.12"><span data-in="pop">ChatGPT</span><span data-in="pop">Claude</span><span data-in="pop">Gemini</span><span data-in="pop">Mistral</span><span data-in="pop">…</span></div></div></div>
+    <div class="st" data-in="fade-up 5.6 0.5"><b>3</b><div><span data-t-html="ai3"></span></div></div>
+   </div>
+  </div>
+  <div class="help-side hide-1x1">
+   <div class="help-hd"><p class="k-kicker" data-in="fade 0.3" data-t="helpK"></p><h2 class="k-h2" data-in="fade-up 0.45" data-t="helpT"></h2></div>
+   <div class="md-card" data-in="fade-left 5.8 0.5">
+    <header><span>📚 <span data-t="bScen"></span></span><span class="cl-b pri" style="font-size:.85em" data-in="press 8.0 0.3">▶ <span data-t="launch"></span></span></header>
+    <pre data-t="mdSample" data-type="6.1 1.8"></pre>
+   </div>
+  </div>
+  <div class="k-pointer" data-in="fade 2.9 0.3" data-out="fade 8.6 0.3" data-moves="#h-copy 3.6" data-clicks="3.75"></div>
+ </section>
+
+ <!-- ============ 7. Chiffres ============ -->
+ <section class="scene g-stats" data-dur="4.5" data-chapter="ch7" data-say="say7">
+  <p class="k-kicker" data-in="fade 0.1" data-t="statsK"></p>
+  <div class="k-stats" data-stagger="0.3 0.2">
+   <div class="k-stat" data-in="fade-up"><b data-count="0.4 1.2">10</b><span data-t="stat1"></span></div>
+   <div class="k-stat" data-in="fade-up"><b data-count="0.6 0.8">2</b><span data-t="stat2"></span></div>
+   <div class="k-stat" data-in="fade-up"><b data-count="0.8 1.4">100 %</b><span data-t="stat3"></span></div>
+  </div>
+  <div class="k-row k-center" data-stagger="2.2 0.15">
+   <span class="k-pill is-glass" data-in="pop">📦 <span data-t="x1"></span></span>
+   <span class="k-pill is-glass" data-in="pop">📱 <span data-t="x2"></span></span>
+   <span class="k-pill is-glass" data-in="pop">🔗 <span data-t="x3"></span></span>
+  </div>
+ </section>
+
+ <!-- ============ 8. Appel à l'action ============ -->
+ <section class="scene g-center s-cta" data-dur="4.5" data-chapter="ch8" data-say="say8" data-key="3.9">
+  <svg class="deco" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><g data-in="drift 0 4.5 linear">
+  <line class="g" x1="260" y1="210" x2="470" y2="420" pathLength="1" data-in="draw 0.25 0.7"/>
+  <line class="" x1="150" y1="420" x2="470" y2="420" pathLength="1" data-in="draw 0.37 0.7"/>
+  <line class="g" x1="470" y1="420" x2="200" y2="640" pathLength="1" data-in="draw 0.49 0.7"/>
+  <line class="o" x1="470" y1="420" x2="430" y2="860" pathLength="1" data-in="draw 0.61 0.7"/>
+  <line class="g" x1="1480" y1="230" x2="1690" y2="440" pathLength="1" data-in="draw 0.73 0.7"/>
+  <line class="g" x1="1690" y1="440" x2="1500" y2="660" pathLength="1" data-in="draw 0.85 0.7"/>
+  <line class="o" x1="1780" y1="640" x2="1500" y2="660" pathLength="1" data-in="draw 0.97 0.7"/>
+  <line class="" x1="1500" y1="660" x2="1720" y2="870" pathLength="1" data-in="draw 1.09 0.7"/>
+  <rect x="200" y="186" width="120" height="48" rx="12" data-in="fade 0.00 0.5"/>
+  <rect x="410" y="396" width="120" height="48" rx="12" data-in="fade 0.08 0.5"/>
+  <rect x="140" y="616" width="120" height="48" rx="12" data-in="fade 0.16 0.5"/>
+  <rect x="370" y="836" width="120" height="48" rx="12" data-in="fade 0.24 0.5"/>
+  <rect x="1420" y="206" width="120" height="48" rx="12" data-in="fade 0.32 0.5"/>
+  <rect x="1630" y="416" width="120" height="48" rx="12" data-in="fade 0.40 0.5"/>
+  <rect x="1440" y="636" width="120" height="48" rx="12" data-in="fade 0.48 0.5"/>
+  <rect x="1660" y="846" width="120" height="48" rx="12" data-in="fade 0.56 0.5"/>
+  <rect x="90" y="396" width="120" height="48" rx="12" data-in="fade 0.64 0.5"/>
+  <rect x="1720" y="616" width="120" height="48" rx="12" data-in="fade 0.72 0.5"/>
+  <text x="379" y="323" data-in="fade 0.90 0.4">51 %</text>
+  <text x="324" y="428" data-in="fade 1.02 0.4">8 %</text>
+  <text x="349" y="538" data-in="fade 1.14 0.4">51 %</text>
+  <text x="464" y="648" data-in="fade 1.26 0.4">42 %</text>
+  <text x="1599" y="343" data-in="fade 1.38 0.4">60 %</text>
+  <text x="1609" y="558" data-in="fade 1.50 0.4">51 %</text>
+  </g></svg>
+  <div class="k-logo" data-in="spin 0 0.7"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4 36 20 20 36 4 20Z" fill="#fff"/><path d="M20 4 36 20 20 20Z" fill="#e0e7ff" opacity=".7"/></svg></div>
+  <h1 class="k-h1" data-in="fade-up 0.4" data-t="cta"></h1>
+  <p class="k-url" data-in="wipe 1.0 0.8">edu-fpar.github.io/capital-lab</p>
+  <div class="k-row k-center" data-stagger="1.8 0.15">
+   <span class="k-pill is-glass" data-in="pop" data-t="b1"></span>
+   <span class="k-pill is-glass" data-in="pop" data-t="b2"></span>
+   <span class="k-pill is-glass" data-in="pop" data-t="b3"></span>
+  </div>
+  <p class="doi" data-in="fade 2.6 0.6">© 2026 François Parlant · CC BY-NC-SA 4.0 · DOI 10.5281/zenodo.24464409</p>
+ </section>
+</div>
+ </div>
+
+ <section class="pg-blk">
+  <div class="wrap">
+   <h2 data-p="toolsT">Par où commencer ?</h2>
+   <p data-p="toolsP"></p>
+   <div class="pg-grid">
+    <article class="pg-card"><h3><span>🎬</span><b data-p="c1T"></b></h3><p data-p="c1P"></p><a class="pg-btn" href="index.html?scenario=pyramide" data-app data-p="c1B"></a></article>
+    <article class="pg-card"><h3><span>❓</span><b data-p="c2T"></b></h3><p data-p="c2P"></p><a class="pg-btn" href="index.html?scenario=majorites&amp;etape=3" data-app data-p="c2B"></a></article>
+    <article class="pg-card"><h3><span>📚</span><b data-p="c3T"></b></h3><p data-p="c3P"></p><a class="pg-btn" href="index.html?scenarios" data-app data-p="c3B"></a></article>
+    <article class="pg-card"><h3><span>✏️</span><b data-p="c4T"></b></h3><p data-p="c4P"></p><a class="pg-btn" href="index.html?intro=0" data-app data-p="c4B"></a></article>
+    <article class="pg-card"><h3><span>🤖</span><b data-p="c5T"></b></h3><p data-p="c5P"></p><a class="pg-btn" href="docs/index.html#/ia-et-skill" data-p="c5B"></a></article>
+    <article class="pg-card"><h3><span>📦</span><b data-p="c6T"></b></h3><p data-p="c6P"></p><a class="pg-btn" href="docs/index.html#/mode-cinema" data-p="c6B"></a></article>
+   </div>
+   <p class="pg-note" data-p="frNote" hidden></p>
+  </div>
+ </section>
+</main>
+
+<footer class="pg-foot"><div class="wrap"><span>© 2026 François Parlant · <a href="LICENSE">CC BY-NC-SA 4.0</a> · <a href="https://doi.org/10.5281/zenodo.24464409">DOI 10.5281/zenodo.24464409</a></span><a href="docs/index.html" data-p="docs">Documentation</a></div></footer>
+
+<!-- Tous les textes, par langue. La voix lit les clés data-say. -->
+<script type="application/json" id="anim-texts">
+{
+ "fr": {
+  "title": "Capital Lab – Visite guidée",
+  "ch1": "Le paradoxe",
+  "ch2": "Capital Lab",
+  "ch3": "La pyramide",
+  "ch4": "Mode cinéma",
+  "ch5": "Mode libre",
+  "ch6": "Avec une IA",
+  "ch7": "En bref",
+  "ch8": "Essayer",
+  "say1": "Peut-on diriger une grande société avec seulement treize pour cent de son capital ?",
+  "say2": "Capital Lab : l'atelier qui rend visibles le capital et le pouvoir.",
+  "say3": "Chaque étage garde la majorité : le contrôle se transmet, mais l'intérêt économique fond de moitié.",
+  "say4": "En mode cinéma, le scénario avance pas à pas, et pose des questions à la salle.",
+  "say5": "Un clic sur « Explorer librement » : la structure devient la vôtre. Déplacez, modifiez, l'analyse suit.",
+  "say6": "Un nouveau scénario ? Copiez la consigne, ajoutez votre cours : votre IA le rédige.",
+  "say7": "Dix scénarios intégrés, deux modes, et tout fonctionne hors ligne.",
+  "say8": "C'est gratuit : essayez Capital Lab !",
+  "hookK": "Capital & pouvoir",
+  "hookCap": "du capital",
+  "hookQ": "Peut-on contrôler une société avec 13 % de son capital ?",
+  "hookA": "Oui. Et c'est parfaitement légal.",
+  "kicker": "Atelier capital & pouvoir",
+  "sub": "Minoritaire au capital, et pourtant aux commandes",
+  "chip1": "Contrôle en chaîne",
+  "chip2": "Majorités",
+  "chip3": "Pactes",
+  "chip4": "Autocontrôle",
+  "tPers": "Personne",
+  "tHold": "Holding",
+  "tSoc": "Société",
+  "tListed": "Société cotée",
+  "tFund": "Fonds",
+  "tPub": "Public",
+  "tSoc100": "Société · capital 100 % identifié",
+  "pCtrl": "👑 contrôle 4 entités",
+  "iH1": "Intérêt 51 % · contrôle ✓",
+  "iH2": "Intérêt 26 % · contrôle ✓",
+  "iAl": "Intérêt 13,3 % · contrôle ✓",
+  "iBe": "Intérêt 6,8 % · contrôle ✓",
+  "pyrK": "Scénario « La pyramide de holdings »",
+  "pyrT": "51 % à chaque étage",
+  "gEco": "Intérêt économique de la famille",
+  "gPow": "Contrôle de chaque société",
+  "g100": "100 %",
+  "g51": "51 %",
+  "g26": "26 %",
+  "g13": "13,3 %",
+  "g7": "6,8 %",
+  "moral": "Le pouvoir reste, l'argent fond : c'est l'effet multiplicateur.",
+  "cinK": "Mode cinéma",
+  "cinT": "Pas à pas, avec des questions à la salle",
+  "appSub": "atelier capital & pouvoir",
+  "mLibre": "Libre",
+  "mCine": "Cinéma",
+  "bScen": "Scénarios",
+  "bShare": "Partager",
+  "bExplore": "Explorer librement",
+  "bHelp": "Aide",
+  "bNew": "Nouveau",
+  "bLayout": "Disposer",
+  "bSave": "Enregistrer",
+  "mCtrl1": "👑 contrôle 1 entité",
+  "noteP": "Plus de 1/3 : peut bloquer toute AGE",
+  "noteM": "Majorité simple : décide en AGO",
+  "scMaj": "Majorités et minorité de blocage",
+  "step2": "Étape 2 / 6",
+  "step3": "Étape 3 / 6",
+  "m1T": "1. Deux associés",
+  "m1P1": "Gamma SA a deux actionnaires : <strong>Marie (60 %)</strong> et <strong>Paul (40 %)</strong>.",
+  "m1P2": "Marie a la majorité : elle nomme les administrateurs, approuve les comptes, décide des dividendes (AGO).",
+  "qTag": "❓ Question",
+  "qT": "Marie peut-elle modifier seule les statuts de Gamma SA ?",
+  "qA": "Oui : avec 60 %, elle est majoritaire",
+  "qB": "Non : il faut les deux tiers des voix en assemblée extraordinaire",
+  "qC": "Non : il faut l'unanimité",
+  "reveal": "💡 Révéler la réponse",
+  "qWhy": "60 % < 66,67 % : sans l'accord de Paul, la résolution est rejetée.",
+  "next": "Suivant",
+  "libK": "Explorer librement",
+  "libT": "Du scénario à votre propre montage",
+  "pov": "Point de vue :",
+  "pov2": "contrôle 2 entités",
+  "povMark": "👁 point de vue",
+  "listed": "(cotée)",
+  "pubN": "Petits porteurs",
+  "fKap": "Intérêt 60 % · contrôle ✓",
+  "fZeta": "Intérêt 25,2 % · contrôle ✓",
+  "pPers": "Personne",
+  "pSoc": "Société",
+  "pFund": "Fonds",
+  "pState": "État",
+  "toast": "Vous pouvez maintenant modifier librement cette structure.",
+  "scFait": "Le contrôle de fait : 40 % peuvent suffire",
+  "step4": "Étape 4 / 5",
+  "f3T": "3. Le contrôle remonte la chaîne",
+  "f3P": "Kappa Holding est contrôlée à 60 % par <strong>M. Lefèvre</strong>. Le contrôle de fait exercé par Kappa sur Zeta remonte jusqu'à lui.",
+  "thEnt": "Entité",
+  "thInt": "Intérêt",
+  "thCtl": "Contrôle",
+  "i60": "60 %",
+  "i25": "25,2 %",
+  "ovT": "Vue d'ensemble",
+  "ovN": "6 entités · 5 participations · 0 pacte",
+  "ovC": "Contrôleurs ultimes",
+  "ovD": "Kappa Holding <span style=\"color:#94a3b8\">(intérêt 60 %)</span>, Zeta SA (cotée) <span style=\"color:#94a3b8\">(intérêt 25,2 %)</span>",
+  "ovP": "Point de vue",
+  "aiT": "Préparer son cours avec une IA",
+  "ai1": "<strong>Copiez la consigne</strong> (elle contient le lien vers les instructions) :",
+  "consigne": "Lis les instructions sur https://edu-fpar.github.io/capital-lab/docs/instructions-ia.md et prépare un scénario Capital Lab à partir du cours ci-dessous. Public : L3 droit des affaires, 6 étapes environ, avec une ou deux questions pour la salle.",
+  "copyB": "Copier la consigne",
+  "copied": "Copié !",
+  "ai2": "<strong>Collez-la dans votre IA</strong>, puis ajoutez votre cours :",
+  "ai3": "<strong>Collez la réponse</strong> dans 📚 Scénarios, puis Lancer.",
+  "helpK": "Aide intégrée",
+  "helpT": "Votre cours devient un scénario",
+  "launch": "Lancer",
+  "mdSample": "# Le contrôle conjoint\n> Deux associés, un pacte.\n\n## 1. Deux holdings à 50/50\n```scene\nholding A \"Alpha Invest\"\nholding B \"Beta Capital\"\nsociete J \"Joint SAS\"\nlien A -> J 50%\nlien B -> J 50%\n```",
+  "statsK": "En bref",
+  "stat1": "scénarios intégrés",
+  "stat2": "modes : libre et cinéma",
+  "stat3": "hors ligne, sans installation",
+  "x1": "Export SCORM pour Moodle",
+  "x2": "Sur téléphone",
+  "x3": "Lien direct vers une étape",
+  "cta": "Essayez Capital Lab",
+  "b1": "Gratuit",
+  "b2": "Sans inscription",
+  "b3": "Dans le navigateur",
+  "gName": "Gamma SA",
+  "pK": "42 %",
+  "pP": "44 %"
+ },
+ "en": {
+  "title": "Capital Lab – Guided tour",
+  "ch1": "The paradox",
+  "ch2": "Capital Lab",
+  "ch3": "The pyramid",
+  "ch4": "Cinema mode",
+  "ch5": "Free mode",
+  "ch6": "With an AI",
+  "ch7": "In short",
+  "ch8": "Try it",
+  "say1": "Can you run a large company with only thirteen percent of its capital?",
+  "say2": "Capital Lab: the workshop that makes capital and power visible.",
+  "say3": "Each level keeps the majority: control is passed on, but the economic interest is halved.",
+  "say4": "In cinema mode, the scenario moves step by step, and asks the audience questions.",
+  "say5": "One click on Explore freely, and the structure is yours. Move, edit: the analysis follows.",
+  "say6": "Need a new scenario? Copy the prompt, add your course, and your AI writes it.",
+  "say7": "Ten built-in scenarios, two modes, and everything works offline.",
+  "say8": "It's free: try Capital Lab!",
+  "hookK": "Capital & power",
+  "hookCap": "of the capital",
+  "hookQ": "Can you control a company with 13% of its capital?",
+  "hookA": "Yes. And it's perfectly legal.",
+  "kicker": "Capital & power workshop",
+  "sub": "A minority shareholder, and yet in charge",
+  "chip1": "Chains of control",
+  "chip2": "Majorities",
+  "chip3": "Pacts",
+  "chip4": "Treasury shares",
+  "tPers": "Person",
+  "tHold": "Holding",
+  "tSoc": "Company",
+  "tListed": "Listed company",
+  "tFund": "Fund",
+  "tPub": "Public",
+  "tSoc100": "Company · 100% of capital identified",
+  "pCtrl": "👑 controls 4 entities",
+  "iH1": "Interest 51% · control ✓",
+  "iH2": "Interest 26% · control ✓",
+  "iAl": "Interest 13.3% · control ✓",
+  "iBe": "Interest 6.8% · control ✓",
+  "pyrK": "Scenario “The holding pyramid”",
+  "pyrT": "51% at every level",
+  "gEco": "The family's economic interest",
+  "gPow": "Control of each company",
+  "g100": "100%",
+  "g51": "51%",
+  "g26": "26%",
+  "g13": "13.3%",
+  "g7": "6.8%",
+  "moral": "Power stays, money melts: that's the leverage effect.",
+  "cinK": "Cinema mode",
+  "cinT": "Step by step, with questions for the audience",
+  "appSub": "capital & power workshop",
+  "mLibre": "Free",
+  "mCine": "Cinema",
+  "bScen": "Scenarios",
+  "bShare": "Share",
+  "bExplore": "Explore freely",
+  "bHelp": "Help",
+  "bNew": "New",
+  "bLayout": "Arrange",
+  "bSave": "Save",
+  "mCtrl1": "👑 controls 1 entity",
+  "noteP": "Over 25%: can block any special resolution",
+  "noteM": "Majority: passes ordinary resolutions",
+  "scMaj": "Majorities and blocking minority (UK)",
+  "step2": "Step 2 / 6",
+  "step3": "Step 3 / 6",
+  "m1T": "1. Two partners",
+  "m1P1": "Gamma Ltd has two shareholders: <strong>Marie (60%)</strong> and <strong>Paul (40%)</strong>.",
+  "m1P2": "Marie has the majority: she passes ordinary resolutions — appointing directors, approving the accounts, declaring dividends.",
+  "qTag": "❓ Question",
+  "qT": "Can Marie amend Gamma Ltd's articles on her own?",
+  "qA": "Yes: with 60% she has the majority",
+  "qB": "No: amending the articles needs a special resolution (75% of the votes)",
+  "qC": "No: it takes unanimity",
+  "reveal": "💡 Reveal the answer",
+  "qWhy": "60% < 75%: without Paul's votes, the special resolution fails.",
+  "next": "Next",
+  "libK": "Explore freely",
+  "libT": "From a scenario to your own structure",
+  "pov": "Point of view:",
+  "pov2": "controls 2 entities",
+  "povMark": "👁 point of view",
+  "listed": "(listed)",
+  "pubN": "Retail investors",
+  "fKap": "Interest 60% · control ✓",
+  "fZeta": "Interest 31.2% · control ✓",
+  "pPers": "Person",
+  "pSoc": "Company",
+  "pFund": "Fund",
+  "pState": "State",
+  "toast": "You can now freely edit this structure.",
+  "scFait": "Chains of control",
+  "step4": "Step 4 / 5",
+  "f3T": "3. Control goes up the chain",
+  "f3P": "Kappa Holding is 60% controlled by <strong>Mr Lefèvre</strong>. Kappa holds 52% of Zeta: control goes all the way up to him.",
+  "thEnt": "Entity",
+  "thInt": "Interest",
+  "thCtl": "Control",
+  "i60": "60%",
+  "i25": "31.2%",
+  "ovT": "Overview",
+  "ovN": "6 entities · 5 holdings · 0 pact",
+  "ovC": "Ultimate controllers",
+  "ovD": "Kappa Holding <span style=\"color:#94a3b8\">(interest 60%)</span>, Zeta SA (listed) <span style=\"color:#94a3b8\">(interest 31.2%)</span>",
+  "ovP": "Point of view",
+  "aiT": "Prepare your course with an AI",
+  "ai1": "<strong>Copy the prompt</strong> (it contains the link to the instructions):",
+  "consigne": "Read the instructions at https://edu-fpar.github.io/capital-lab/docs/instructions-ia.md and prepare a Capital Lab scenario from the course below. Audience: 3rd-year business law, about 6 steps, with one or two questions for the class.",
+  "copyB": "Copy the prompt",
+  "copied": "Copied!",
+  "ai2": "<strong>Paste it into your AI</strong>, then add your course:",
+  "ai3": "<strong>Paste the answer</strong> into 📚 Scenarios, then Launch.",
+  "helpK": "Built-in help",
+  "helpT": "Your course becomes a scenario",
+  "launch": "Launch",
+  "mdSample": "# Joint control\n> Two partners, one pact.\n\n## 1. Two holdings, 50/50\n```scene\nholding A \"Alpha Invest\"\nholding B \"Beta Capital\"\nsociete J \"Joint SAS\"\nlien A -> J 50%\nlien B -> J 50%\n```",
+  "statsK": "In short",
+  "stat1": "built-in scenarios",
+  "stat2": "modes: free and cinema",
+  "stat3": "offline, nothing to install",
+  "x1": "SCORM export for Moodle",
+  "x2": "On your phone",
+  "x3": "Direct link to any step",
+  "cta": "Try Capital Lab",
+  "b1": "Free",
+  "b2": "No sign-up",
+  "b3": "In your browser",
+  "gName": "Gamma Ltd",
+  "pK": "52%",
+  "pP": "34%"
+ },
+ "es": {
+  "title": "Capital Lab – Visita guiada",
+  "ch1": "La paradoja",
+  "ch2": "Capital Lab",
+  "ch3": "La pirámide",
+  "ch4": "Modo cine",
+  "ch5": "Modo libre",
+  "ch6": "Con una IA",
+  "ch7": "En resumen",
+  "ch8": "Probar",
+  "say1": "¿Se puede dirigir una gran empresa con solo el trece por ciento de su capital?",
+  "say2": "Capital Lab: el taller que hace visibles el capital y el poder.",
+  "say3": "Cada nivel conserva la mayoría: el control se transmite, pero el interés económico se reduce a la mitad.",
+  "say4": "En modo cine, el escenario avanza paso a paso y plantea preguntas a la clase.",
+  "say5": "Un clic en Explorar libremente y la estructura es tuya. Mueve, modifica: el análisis te sigue.",
+  "say6": "¿Un nuevo escenario? Copia la consigna, añade tu curso y tu IA lo redacta.",
+  "say7": "Diez escenarios integrados, dos modos y todo funciona sin conexión.",
+  "say8": "Es gratis: ¡prueba Capital Lab!",
+  "hookK": "Capital y poder",
+  "hookCap": "del capital",
+  "hookQ": "¿Se puede controlar una empresa con el 13 % de su capital?",
+  "hookA": "Sí. Y es perfectamente legal.",
+  "kicker": "Taller de capital y poder",
+  "sub": "Minoritario en el capital y, sin embargo, al mando",
+  "chip1": "Control en cadena",
+  "chip2": "Mayorías",
+  "chip3": "Pactos",
+  "chip4": "Autocartera",
+  "tPers": "Persona",
+  "tHold": "Holding",
+  "tSoc": "Sociedad",
+  "tListed": "Sociedad cotizada",
+  "tFund": "Fondo",
+  "tPub": "Público",
+  "tSoc100": "Sociedad · capital 100 % identificado",
+  "pCtrl": "👑 controla 4 entidades",
+  "iH1": "Interés 51 % · control ✓",
+  "iH2": "Interés 26 % · control ✓",
+  "iAl": "Interés 13,3 % · control ✓",
+  "iBe": "Interés 6,8 % · control ✓",
+  "pyrK": "Escenario «La pirámide de holdings»",
+  "pyrT": "51 % en cada nivel",
+  "gEco": "Interés económico de la familia",
+  "gPow": "Control de cada sociedad",
+  "g100": "100 %",
+  "g51": "51 %",
+  "g26": "26 %",
+  "g13": "13,3 %",
+  "g7": "6,8 %",
+  "moral": "El poder se queda, el dinero se diluye: es el efecto multiplicador.",
+  "cinK": "Modo cine",
+  "cinT": "Paso a paso, con preguntas para la clase",
+  "appSub": "taller de capital y poder",
+  "mLibre": "Libre",
+  "mCine": "Cine",
+  "bScen": "Escenarios",
+  "bShare": "Compartir",
+  "bExplore": "Explorar libremente",
+  "bHelp": "Ayuda",
+  "bNew": "Nuevo",
+  "bLayout": "Ordenar",
+  "bSave": "Guardar",
+  "mCtrl1": "👑 controla 1 entidad",
+  "noteP": "Más de 1/3: bloquea los acuerdos de 2/3",
+  "noteM": "Mayoría: decide los acuerdos ordinarios",
+  "scMaj": "Mayorías y minoría de bloqueo",
+  "step2": "Paso 2 / 6",
+  "step3": "Paso 3 / 6",
+  "m1T": "1. Dos socios",
+  "m1P1": "Gamma SL tiene dos socios: <strong>Marie (60 %)</strong> y <strong>Paul (40 %)</strong>.",
+  "m1P2": "Marie tiene la mayoría: aprueba las cuentas, nombra a los administradores, decide los dividendos e incluso modifica los estatutos (más de la mitad de los votos, art. 199 a LSC).",
+  "qTag": "❓ Pregunta",
+  "qT": "¿Puede Marie aprobar sola la fusión de Gamma SL?",
+  "qA": "Sí: con el 60 % tiene la mayoría",
+  "qB": "No: la fusión exige dos tercios de los votos (art. 199 b LSC)",
+  "qC": "No: hace falta unanimidad",
+  "reveal": "💡 Revelar la respuesta",
+  "qWhy": "60 % < 66,67 %: sin los votos de Paul, la fusión no se aprueba.",
+  "next": "Siguiente",
+  "libK": "Explorar libremente",
+  "libT": "Del escenario a tu propia estructura",
+  "pov": "Punto de vista:",
+  "pov2": "controla 2 entidades",
+  "povMark": "👁 punto de vista",
+  "listed": "(cotizada)",
+  "pubN": "Pequeños accionistas",
+  "fKap": "Interés 60 % · control ✓",
+  "fZeta": "Interés 31,2 % · control ✓",
+  "pPers": "Persona",
+  "pSoc": "Sociedad",
+  "pFund": "Fondo",
+  "pState": "Estado",
+  "toast": "Ahora puedes modificar libremente esta estructura.",
+  "scFait": "El control en cadena",
+  "step4": "Paso 4 / 5",
+  "f3T": "3. El control sube por la cadena",
+  "f3P": "Kappa Holding está controlada al 60 % por <strong>el Sr. Lefèvre</strong>. Kappa tiene el 52 % de Zeta: el control llega hasta él.",
+  "thEnt": "Entidad",
+  "thInt": "Interés",
+  "thCtl": "Control",
+  "i60": "60 %",
+  "i25": "31,2 %",
+  "ovT": "Vista general",
+  "ovN": "6 entidades · 5 participaciones · 0 pactos",
+  "ovC": "Controladores últimos",
+  "ovD": "Kappa Holding <span style=\"color:#94a3b8\">(interés 60 %)</span>, Zeta SA (cotizada) <span style=\"color:#94a3b8\">(interés 31,2 %)</span>",
+  "ovP": "Punto de vista",
+  "aiT": "Preparar tu curso con una IA",
+  "ai1": "<strong>Copia la consigna</strong> (contiene el enlace a las instrucciones):",
+  "consigne": "Lee las instrucciones en https://edu-fpar.github.io/capital-lab/docs/instructions-ia.md y prepara un escenario de Capital Lab a partir del curso siguiente. Público: 3.º de Derecho mercantil, unos 6 pasos, con una o dos preguntas para la clase.",
+  "copyB": "Copiar la consigna",
+  "copied": "¡Copiado!",
+  "ai2": "<strong>Pégala en tu IA</strong> y añade tu curso:",
+  "ai3": "<strong>Pega la respuesta</strong> en 📚 Escenarios y pulsa Iniciar.",
+  "helpK": "Ayuda integrada",
+  "helpT": "Tu curso se convierte en escenario",
+  "launch": "Iniciar",
+  "mdSample": "# El control conjunto\n> Dos socios, un pacto.\n\n## 1. Dos holdings al 50/50\n```scene\nholding A \"Alpha Invest\"\nholding B \"Beta Capital\"\nsociete J \"Joint SAS\"\nlien A -> J 50%\nlien B -> J 50%\n```",
+  "statsK": "En resumen",
+  "stat1": "escenarios integrados",
+  "stat2": "modos: libre y cine",
+  "stat3": "sin conexión ni instalación",
+  "x1": "Exportación SCORM para Moodle",
+  "x2": "En el móvil",
+  "x3": "Enlace directo a cada paso",
+  "cta": "Prueba Capital Lab",
+  "b1": "Gratis",
+  "b2": "Sin registro",
+  "b3": "En el navegador",
+  "gName": "Gamma SL",
+  "pK": "52 %",
+  "pP": "34 %"
+ }
+}
+</script>
+
+<!-- Liens entre entités : tracés d'après la position réelle des cartes, à chaque image (suivent la mise en page de chaque format et le glisser-déposer). -->
+<script>
+(function () {
+  "use strict";
+  const root = document.querySelector(".anim");
+  const NS = "http://www.w3.org/2000/svg";
+  // point de sortie d'un rectangle (centre c, demi-tailles hw, hh) dans la direction (dx, dy)
+  const exitT = (hw, hh, dx, dy) => Math.min(dx ? hw / Math.abs(dx) : Infinity, dy ? hh / Math.abs(dy) : Infinity);
+  function update() {
+    root.querySelectorAll(".cl-stage").forEach((stage) => {
+      if (!stage.offsetParent && getComputedStyle(stage).position !== "fixed" && !stage.getClientRects().length) return; // scène cachée
+      const S = stage.getBoundingClientRect(), k = S.width / (stage.offsetWidth || 1);
+      if (!k) return;
+      const box = (sel) => { const e = stage.querySelector(sel); if (!e) return null; const n = e.querySelector(".cl-node") || e; const r = n.getBoundingClientRect();
+        return { x: (r.left - S.left) / k + r.width / k / 2, y: (r.top - S.top) / k + r.height / k / 2, hw: r.width / k / 2, hh: r.height / k / 2 }; };
+      const fs = parseFloat(getComputedStyle(stage).fontSize) || 16;
+      stage.querySelectorAll("line.cl-link").forEach((ln) => {
+        const a = box(ln.dataset.from), b = box(ln.dataset.to); if (!a || !b) return;
+        let dx = b.x - a.x, dy = b.y - a.y; const L = Math.hypot(dx, dy) || 1; dx /= L; dy /= L;
+        const gap = fs * 0.25, head = fs * 0.85;
+        const x1 = a.x + dx * (exitT(a.hw, a.hh, dx, dy) + gap), y1 = a.y + dy * (exitT(a.hw, a.hh, dx, dy) + gap);
+        const xe = b.x - dx * (exitT(b.hw, b.hh, dx, dy) + gap), ye = b.y - dy * (exitT(b.hw, b.hh, dx, dy) + gap);
+        ln.setAttribute("x1", x1.toFixed(1)); ln.setAttribute("y1", y1.toFixed(1));
+        ln.setAttribute("x2", (xe - dx * head * 0.6).toFixed(1)); ln.setAttribute("y2", (ye - dy * head * 0.6).toFixed(1));
+        // pointe de flèche
+        if (!ln._head) { ln._head = document.createElementNS(NS, "path"); ln._head.setAttribute("class", "cl-head " + [...ln.classList].filter((c) => c.startsWith("is-")).join(" ")); ln.parentNode.appendChild(ln._head); }
+        const p = parseFloat(ln.style.getPropertyValue("--p")); const v = isNaN(p) ? 1 : Math.max(0, Math.min(1, (p - 0.8) / 0.2));
+        const nx = -dy, ny = dx, w = head * 0.5;
+        ln._head.setAttribute("d", `M${xe.toFixed(1)},${ye.toFixed(1)} L${(xe - dx * head + nx * w).toFixed(1)},${(ye - dy * head + ny * w).toFixed(1)} L${(xe - dx * head - nx * w).toFixed(1)},${(ye - dy * head - ny * w).toFixed(1)}Z`);
+        ln._head.style.opacity = v.toFixed(3);
+        ln._mid = [(x1 + xe) / 2, (y1 + ye) / 2];
+      });
+      stage.querySelectorAll(".cl-pct[data-at]").forEach((pc) => { const ln = stage.querySelector(pc.dataset.at); if (!ln || !ln._mid) return;
+        pc.style.left = ln._mid[0].toFixed(1) + "px"; pc.style.top = ln._mid[1].toFixed(1) + "px"; });
+    });
+  }
+  // le moteur règle --t sur .anim à chaque image : on retrace juste après (avant l'affichage)
+  new MutationObserver(update).observe(root, { attributes: true, attributeFilter: ["style", "data-format"] });
+  addEventListener("resize", update);
+  if (document.fonts) document.fonts.ready.then(update);
+})();
+</script>
+<script src="intro/kit/anim.js"></script>
+
+<!-- Textes de la page autour de l'animation (les textes de l'animation sont dans anim-texts). -->
+<script type="application/json" id="page-texts">
+{
+ "fr": {
+  "tagline": "Visite guidée en vidéo",
+  "openApp": "Ouvrir l'application",
+  "skip": "Passer l'introduction",
+  "start": "Commencer",
+  "scenario": "Voir un scénario",
+  "h1": "Capital Lab en une minute",
+  "lead": "Comment contrôler une société en y étant minoritaire ? Capital Lab rend visibles les chaînes de participations, les majorités, les pactes et le contrôle de fait, avec des scénarios animés pour la classe.",
+  "toolsT": "Par où commencer ?",
+  "toolsP": "Chaque lien ouvre l'application directement au bon endroit. Rien à installer, rien à créer : tout fonctionne dans le navigateur, même hors ligne.",
+  "c1T": "La pyramide de holdings",
+  "c1P": "Le scénario de la vidéo : 51 % à chaque étage, et une famille qui contrôle Beta SAS avec 6,8 % de son capital.",
+  "c1B": "Lancer le scénario",
+  "c2T": "Une question à la salle",
+  "c2P": "Marie détient 60 % : peut-elle modifier seule les statuts ? Les étudiants votent, puis on révèle la réponse.",
+  "c2B": "Ouvrir la question",
+  "c3T": "Les 10 scénarios",
+  "c3P": "Majorités, droits de vote double, autocontrôle, action de concert, contrôle de fait, consolidation, dilution, LBO, IFRS.",
+  "c3B": "Choisir un scénario",
+  "c4T": "Le mode libre",
+  "c4P": "Glissez des entités, tirez des participations : l'analyse du contrôle, des intérêts et des minorités de blocage suit en direct.",
+  "c4B": "Construire un montage",
+  "c5T": "Votre cours devient un scénario",
+  "c5P": "Une consigne prête à copier pour votre IA (ChatGPT, Claude, Gemini, Mistral…) : collez la réponse, lancez.",
+  "c5B": "Préparer avec une IA",
+  "c6T": "Dans Moodle",
+  "c6P": "Exportez un scénario en paquet SCORM : achèvement, reprise et note remontent dans la plateforme.",
+  "c6B": "En savoir plus",
+  "frNote": "",
+  "docs": "Documentation"
+ },
+ "en": {
+  "tagline": "Guided video tour",
+  "openApp": "Open the app",
+  "skip": "Skip intro",
+  "start": "Get started",
+  "scenario": "See a scenario",
+  "h1": "Capital Lab in one minute",
+  "lead": "How can you control a company while holding a minority stake? Capital Lab makes chains of holdings, majorities, shareholder pacts and de facto control visible, with animated scenarios for the classroom.",
+  "toolsT": "Where to start?",
+  "toolsP": "Each link opens the app right where you need it. Nothing to install, no account: everything runs in the browser, even offline.",
+  "c1T": "The holding pyramid",
+  "c1P": "The scenario from the video: 51% at every level, and a family that ends up controlling a company with less than 7% of its capital.",
+  "c1B": "Launch the scenario",
+  "c2T": "A question for the class",
+  "c2P": "Marie holds 60%: can she amend the articles on her own? Students vote, then you reveal the answer.",
+  "c2B": "Open the question",
+  "c3T": "All the scenarios",
+  "c3P": "Majorities, dual-class shares, treasury shares, acting in concert, consolidation, dilution, LBO… under UK or US law.",
+  "c3B": "Pick a scenario",
+  "c4T": "Free mode",
+  "c4P": "Drag entities, draw holdings: the analysis of control, interests and blocking minorities updates live.",
+  "c4B": "Build a structure",
+  "c5T": "Your course becomes a scenario",
+  "c5P": "A ready-to-copy prompt for your AI (ChatGPT, Claude, Gemini, Mistral…): paste the answer and launch it.",
+  "c5B": "Prepare it with an AI",
+  "c6T": "In Moodle",
+  "c6P": "Export a scenario as a SCORM package: completion, resume and score are reported to the platform.",
+  "c6B": "Learn more",
+  "frNote": "",
+  "docs": "Documentation"
+ },
+ "es": {
+  "tagline": "Visita guiada en vídeo",
+  "openApp": "Abrir la aplicación",
+  "skip": "Saltar la introducción",
+  "start": "Empezar",
+  "scenario": "Ver un escenario",
+  "h1": "Capital Lab en un minuto",
+  "lead": "¿Cómo controlar una sociedad siendo minoritario? Capital Lab hace visibles las cadenas de participaciones, las mayorías, los pactos y el control de hecho, con escenarios animados para la clase.",
+  "toolsT": "¿Por dónde empezar?",
+  "toolsP": "Cada enlace abre la aplicación justo donde hace falta. Nada que instalar, sin registro: todo funciona en el navegador, incluso sin conexión.",
+  "c1T": "La pirámide de holdings",
+  "c1P": "El escenario del vídeo: 51 % en cada nivel, y una familia que acaba controlando una sociedad con menos del 7 % de su capital.",
+  "c1B": "Iniciar el escenario",
+  "c2T": "Una pregunta para la clase",
+  "c2P": "Marie tiene el 60 % de una SL: ¿puede aprobar sola una fusión? Los estudiantes votan y luego se revela la respuesta.",
+  "c2B": "Abrir la pregunta",
+  "c3T": "Todos los escenarios",
+  "c3P": "Mayorías, acciones de lealtad, autocartera, concierto, consolidación, dilución, LBO, NIIF… en derecho español.",
+  "c3B": "Elegir un escenario",
+  "c4T": "El modo libre",
+  "c4P": "Arrastra entidades, traza participaciones: el análisis del control, los intereses y las minorías de bloqueo se actualiza en directo.",
+  "c4B": "Construir una estructura",
+  "c5T": "Tu curso se convierte en escenario",
+  "c5P": "Una consigna lista para copiar en tu IA (ChatGPT, Claude, Gemini, Mistral…): pega la respuesta e inícialo.",
+  "c5B": "Preparar con una IA",
+  "c6T": "En Moodle",
+  "c6P": "Exporta un escenario como paquete SCORM: finalización, reanudación y nota llegan a la plataforma.",
+  "c6B": "Saber más",
+  "frNote": "",
+  "docs": "Documentación"
+ }
+}
+</script>
+<script>
+/* Page de présentation : langue de la page, boutons de fin, mode intégré (?embed=app), format portrait sur téléphone.
+   L'animation et son lecteur viennent d'anim-kit (intro/kit/anim.js). */
+(function () {
+  "use strict";
+  const params = new URLSearchParams(location.search);
+  const EMBED = params.get("embed") === "app";
+  const DEV = params.get("dev") === "1";          // ?dev=1 : format et coulisses visibles (fabrication)
+  if (EMBED) document.body.classList.add("embed");
+  if (DEV) document.body.classList.add("dev");
+  let T = {};
+  try { T = JSON.parse(document.getElementById("page-texts").textContent); } catch (e) { /* rien */ }
+  const LOGO = '<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M20 4 36 20 20 36 4 20Z" fill="#fff"/><path d="M20 4 36 20 20 20Z" fill="#e0e7ff" opacity=".7"/></svg>';
+  const ARROW = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
+  document.querySelectorAll(".pg-logo").forEach((e) => { e.innerHTML = LOGO; });
+
+  const lang = () => (T[document.documentElement.lang] ? document.documentElement.lang : "fr");
+
+  /* Liens vers l'application : dans la langue de la page, vers le scénario équivalent du droit correspondant
+     (anglais : droit britannique ou américain, selon le dernier choix ou la langue du navigateur). */
+  const SCEN = {
+    pyramide: { en: { uk: "uk-pyramid", us: "us-pyramid" }, es: "es-piramide" },
+    majorites: { en: { uk: "uk-majorities", us: "us-majority" }, es: "es-mayorias" }
+  };
+  const STEP = { "es-mayorias": "5" };   // la question espagnole reprise par la vidéo (fusion d'une SL)
+  function lawEn() {
+    try { const s = localStorage.getItem("capital-lab.droit"); if (s === "uk" || s === "us") return s; } catch (e) { /* */ }
+    return /^en-us$/i.test(navigator.language || "") ? "us" : "uk";
+  }
+  function appLinks() {
+    const l = lang();
+    document.querySelectorAll("a[data-app]").forEach((a) => {
+      if (!a.dataset.base) a.dataset.base = a.getAttribute("href");
+      const u = new URL(a.dataset.base, location.href);
+      const id = u.searchParams.get("scenario");
+      if (id && SCEN[id] && l !== "fr") {
+        const m = SCEN[id][l], nid = typeof m === "string" ? m : m[lawEn()];
+        u.searchParams.set("scenario", nid);
+        if (u.searchParams.has("etape")) u.searchParams.set("etape", STEP[nid] || u.searchParams.get("etape"));
+      }
+      u.searchParams.set("lang", l);
+      a.setAttribute("href", u.pathname.split("/").pop() + u.search);
+    });
+    document.querySelectorAll('a[href^="docs/index.html"]').forEach((a) => {
+      if (!a.dataset.base) a.dataset.base = a.getAttribute("href");
+      a.setAttribute("href", l === "fr" ? a.dataset.base : a.dataset.base.replace("#/", "#/" + l + "/").replace(/docs\/index\.html$/, "docs/index.html#/" + l + "/"));
+    });
+  }
+  function applyPage() {
+    appLinks();
+    const d = T[lang()] || T.fr || {};
+    document.querySelectorAll("[data-p]").forEach((e) => { const v = d[e.dataset.p]; if (v != null) e.textContent = v; });
+    const note = document.querySelector('[data-p="frNote"]'); if (note) note.hidden = !d.frNote;
+    document.querySelectorAll("[data-plang]").forEach((b) => b.setAttribute("aria-pressed", b.dataset.plang === lang()));
+  }
+
+  function closeEmbed() {
+    try { parent.postMessage({ capitalLab: "intro-close" }, location.origin === "null" ? "*" : location.origin); } catch (e) { /* rien */ }
+  }
+
+  function start() {
+    const A = window.__ANIM; if (!A) return;
+    // téléphone tenu droit : la version 9:16 de l'animation
+    if (!params.get("format") && window.innerHeight > window.innerWidth * 1.15) A.setFormat("9x16");
+    // boutons de fin, à côté de « Revoir » du lecteur
+    const end = document.querySelector(".ap-end");
+    if (end) {
+      const mk = (html) => { const t = document.createElement("template"); t.innerHTML = html.trim(); return t.content.firstChild; };
+      if (EMBED) {
+        const b = mk('<button class="pg-btn primary" type="button" data-p="start"></button>');
+        b.addEventListener("click", closeEmbed); end.prepend(b);
+      } else {
+        end.prepend(mk('<a class="pg-btn" href="index.html?scenario=pyramide" data-app data-p="scenario"></a>'));
+        end.prepend(mk('<a class="pg-btn primary" href="index.html" data-app data-p="openApp"></a>'));
+      }
+    }
+    document.querySelectorAll(".pg-top .pg-btn.primary").forEach((a) => { if (!a.querySelector("svg")) a.insertAdjacentHTML("beforeend", ARROW); });
+    document.querySelectorAll("[data-plang]").forEach((b) => b.addEventListener("click", () => { A.setLang(b.dataset.plang); applyPage(); }));
+    // la langue peut aussi changer par le clavier (touche L) : on suit l'attribut lang
+    new MutationObserver(applyPage).observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+    applyPage();
+  }
+  document.getElementById("pg-skip").addEventListener("click", closeEmbed);
+  addEventListener("keydown", (e) => { if (EMBED && e.key === "Escape") closeEmbed(); });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+})();
+</script>
+</body>
+</html>

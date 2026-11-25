@@ -4,27 +4,29 @@
 (function () {
   'use strict';
   const P = window.P;
+  /* messages traduits par js/i18n.js quand il est chargé (navigateur) ; tels quels sinon (outils node) */
+  const T = (s, v) => (P.t ? P.t(s, v) : (v ? s.replace(/\{(\w+)\}/g, (m, k) => (v[k] != null ? v[k] : m)) : s));
 
   /* ------------------------------------------------------------ mots-clés */
   const KW = {
-    lien: ['lien', 'participation', 'detient', 'link'],
-    retirer: ['retirer', 'supprimer', 'enlever', 'remove', 'delete'],
-    renommer: ['renommer', 'rename'],
-    concert: ['concert', 'pacte', 'pact'],
-    vue: ['vue', 'perspective', 'view'],
-    focus: ['focus', 'surligner', 'highlight', 'montrer'],
-    note: ['note', 'bulle'],
-    effacer: ['effacer', 'vider', 'reset', 'clear'],
-    duree: ['duree', 'duration'],
-    regle: ['regle', 'option', 'rule'],
+    lien: ['lien', 'participation', 'detient', 'link', 'holds', 'vinculo', 'enlace'],
+    retirer: ['retirer', 'supprimer', 'enlever', 'remove', 'delete', 'quitar', 'eliminar'],
+    renommer: ['renommer', 'rename', 'renombrar'],
+    concert: ['concert', 'pacte', 'pact', 'concierto', 'pacto'],
+    vue: ['vue', 'perspective', 'view', 'vista'],
+    focus: ['focus', 'surligner', 'highlight', 'montrer', 'resaltar'],
+    note: ['note', 'bulle', 'nota'],
+    effacer: ['effacer', 'vider', 'reset', 'clear', 'borrar'],
+    duree: ['duree', 'duration', 'duracion'],
+    regle: ['regle', 'option', 'rule', 'regla'],
     disposition: ['disposition', 'layout'],
-    deplacer: ['deplacer', 'placer', 'move'],
-    selection: ['selection', 'selectionner', 'select', 'analyse', 'analyser'],
+    deplacer: ['deplacer', 'placer', 'move', 'mover'],
+    selection: ['selection', 'selectionner', 'select', 'analyse', 'analyser', 'seleccionar', 'analizar'],
     type: ['type']
   };
   const KWMAP = {};
   Object.keys(KW).forEach(k => KW[k].forEach(w => { KWMAP[w] = k; }));
-  const NONE = ['aucun', 'aucune', 'aucuns', 'aucunes', 'rien', 'none', 'off', '-'];
+  const NONE = ['aucun', 'aucune', 'aucuns', 'aucunes', 'rien', 'none', 'off', '-', 'ninguno', 'ninguna', 'nada'];
   const isNone = tok => tok && NONE.includes(P.norm(tok.v));
 
   P.tokenize = function (s) {
@@ -63,38 +65,38 @@
     const kw = P.norm(t[0].v);
     if (P.TYPE_ALIASES[kw]) return declCmd(P.TYPE_ALIASES[kw], t.slice(1));
     const cmd = KWMAP[kw];
-    if (!cmd) return err('Commande inconnue : « ' + t[0].v + ' »');
+    if (!cmd) return err(T('Commande inconnue : « {v} »', { v: t[0].v }));
     const a = t.slice(1);
 
     switch (cmd) {
       case 'lien': return linkCmd(a);
       case 'retirer': {
-        if (!a.length) return err('Que faut-il retirer ?');
+        if (!a.length) return err(T('Que faut-il retirer ?'));
         if (a.length >= 3 && a[1].v === '->') {
           const f = P.resolve(st, a[0]), to = P.resolve(st, a[2]);
-          if (!f || !to || !P.findLink(st, f, to)) return err('Participation introuvable');
+          if (!f || !to || !P.findLink(st, f, to)) return err(T('Participation introuvable'));
           P.removeLink(st, f, to); return;
         }
         for (const tok of a) {
           const c = findConcert(st, tok.v);
           if (c) { st.concerts = st.concerts.filter(x => x !== c); continue; }
           const id = P.resolve(st, tok);
-          if (id) P.removeEntity(st, id); else err('Introuvable : ' + tok.v);
+          if (id) P.removeEntity(st, id); else err(T('Introuvable : {v}', { v: tok.v }));
         }
         return;
       }
       case 'renommer': {
         const id = P.resolve(st, a[0]);
-        if (!id || !a[1]) return err('Syntaxe : renommer ID "Nouveau nom"');
+        if (!id || !a[1]) return err(T('Syntaxe : renommer ID "Nouveau nom"'));
         st.entities[id].name = a.slice(1).map(x => x.v).join(' '); return;
       }
       case 'type': {
         const id = P.resolve(st, a[0]), ty = a[1] && P.TYPE_ALIASES[P.norm(a[1].v)];
-        if (!id || !ty) return err('Syntaxe : type ID societe|holding|fonds|personne|etat|public');
+        if (!id || !ty) return err(T('Syntaxe : type ID societe|holding|fonds|personne|etat|public'));
         st.entities[id].type = ty; return;
       }
       case 'concert': {
-        if (!a.length) return err('Syntaxe : concert ID "Nom" MEMBRE1 MEMBRE2…');
+        if (!a.length) return err(T('Syntaxe : concert ID "Nom" MEMBRE1 MEMBRE2…'));
         let name = a[0].q ? a[0].v : null;
         const cid = a[0].q ? P.slug(a[0].v) : a[0].v;
         const mem = [];
@@ -104,7 +106,7 @@
         }
         let c = findConcert(st, cid);
         if (!c) {
-          if (mem.length < 2) return err('Un concert réunit au moins deux membres');
+          if (mem.length < 2) return err(T('Un concert réunit au moins deux membres'));
           c = { id: cid, name: name || cid, members: [] }; st.concerts.push(c);
         }
         if (name) c.name = name;
@@ -114,19 +116,19 @@
       case 'vue': {
         if (!a.length || isNone(a[0])) { st.view.perspective = null; return; }
         const id = P.resolve(st, a[0]);
-        if (!id) return err('Entité introuvable : ' + a[0].v);
+        if (!id) return err(T('Entité introuvable : {v}', { v: a[0].v }));
         st.view.perspective = id; return;
       }
       case 'focus': {
         st.view.focus = [];
         if (!a.length || isNone(a[0])) return;
-        a.forEach(tok => { const id = P.resolve(st, tok); if (id) st.view.focus.push(id); else err('Entité introuvable : ' + tok.v); });
+        a.forEach(tok => { const id = P.resolve(st, tok); if (id) st.view.focus.push(id); else err(T('Entité introuvable : {v}', { v: tok.v })); });
         return;
       }
       case 'note': {
         if (!a.length || isNone(a[0])) { st.view.notes = {}; return; }
         const id = P.resolve(st, a[0]);
-        if (!id) return err('Entité introuvable : ' + a[0].v);
+        if (!id) return err(T('Entité introuvable : {v}', { v: a[0].v }));
         if (!a[1] || isNone(a[1])) { delete st.view.notes[id]; return; }
         st.view.notes[id] = a.slice(1).map(x => x.v).join(' '); return;
       }
@@ -136,27 +138,27 @@
       case 'duree': return;
       case 'regle': {
         const w = a.map(x => P.norm(x.v));
-        const on = w.some(x => ['on', 'oui', 'actif', 'active', 'activee', 'vrai', 'true'].includes(x));
+        const on = w.some(x => ['on', 'oui', 'actif', 'active', 'activee', 'vrai', 'true', 'yes', 'si'].includes(x));
         const off = w.some(x => ['off', 'non', 'inactif', 'inactive', 'desactivee', 'faux', 'false'].includes(x));
-        if (!on && !off) return err('Syntaxe : regle 40 on|off');
+        if (!on && !off) return err(T('Syntaxe : regle 40 on|off'));
         st.options.deFacto = on; return;
       }
       case 'disposition': Object.values(st.entities).forEach(e => { e.fixed = false; }); return;
       case 'deplacer': {
         const id = P.resolve(st, a[0]), x = P.num(a[1] && a[1].v), y = P.num(a[2] && a[2].v);
-        if (!id || x == null || y == null) return err('Syntaxe : deplacer ID X Y');
+        if (!id || x == null || y == null) return err(T('Syntaxe : deplacer ID X Y'));
         Object.assign(st.entities[id], { x, y, fixed: true }); return;
       }
       case 'selection': {
         if (!a.length || isNone(a[0])) { st.view.select = null; return; }
         const id = P.resolve(st, a[0]);
-        if (!id) return err('Entité introuvable : ' + a[0].v);
+        if (!id) return err(T('Entité introuvable : {v}', { v: a[0].v }));
         st.view.select = id; return;
       }
     }
 
     function declCmd(type, a) {
-      if (!a.length) return err('Identifiant manquant');
+      if (!a.length) return err(T('Identifiant manquant'));
       let id, name = null;
       if (a[0].q) { name = a[0].v; id = P.resolve(st, a[0], false) || P.slug(a[0].v); }
       else id = a[0].v;
@@ -166,7 +168,7 @@
         if (tok.q) { if (name == null) name = tok.v; continue; }
         if (['at', 'en', '@', 'pos', 'position', 'a'].includes(w)) {
           x = P.num(a[k + 1] && a[k + 1].v); y = P.num(a[k + 2] && a[k + 2].v); k += 2;
-          if (x == null || y == null) err('Coordonnées invalides');
+          if (x == null || y == null) err(T('Coordonnées invalides'));
           continue;
         }
         let m = w.match(/^x=(.+)$/); if (m) { x = P.num(m[1]); continue; }
@@ -179,14 +181,14 @@
       if (x != null && y != null) { o.x = x; o.y = y; o.fixed = true; }
       P.addEntity(st, o);
       if (!P.TYPES[type].holdable && st.links.some(l => l.to === id))
-        err('« ' + st.entities[id].name + ' » a des actionnaires mais son type ne peut pas être détenu');
+        err(T('« {name} » a des actionnaires mais son type ne peut pas être détenu', { name: st.entities[id].name }));
     }
 
     function linkCmd(a) {
-      if (a.length < 3 || a[1].v !== '->') return err('Syntaxe attendue : lien A -> B 51%');
+      if (a.length < 3 || a[1].v !== '->') return err(T('Syntaxe attendue : lien A -> B 51%'));
       const f = P.resolve(st, a[0], true), to = P.resolve(st, a[2], true);
       const te = st.entities[to];
-      if (!(P.TYPES[te.type] || {}).holdable) return err('« ' + te.name + ' » (' + P.TYPES[te.type].label.toLowerCase() + ') ne peut pas être détenu(e)');
+      if (!(P.TYPES[te.type] || {}).holdable) return err(T('« {name} » ({type}) ne peut pas être détenu(e)', { name: te.name, type: P.TYPES[te.type].label.toLowerCase() }));
       let cap = null, votes = null;
       for (let k = 3; k < a.length; k++) {
         const w = P.norm(a[k].v);
@@ -194,17 +196,17 @@
         m = w.match(/^(votes|vote|dv|ddv|droits)=(.+)$/); if (m) { votes = P.num(m[2]); continue; }
         if (['capital', 'cap'].includes(w)) { cap = P.num(a[++k] && a[k].v); continue; }
         if (['votes', 'vote', 'dv', 'ddv', 'droits'].includes(w)) { votes = P.num(a[++k] && a[k].v); continue; }
-        if (['de', 'du', 'des', 'et', '%', 'de vote'].includes(w)) continue;
+        if (['de', 'du', 'des', 'et', '%', 'de vote', 'of', 'and', 'y', 'del'].includes(w)) continue;
         const n = P.num(a[k].v);
         if (n != null) { if (cap == null) cap = n; else if (votes == null) votes = n; continue; }
-        err('Mot non compris : « ' + a[k].v + ' »');
+        err(T('Mot non compris : « {v} »', { v: a[k].v }));
       }
-      if (cap == null && votes == null) return err('Pourcentage manquant');
+      if (cap == null && votes == null) return err(T('Pourcentage manquant'));
       const ex = P.findLink(st, f, to);
       if (cap == null) cap = ex ? ex.capital : votes;
       if (votes != null && Math.abs(votes - cap) < 1e-9) votes = null;
       if (cap <= 0 && (votes == null || votes <= 0)) { P.removeLink(st, f, to); return; }
-      if (cap > 100 || (votes || 0) > 100) err('Pourcentage supérieur à 100 % ramené à 100 %');
+      if (cap > 100 || (votes || 0) > 100) err(T('Pourcentage supérieur à 100 % ramené à 100 %'));
       P.setLink(st, f, to, cap, votes);
     }
   };
@@ -217,10 +219,10 @@
    *    ou d'une section « ### Réponse » ;
    *  - lignes indentées (ou citations « > ») sous un choix = explication de ce choix ;
    *  - tout ce qui suit « ### Réponse » (texte et blocs scene) n'apparaît qu'à la révélation. */
-  const ANSWER_RE = /^###\s+(?:💡\s*)?(?:réponse|reponse|correction|explication|solution)s?\b/i;
+  const ANSWER_RE = /^###\s+(?:💡\s*)?(?:réponse|reponse|correction|explication|solution|answer|explanation|respuesta|solución|solucion|explicación|explicacion)s?\b/i;
   const CHOICE_RE = /^\s*[-*+]\s+\[( |x|X)\]\s+(.*)$/;
-  const QTITLE_RE = /^(?:❓\s*)?(?:question|quiz)\b/i;
-  const QPREFIX_RE = /^(?:❓\s*)?(?:(?:question|quiz)\s*(?:n°\s*)?\d*\s*[:.\-–—]\s*)?/i;
+  const QTITLE_RE = /^(?:❓\s*)?(?:question|quiz|pregunta)\b/i;
+  const QPREFIX_RE = /^(?:❓\s*)?(?:(?:question|quiz|pregunta)\s*(?:n°\s*)?\d*\s*[:.\-–—]\s*)?/i;
 
   function makeStep(cur) {
     const ctx = [], choices = [];
@@ -251,7 +253,7 @@
     const first = lines.findIndex(l => l.trim()), last = lines.length - 1 - lines.slice().reverse().findIndex(l => l.trim());
     const open = first >= 0 && lines[first].trim().match(/^(`{3,}|~{3,})\s*(markdown|md)?\s*$/i);
     if (open && last > first && lines[last].trim() === open[1]) lines = lines.slice(first + 1, last);
-    const sc = { title: 'Scénario', description: '', steps: [], errors: [], meta: {} };
+    const sc = { title: T('Scénario'), description: '', steps: [], errors: [], meta: {} };
     const newCur = (title, intro) => ({ title, md: [], commands: [], duration: null, intro: !!intro, hasAnswer: false, answer: [], reveal: [] });
     let cur = newCur('Introduction', true);
     let inFence = null, isScene = false, gotTitle = false, i = 0;
@@ -312,6 +314,9 @@
    *  celles de l'étape n seulement si revealLast est vrai. */
   P.buildState = function (sc, n, errs, revealLast) {
     const st = P.newState();
+    // droit du scénario (en-tête « droit: uk ») : seuils et règles propres à ce droit
+    const droit = sc.meta && sc.meta.droit && P.norm(sc.meta.droit);
+    if (droit && P.JURIS && P.JURIS[droit]) st.options.droit = droit;
     for (let i = 0; i <= n && i < sc.steps.length; i++) {
       st.view.focus = []; st.view.notes = {}; st.view.select = null;
       const sink = errs ? { push: e => errs.push(Object.assign(e, { step: i })) } : null;
@@ -361,11 +366,11 @@
   };
 
   P.studioMarkdown = function (title, steps) {
-    let md = `# ${title}\n\n> Scénario créé avec le studio de l'atelier Capital Lab.\n\n`;
+    let md = `# ${title}\n\n> ${T("Scénario créé avec le studio de l'atelier Capital Lab.")}\n\n`;
     let prev = P.newState();
     steps.forEach((s, i) => {
       const cmds = P.toCommands(prev, s.snap);
-      md += `## ${s.title || 'Étape ' + (i + 1)}\n\n${(s.comment || '').trim()}\n\n\`\`\`scene\n${cmds.join('\n')}\n\`\`\`\n\n`;
+      md += `## ${s.title || T('Étape {n}', { n: i + 1 })}\n\n${(s.comment || '').trim()}\n\n\`\`\`scene\n${cmds.join('\n')}\n\`\`\`\n\n`;
       prev = s.snap;
     });
     return md;

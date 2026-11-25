@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Planche contact – anim-kit</title>
+<style>
+ /* Planche contact : une image clé par scène, dans chaque format, sur une seule page.
+    Usage : kit/planche.html?src=../demo/index.html&lang=fr
+    L'image clé d'une scène est data-key (secondes depuis son début), sinon 0,45 s avant sa fin. */
+ body { margin: 0; padding: 24px; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #f5f6f8; color: #1d2330; }
+ h1 { font-size: 22px; margin: 0 0 4px; }
+ .bar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; color: #5d6676; }
+ .bar select, .bar button { font: inherit; padding: 5px 10px; border: 1px solid #dde1e7; border-radius: 8px; background: #fff; cursor: pointer; }
+ table { border-collapse: separate; border-spacing: 14px 10px; margin-left: -14px; }
+ th { text-align: left; font-size: 13px; color: #5d6676; font-weight: 600; vertical-align: bottom; }
+ td.lbl { vertical-align: top; width: 150px; font-weight: 700; padding-top: 6px; }
+ td.lbl small { display: block; font-weight: 400; color: #5d6676; }
+ .cell { position: relative; overflow: hidden; border-radius: 8px; box-shadow: 0 4px 14px rgba(7, 18, 38, .18); background: #071226; }
+ .cell iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; pointer-events: none; }
+ .cell a { position: absolute; inset: 0; }
+ .cell.bad { outline: 4px solid #b3261e; outline-offset: 2px; }
+ .warn { background: #fbe7e5; color: #b3261e; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; }
+ .good { background: #e4f4ea; color: #1d7a46; border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; }
+ @media print { body { background: #fff; padding: 0; } .bar button, .bar select { display: none; } }
+</style>
+</head>
+<body>
+<h1 id="title">Planche contact</h1>
+<div class="bar"><span id="info"></span>
+ <label>Langue <select id="lang"></select></label>
+ <label>Hauteur <select id="hsel"><option>160</option><option selected>220</option><option>300</option></select></label>
+ <button type="button" onclick="print()">Imprimer</button></div>
+<div id="check"></div>
+<table id="grid"></table>
+<script>
+"use strict";
+const P = new URLSearchParams(location.search), SRC = P.get("src") || "../demo/index.html";
+const FORMATS = { "16x9": [1920, 1080], "9x16": [1080, 1920], "1x1": [1080, 1080] };
+const url = (q) => SRC + (SRC.includes("?") ? "&" : "?") + new URLSearchParams(q);
+// 1. une page en mode rendu pour lire la liste des scènes
+// (hors écran mais mise en page réelle, pour pouvoir mesurer les débordements)
+const probe = document.createElement("iframe"); probe.style.cssText = "position:fixed;left:-99999px;top:0;width:1920px;height:1920px;border:0;visibility:hidden";
+probe.src = url(P.get("lang") ? { render: 1, lang: P.get("lang") } : { render: 1 });
+probe.onload = async () => { const A = probe.contentWindow.__ANIM; await A.ready;
+ const lang = P.get("lang") || A.langs[0];
+ // contrôle automatique : éléments qui sortent de la scène, par format et par scène
+ const issues = A.check(), box = document.getElementById("check");
+ box.className = issues.length ? "warn" : "good";
+ box.innerHTML = issues.length ? "<b>Débordements à corriger :</b><br>" + issues.map((x) => `scène ${x.scene} (${x.chapter}) en ${x.format.replace("x", ":")} : ` +
+   Object.entries(x.depasse).filter(([, v]) => v).map(([k, v]) => `${v} px en ${k}`).join(", ")).join("<br>") : "✓ Aucun élément ne sort de la scène, dans aucun format.";
+ window.ISSUES = issues;
+ document.getElementById("lang").innerHTML = A.langs.map((l) => `<option${l === lang ? " selected" : ""}>${l}</option>`).join("");
+ document.getElementById("title").textContent = "Planche contact – " + probe.contentDocument.title;
+ document.getElementById("info").textContent = `${A.scenes.length} scènes · ${A.duration.toFixed(1)} s · ${SRC}`;
+ document.getElementById("lang").onchange = () => { location.search = "?" + new URLSearchParams({ src: SRC, lang: document.getElementById("lang").value }); };
+ const draw = () => build(A, document.getElementById("lang").value, +document.getElementById("hsel").value);
+ document.getElementById("hsel").onchange = draw; draw(); };
+document.body.appendChild(probe);
+// 2. une iframe par scène et par format, figée sur l'image clé
+function build(A, lang, h) {
+ const f = Object.keys(FORMATS);
+ let html = `<tr><th></th>${f.map((x) => `<th>${x.replace("x", ":")}</th>`).join("")}</tr>`;
+ A.scenes.forEach((s, i) => {
+  html += `<tr><td class="lbl">${i + 1}. ${s.chapter || ""}<small>${s.start.toFixed(1)} → ${s.end.toFixed(1)} s<br>image : ${s.key.toFixed(2)} s</small></td>`;
+  for (const fmt of f) { const [W, H] = FORMATS[fmt], k = h / H, src = url({ render: 1, format: fmt, lang, t: s.key.toFixed(2) });
+   html += `<td><div class="cell${(window.ISSUES || []).some((x) => x.format === fmt && x.scene === i + 1) ? " bad" : ""}" style="width:${Math.round(W * k)}px;height:${h}px"><iframe loading="lazy" src="${src}" width="${W}" height="${H}" style="transform:scale(${k})" title="${fmt}"></iframe>
+    <a href="${url({ format: fmt, lang, t: s.key.toFixed(2) })}" target="_blank" title="Ouvrir à cet instant"></a></div></td>`; }
+  html += "</tr>"; });
+ document.getElementById("grid").innerHTML = html;
+}
+</script>
+</body>
+</html>

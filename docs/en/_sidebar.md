@@ -1,0 +1,16 @@
+- [Home](README.md)
+- [🤖 Prepare your lesson with an AI](ia-et-skill.md)
+- **Teach in class**
+  - [Cinema mode: playback, questions, phone, sharing](mode-cinema.md)
+  - [Available scenarios](scenarios.md)
+- **Build**
+  - [Free mode and studio](prise-en-main.md)
+  - [Scenario format](format-scenario.md)
+- **Understand**
+  - [Calculation rules (UK and US)](regles-de-calcul.md)
+- **Reference**
+  - [Instructions page for AIs](instructions-ia.md)
+  - [Developers](developpeurs.md)
+- **Other languages**
+  - [Français](../README.md)
+  - [Español](../es/README.md)

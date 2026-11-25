@@ -11,6 +11,8 @@ des pactes, des droits de vote double, l'autocontrôle…
 **▶ En ligne : [edu-fpar.github.io/capital-lab](https://edu-fpar.github.io/capital-lab/)** (aussi sur téléphone) ·
 [documentation](https://edu-fpar.github.io/capital-lab/docs/)
 
+**Trois langues, quatre droits** : français (droit français), anglais (droit britannique ou américain, au choix dans la barre d'outils) et espagnol (droit espagnol). Langue : sélecteur dans la barre d'outils ou `?lang=en` / `?lang=es`. Les seuils, la légende, les textes d'analyse et les scénarios suivent le droit choisi. 🇬🇧 [English below](#english) · 🇪🇸 [Español más abajo](#español)
+
 Aucune installation : ouvrez `index.html` (double-clic) ou servez le dossier avec UwAmp
 (`http://localhost/edu-fpar/capital-lab/`). Pas de dépendance externe, fonctionne hors ligne.
 
@@ -31,6 +33,14 @@ Aucune installation : ouvrez `index.html` (double-clic) ou servez le dossier ave
 
 `pyramide`, `majorites`, `droits-de-vote`, `autocontrole`, `concert`, `controle-de-fait`,
 `consolidation`, `dilution`, `lbo`, `ifrs` — dans `js/library.js`.
+
+Versions étrangères, adaptées au droit de chaque pays (pas de simples traductions ; le contrôle de fait à 40 %, propre au droit français, n'y figure pas) :
+
+- droit britannique, en anglais (`js/library-uk.js`) : `uk-pyramid`, `uk-majorities`, `uk-voting-rights`, `uk-treasury-shares`, `uk-concert`, `uk-consolidation`, `uk-dilution`, `uk-lbo`, `uk-ifrs` ;
+- droit américain, en anglais (`js/library-us.js`) : `us-pyramid`, `us-majority`, `us-dual-class`, `us-treasury-stock`, `us-group`, `us-consolidation`, `us-dilution`, `us-lbo` ;
+- droit espagnol, en espagnol (`js/library-es.js`) : `es-piramide`, `es-mayorias`, `es-derechos-voto`, `es-autocartera`, `es-concierto`, `es-consolidacion`, `es-dilucion`, `es-lbo`, `es-niif`.
+
+Un scénario indique son droit par un en-tête `---` / `droit: uk` / `---`.
 
 ## Écrire un scénario (enseignant ou IA)
 
@@ -62,12 +72,17 @@ focus H1
 
 | Fichier | Rôle |
 |---|---|
-| `js/model.js` | moteur : contrôle en chaîne, autocontrôle, concert, contrôle de fait, intérêts, disposition auto |
+| `js/model.js` | moteur : contrôle en chaîne, autocontrôle, concert, contrôle de fait, intérêts, disposition auto ; seuils et références de chaque droit (`P.JURIS` : fr, uk, us, es) |
+| `js/i18n.js`, `js/i18n-en.js`, `js/i18n-es.js` | langue de l'interface (`P.t`) et dictionnaires ; `node tools/i18n-check.js` signale les chaînes non traduites |
+| `js/docs-en.js`, `js/docs-es.js`, `docs/en/`, `docs/es/` | aide intégrée, format, consigne IA et documentation en anglais et en espagnol |
+| `docs/i18n-spec.md` | cadrage des langues, des droits et des seuils |
 | `js/scenario.js` | parseur markdown → étapes, commandes, export studio, rendu markdown |
 | `js/app.js` | interface : canevas SVG, inspecteur, lecteur cinéma, studio |
 | `js/library.js` | scénarios intégrés |
 | `js/docs.js` | aide, spécification du format, prompt IA |
 | `js/scorm.js`, `js/scorm-runtime.js` | export SCORM et dialogue avec la plateforme dans le paquet |
+| `intro.html`, `intro/kit/` | visite guidée en vidéo (FR/EN/ES, 16:9 · 9:16 · 1:1), faite avec anim-kit ; `?dev=1` montre les formats et les coulisses, `intro/kit/planche.html?src=../../intro.html` la planche contact |
+| `js/intro-launcher.js` | bouton 🎬 Intro et ouverture automatique de la vidéo à la première visite (`?intro=0` pour l'éviter) |
 
 ## Remerciements
 
@@ -96,3 +111,11 @@ Vous l'utilisez en cours ? [Dites-le-moi](https://www.linkedin.com/in/francois-p
 > Parlant, F. (2026). *Capital Lab* [Educational software]. Zenodo. https://doi.org/10.5281/zenodo.24464409
 
 Using it in class? [Let me know](https://www.linkedin.com/in/francois-parlant/): this feedback helps me improve the tool and spread the word.
+
+## English
+
+Capital Lab is also available **in English**, under **UK law** (Companies Act 2006, Takeover Code) or **US law** (Delaware, federal securities law): choose the law in the toolbar. Thresholds, legend, analysis and the built-in scenarios follow the chosen law. Open [edu-fpar.github.io/capital-lab/?lang=en](https://edu-fpar.github.io/capital-lab/?lang=en) · [documentation](https://edu-fpar.github.io/capital-lab/docs/#/en/) · [video tour](https://edu-fpar.github.io/capital-lab/intro.html?lang=en).
+
+## Español
+
+Capital Lab también está disponible **en español**, con el **derecho español** (Ley de Sociedades de Capital, OPA, NIIF). Abrir [edu-fpar.github.io/capital-lab/?lang=es](https://edu-fpar.github.io/capital-lab/?lang=es) · [documentación](https://edu-fpar.github.io/capital-lab/docs/#/es/) · [visita guiada](https://edu-fpar.github.io/capital-lab/intro.html?lang=es).

@@ -7,6 +7,7 @@
 (function () {
   'use strict';
   const P = window.P = window.P || {};
+  const T = (s, v) => (P.t ? P.t(s, v) : (v ? s.replace(/\{(\w+)\}/g, (m, k) => (v[k] != null ? v[k] : m)) : s));
 
   /* ---------------------------------------------------------- zip */
   const CRC = (() => {
@@ -117,26 +118,37 @@ ${files}
     for (const b of bases) {
       try { const r = await fetch(b + path, { cache: 'no-cache' }); if (r.ok) return await r.text(); } catch (e) { /* base suivante */ }
     }
-    throw new Error('Fichier introuvable : ' + path);
+    throw new Error(T('Fichier introuvable : {path}', { path }));
   }
 
-  /** o : { md, title, version ('1.2' | '2004'), score (bool), publicBase } → Blob du paquet SCORM. */
+  /** o : { md, title, version ('1.2' | '2004'), score (bool), publicBase, lang, droit } → Blob du paquet SCORM.
+   *  Langue autre que le français : le paquet garde la langue de l'interface (<html lang>, choix mémorisé avant js/i18n.js). */
   P.scormPackage = async function (o) {
     const bases = ['', o.publicBase].filter((b, i, a) => b != null && a.indexOf(b) === i);
     let html = await fetchText('index.html', bases);
     // les fichiers à embarquer sont ceux que charge la page
     const assets = [];
     html.replace(/<(?:script|link)\b[^>]*(?:src|href)="((?:js|css)\/[^"?#]+)"/g, (m, f) => { assets.push(f); return m; });
-    if (!assets.includes('js/app.js')) throw new Error('index.html inattendu');
+    if (!assets.includes('js/app.js')) throw new Error(T('index.html inattendu'));
     const runtime = 'js/scorm-runtime.js', data = 'js/scenario-data.js';
     html = html
       .replace(/<title>[\s\S]*?<\/title>/, `<title>${xml(o.title)} — Capital Lab</title>`)
       .replace(/<link rel="canonical"[^>]*>\n?/, '')
       .replace('<body class="libre">', '<body class="libre embed">')
       .replace('<script src="js/app.js"></script>', `<script src="${data}"></script>\n<script src="${runtime}"></script>\n<script src="js/app.js"></script>`);
+    if (o.lang && o.lang !== 'fr' && /^[a-z]{2}$/.test(o.lang)) {
+      html = html
+        .replace(/<html lang="[^"]*">/, `<html lang="${o.lang}">`)
+        .replace('<script src="js/i18n.js"></script>', `<script>try{localStorage.setItem('capital-lab.lang','${o.lang}')}catch(e){}</script>\n<script src="js/i18n.js"></script>`);
+    }
     const files = [{ name: 'index.html', data: html }];
-    for (const f of assets.concat(runtime)) files.push({ name: f, data: await fetchText(f, bases) });
+    // traductions, documentation et scénarios d'autres langues : facultatifs (ignorés s'ils manquent)
+    const optional = f => /^js\/(i18n-|docs-|library-)/.test(f);
+    for (const f of assets.concat(runtime)) {
+      try { files.push({ name: f, data: await fetchText(f, bases) }); } catch (e) { if (!optional(f)) throw e; }
+    }
     const embed = { md: o.md, title: o.title, score: !!o.score, scorm: o.version === '2004' ? '2004' : '1.2' };
+    if (o.droit && o.droit !== 'fr') embed.droit = o.droit;
     files.push({ name: data, data: '/* Scénario embarqué par l\'export SCORM de Capital Lab. */\nwindow.CAPITAL_LAB_EMBED = ' + JSON.stringify(embed) + ';\n' });
     const manifest = P.scormManifest({ title: o.title, version: embed.scorm, files: files.map(f => f.name) });
     return P.zip([{ name: 'imsmanifest.xml', data: manifest }].concat(files));

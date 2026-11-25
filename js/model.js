@@ -7,24 +7,25 @@
   'use strict';
   const P = window.P = window.P || {};
 
+  const t = s => (P.t ? P.t(s) : s);
   P.TYPES = {
-    personne: { label: 'Personne physique', short: 'Personne', icon: '👤', prefix: 'P', holdable: false },
-    societe: { label: 'Société', short: 'Société', icon: '🏢', prefix: 'S', holdable: true },
+    personne: { label: t('Personne physique'), short: t('Personne'), icon: '👤', prefix: 'P', holdable: false },
+    societe: { label: t('Société'), short: t('Société'), icon: '🏢', prefix: 'S', holdable: true },
     holding: { label: 'Holding', short: 'Holding', icon: '🏦', prefix: 'H', holdable: true },
-    fonds: { label: "Fonds d'investissement", short: 'Fonds', icon: '💼', prefix: 'F', holdable: true },
-    etat: { label: 'État / entité publique', short: 'État', icon: '🏛️', prefix: 'E', holdable: false },
-    public: { label: 'Public / flottant', short: 'Public', icon: '👥', prefix: 'PUB', holdable: false }
+    fonds: { label: t("Fonds d'investissement"), short: t('Fonds'), icon: '💼', prefix: 'F', holdable: true },
+    etat: { label: t('État / entité publique'), short: t('État'), icon: '🏛️', prefix: 'E', holdable: false },
+    public: { label: t('Public / flottant'), short: t('Public'), icon: '👥', prefix: 'PUB', holdable: false }
   };
 
   P.norm = s => String(s == null ? '' : s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
 
   const aliases = {
-    personne: ['personne', 'physique', 'personne-physique', 'person', 'famille', 'individu', 'dirigeant'],
-    societe: ['societe', 'entreprise', 'company', 'filiale', 'cible'],
+    personne: ['personne', 'physique', 'personne-physique', 'person', 'famille', 'individu', 'dirigeant', 'individual', 'family', 'persona', 'familia'],
+    societe: ['societe', 'entreprise', 'company', 'corporation', 'subsidiary', 'target', 'filiale', 'cible', 'sociedad', 'empresa', 'filial'],
     holding: ['holding'],
-    fonds: ['fonds', 'fund', 'investisseur'],
-    etat: ['etat', 'state'],
-    public: ['public', 'flottant', 'float', 'marche', 'bourse']
+    fonds: ['fonds', 'fund', 'investor', 'investisseur', 'fondo', 'inversor'],
+    etat: ['etat', 'state', 'government', 'estado'],
+    public: ['public', 'flottant', 'float', 'marche', 'bourse', 'market', 'publico', 'mercado', 'bolsa']
   };
   P.TYPE_ALIASES = {};
   Object.keys(aliases).forEach(t => aliases[t].forEach(a => { P.TYPE_ALIASES[a] = t; }));
@@ -46,32 +47,147 @@
   P.round2 = v => Math.round(v * 100) / 100;
   P.fmt = function (v) {
     if (!isFinite(v)) v = 0;
-    return P.round2(v).toLocaleString('fr-FR', { maximumFractionDigits: 2 }) + ' %';
+    return P.round2(v).toLocaleString(P.locale || 'fr-FR', { maximumFractionDigits: 2 }) + (P.lang === 'en' ? '%' : ' %');
   };
 
-  /* Catégories de seuils (appliquées aux droits de vote effectifs) */
-  P.CATS = [
-    { key: 'retrait', test: v => v >= 90 - 1e-9, color: '#065f46', label: '≥ 90 % — retrait obligatoire possible',
-      text: "Au moins 90 % du capital et des droits de vote : dans une société cotée, l'actionnaire majoritaire peut mettre en œuvre un retrait obligatoire (squeeze-out) des minoritaires." },
-    { key: 'qualifiee', test: v => v >= 200 / 3 - 1e-6, color: '#15803d', label: '≥ 2/3 — majorité qualifiée (AGE)',
-      text: "Au moins les deux tiers des voix : l'actionnaire décide seul en assemblée générale extraordinaire (modification des statuts, augmentation de capital, fusion…)." },
-    { key: 'majorite', test: v => v > 50 + 1e-9, color: '#22c55e', label: '> 50 % — majorité, contrôle',
-      text: "Plus de 50 % des droits de vote : contrôle exclusif « de droit » (art. L233-3, I, 1° C. com.). L'actionnaire décide seul en assemblée générale ordinaire." },
-    { key: 'blocage', test: v => v > 100 / 3 + 1e-6, color: '#f97316', label: '> 1/3 — minorité de blocage',
-      text: "Plus d'un tiers des voix : minorité de blocage en AGE (SA). L'actionnaire peut empêcher toute modification des statuts." },
-    { key: 'influence', test: v => v >= 20 - 1e-9, color: '#a855f7', label: '≥ 20 % — influence notable',
-      text: "Au moins 20 % des voix : influence notable présumée — en consolidation, la société est en principe mise en équivalence." },
-    { key: 'participation', test: v => v >= 10 - 1e-9, color: '#3b82f6', label: '≥ 10 % — participation',
-      text: "Entre 10 % et 50 % du capital : « participation » au sens de l'art. L233-2 C. com." },
-    { key: 'placement', test: () => true, color: '#94a3b8', label: '< 10 % — placement',
-      text: "Moins de 10 % : simple placement financier (dans les sociétés cotées, les franchissements de seuils sont déclarés dès 5 %)." }
-  ];
+  /* ------------------------------------------------------------ droits applicables
+   * Chaque droit a ses seuils (catégories appliquées aux droits de vote effectifs, du plus haut au plus bas),
+   * ses références légales et ses règles propres. Le contrôle reste partout : plus de 50 % des voix
+   * effectives, transmis en chaîne. La présomption de contrôle de fait (40 %) est propre au droit français.
+   * Spécification : docs/i18n-spec.md. */
+  const PLACEMENT = '#94a3b8';
+  P.JURIS = {
+    fr: {
+      code: 'fr', lang: 'fr', flag: '🇫🇷', name: 'France', deFacto: true,
+      cats: [
+        { key: 'retrait', test: v => v >= 90 - 1e-9, color: '#065f46', label: '≥ 90 % — retrait obligatoire possible',
+          text: "Au moins 90 % du capital et des droits de vote : dans une société cotée, l'actionnaire majoritaire peut mettre en œuvre un retrait obligatoire (squeeze-out) des minoritaires." },
+        { key: 'qualifiee', test: v => v >= 200 / 3 - 1e-6, color: '#15803d', label: '≥ 2/3 — majorité qualifiée (AGE)',
+          text: "Au moins les deux tiers des voix : l'actionnaire décide seul en assemblée générale extraordinaire (modification des statuts, augmentation de capital, fusion…)." },
+        { key: 'majorite', test: v => v > 50 + 1e-9, color: '#22c55e', label: '> 50 % — majorité, contrôle',
+          text: "Plus de 50 % des droits de vote : contrôle exclusif « de droit » (art. L233-3, I, 1° C. com.). L'actionnaire décide seul en assemblée générale ordinaire." },
+        { key: 'blocage', test: v => v > 100 / 3 + 1e-6, color: '#f97316', label: '> 1/3 — minorité de blocage',
+          text: "Plus d'un tiers des voix : minorité de blocage en AGE (SA). L'actionnaire peut empêcher toute modification des statuts." },
+        { key: 'influence', test: v => v >= 20 - 1e-9, color: '#a855f7', label: '≥ 20 % — influence notable',
+          text: "Au moins 20 % des voix : influence notable présumée — en consolidation, la société est en principe mise en équivalence." },
+        { key: 'participation', test: v => v >= 10 - 1e-9, color: '#3b82f6', label: '≥ 10 % — participation',
+          text: "Entre 10 % et 50 % du capital : « participation » au sens de l'art. L233-2 C. com." },
+        { key: 'placement', test: () => true, color: PLACEMENT, label: '< 10 % — placement',
+          text: "Moins de 10 % : simple placement financier (dans les sociétés cotées, les franchissements de seuils sont déclarés dès 5 %)." }
+      ],
+      txt: {
+        control: 'art. L233-3 C. com.',
+        autocontrol: "actions détenues par {name} elle-même ou par des sociétés qu'elle contrôle — art. L225-210 et L233-31 C. com.",
+        concert: "Action de concert (art. L233-10 C. com.) : les membres sont traités comme <b>un seul bloc de vote</b>. S'ils dépassent ensemble 50 % des voix d'une société, ils la contrôlent conjointement (art. L233-3, III).",
+        deFacto: 'Présomption de contrôle de fait : plus de 40 % des voix et aucun autre associé au-dessus (art. L233-3 II C. com.)'
+      }
+    },
+    uk: {
+      code: 'uk', lang: 'en', flag: '🇬🇧', name: 'United Kingdom', deFacto: false,
+      cats: [
+        { key: 'uk-squeeze', test: v => v >= 90 - 1e-9, color: '#065f46', label: '≥ 90% — squeeze-out',
+          text: 'At least 90%: after a takeover offer, the bidder can compulsorily buy out the remaining shareholders (Companies Act 2006, s. 979).' },
+        { key: 'uk-special', test: v => v >= 75 - 1e-9, color: '#15803d', label: '≥ 75% — special resolution',
+          text: 'At least 75% of the votes: passes special resolutions alone (s. 283) — amending the articles (s. 21), disapplying pre-emption rights, reducing capital…' },
+        { key: 'uk-majority', test: v => v > 50 + 1e-9, color: '#22c55e', label: '> 50% — ordinary resolution, control',
+          text: 'More than 50% of the voting rights: passes ordinary resolutions (s. 282), appoints and removes directors. The company is its subsidiary (s. 1159): control.' },
+        { key: 'uk-bid', test: v => v >= 30 - 1e-9, color: '#ea580c', label: '≥ 30% — mandatory bid (Rule 9)',
+          text: 'At least 30% of the voting rights of a company subject to the Takeover Code: acquiring this stake triggers a mandatory offer for the rest (Rule 9). Above 25%, it also blocks special resolutions.' },
+        { key: 'uk-blocking', test: v => v > 25 + 1e-9, color: '#f97316', label: '> 25% — blocking minority',
+          text: 'More than 25% of the votes: can defeat any special resolution (75% needed). Also a person with significant control (PSC register).' },
+        { key: 'uk-influence', test: v => v >= 20 - 1e-9, color: '#a855f7', label: '≥ 20% — significant influence',
+          text: 'At least 20% of the votes: significant influence is presumed (IAS 28 / FRS 102) — in group accounts, the company is normally an associate, accounted for using the equity method.' },
+        { key: 'uk-notifiable', test: v => v >= 3 - 1e-9, color: '#3b82f6', label: '≥ 3% — notifiable holding',
+          text: 'At least 3% of the voting rights of a listed company: the holding must be disclosed (FCA Disclosure Guidance and Transparency Rules, DTR 5).' },
+        { key: 'uk-investment', test: () => true, color: PLACEMENT, label: '< 3% — investment',
+          text: 'Less than 3%: a portfolio investment.' }
+      ],
+      txt: {
+        control: 'Companies Act 2006, s. 1159 and s. 1162',
+        autocontrol: 'shares held by {name} itself (treasury shares carry no votes, s. 726) or by a company it controls (a subsidiary cannot be a member of its holding company, s. 136)',
+        concert: 'Persons acting in concert (Takeover Code, Definitions): the members are treated as <b>a single voting block</b>. If together they hold more than 50% of the votes of a company, they control it jointly.',
+        deFacto: ''
+      }
+    },
+    us: {
+      code: 'us', lang: 'en', flag: '🇺🇸', name: 'United States', deFacto: false,
+      cats: [
+        { key: 'us-shortform', test: v => v >= 90 - 1e-9, color: '#065f46', label: '≥ 90% — short-form merger',
+          text: 'At least 90% of each class: the parent can merge the subsidiary without a stockholder vote (DGCL §253).' },
+        { key: 'us-majority', test: v => v > 50 + 1e-9, color: '#22c55e', label: '> 50% — majority, control',
+          text: 'More than 50% of the voting power: elects the board and approves charter amendments and mergers (DGCL §242, §251: majority of the outstanding stock). Control. There is no statutory blocking minority: a supermajority applies only if the charter or bylaws require it.' },
+        { key: 'us-influence', test: v => v >= 20 - 1e-9, color: '#a855f7', label: '≥ 20% — significant influence',
+          text: 'At least 20% of the voting stock: significant influence is presumed (ASC 323) — the investor normally uses the equity method. From 15%, the holder is also an interested stockholder (DGCL §203).' },
+        { key: 'us-interested', test: v => v >= 15 - 1e-9, color: '#f97316', label: '≥ 15% — interested stockholder',
+          text: 'At least 15% of the voting stock: interested stockholder (DGCL §203) — business combinations with the corporation are restricted for 3 years unless approved by the board.' },
+        { key: 'us-insider', test: v => v >= 10 - 1e-9, color: '#0ea5e9', label: '≥ 10% — Section 16 insider',
+          text: 'At least 10% of a registered class: beneficial owner treated as an insider (Exchange Act §16): ownership reports and short-swing profit rule.' },
+        { key: 'us-beneficial', test: v => v > 5 + 1e-9, color: '#3b82f6', label: '> 5% — Schedule 13D/13G',
+          text: 'More than 5% of a registered class of equity: the beneficial owner must file Schedule 13D (or the short-form 13G) with the SEC (Exchange Act §13(d)).' },
+        { key: 'us-investment', test: () => true, color: PLACEMENT, label: '≤ 5% — investment',
+          text: '5% or less: a portfolio investment.' }
+      ],
+      txt: {
+        control: 'majority of the voting power',
+        autocontrol: 'shares held by {name} itself (treasury stock) or by a majority-owned subsidiary: they are not voted (DGCL §160(c))',
+        concert: 'A "group" (Exchange Act §13(d)(3)): the members acting together are treated as <b>a single voting block</b>. If together they hold more than 50% of the votes of a company, they control it jointly.',
+        deFacto: ''
+      }
+    },
+    es: {
+      code: 'es', lang: 'es', flag: '🇪🇸', name: 'España', deFacto: false,
+      cats: [
+        { key: 'es-venta', test: v => v >= 90 - 1e-9, color: '#065f46', label: '≥ 90 % — venta forzosa',
+          text: 'Al menos el 90 %: tras una OPA sobre la totalidad del capital, el oferente puede exigir la venta forzosa de las acciones de los minoritarios (squeeze-out).' },
+        { key: 'es-reforzada', test: v => v >= 200 / 3 - 1e-6, color: '#15803d', label: '≥ 2/3 — mayoría reforzada',
+          text: 'Al menos dos tercios: en la SA, si en la junta concurre menos del 50 % del capital, modificar los estatutos exige 2/3 del capital presente o representado (art. 201.2 LSC); en la SL, la transformación, la fusión, la escisión o la supresión del derecho de preferencia exigen 2/3 de los votos (art. 199 b LSC).' },
+        { key: 'es-mayoria', test: v => v > 50 + 1e-9, color: '#22c55e', label: '> 50 % — mayoría, control',
+          text: 'Más del 50 % de los derechos de voto: mayoría absoluta en la junta y control de la sociedad (art. 42 del Código de Comercio).' },
+        { key: 'es-bloqueo', test: v => v > 100 / 3 + 1e-6, color: '#f97316', label: '> 1/3 — minoría de bloqueo',
+          text: 'Más de un tercio de los votos: puede impedir los acuerdos que exigen dos tercios (SL, art. 199 b LSC; SA con quórum inferior al 50 %).' },
+        { key: 'es-opa', test: v => v >= 30 - 1e-9, color: '#ea580c', label: '≥ 30 % — OPA obligatoria',
+          text: 'Al menos el 30 % de los derechos de voto de una sociedad cotizada: quien lo alcanza debe formular una OPA sobre la totalidad del capital (RD 1066/2007, art. 4).' },
+        { key: 'es-influencia', test: v => v >= 20 - 1e-9, color: '#a855f7', label: '≥ 20 % — influencia significativa',
+          text: 'Al menos el 20 % de los votos: se presume influencia significativa (NIC 28) — en las cuentas consolidadas, la sociedad se integra por el método de la participación.' },
+        { key: 'es-minoria', test: v => v >= 5 - 1e-9, color: '#3b82f6', label: '≥ 5 % — derechos de minoría',
+          text: 'Al menos el 5 % del capital: derechos de minoría — solicitar la convocatoria de la junta, el complemento del orden del día, ejercer la acción social de responsabilidad (3 % en las sociedades cotizadas).' },
+        { key: 'es-inversion', test: () => true, color: PLACEMENT, label: '< 5 % — inversión',
+          text: 'Menos del 5 %: inversión financiera (en las sociedades cotizadas, las participaciones se comunican desde el 3 %).' }
+      ],
+      txt: {
+        control: 'art. 42 del Código de Comercio',
+        autocontrol: 'acciones de {name} en su propia cartera (autocartera, art. 148 LSC) o en manos de sociedades que controla (art. 134 y ss. LSC): sus derechos de voto quedan en suspenso',
+        concert: 'Actuación concertada (RD 1066/2007, art. 5): los miembros se tratan como <b>un solo bloque de voto</b>. Si juntos superan el 50 % de los votos de una sociedad, la controlan conjuntamente.',
+        deFacto: ''
+      }
+    }
+  };
+  /** Droits proposés dans chaque langue de l'interface */
+  P.LAWS_BY_LANG = { fr: ['fr'], en: ['uk', 'us'], es: ['es'] };
+  P.lawsFor = l => P.LAWS_BY_LANG[l] || ['fr'];
+  /** Droit par défaut : le dernier choisi, sinon celui de la langue (anglais : US si le navigateur est en en-US, sinon UK) */
+  P.defaultJuris = function () {
+    const laws = P.lawsFor(P.lang || 'fr');
+    try { const s = localStorage.getItem('capital-lab.droit'); if (laws.includes(s)) return s; } catch (e) { /* */ }
+    if (P.lang === 'en') return typeof navigator !== 'undefined' && /^en-us$/i.test(navigator.language || '') ? 'us' : 'uk';
+    return laws[0];
+  };
+  /** Toutes les catégories de tous les droits (marqueurs SVG des flèches) */
+  P.CATS_ALL = Object.values(P.JURIS).reduce((a, j) => a.concat(j.cats), []);
+  /** Droit en vigueur pour l'affichage (seuils, légende, textes) */
+  P.setJuris = function (code) {
+    if (!P.JURIS[code]) code = 'fr';
+    P.juris = code; P.CATS = P.JURIS[code].cats;
+    return P.JURIS[code];
+  };
+  P.jur = () => P.JURIS[P.juris] || P.JURIS.fr;
+  P.setJuris(P.defaultJuris());
   P.category = v => P.CATS.find(c => c.test(v));
 
   /* ------------------------------------------------------------ état */
   P.newState = () => ({
     entities: {}, links: [], concerts: [],
-    options: { deFacto: false },
+    options: { deFacto: false, droit: P.juris || 'fr' },
     view: { perspective: null, focus: [], notes: {}, select: null }
   });
   P.clone = s => JSON.parse(JSON.stringify(s));
@@ -175,7 +291,8 @@
       blocks.push(b); blockById[b.id] = b;
     });
 
-    const deFacto = !!(st.options && st.options.deFacto);
+    const J = P.JURIS[(st.options && st.options.droit) || P.juris] || P.JURIS.fr;
+    const deFacto = !!(st.options && st.options.deFacto) && J.deFacto;
     let ctrl = null, how = null, norm = {}, supp = {}, prevSig = '';
     /* Point fixe : les voix des actions d'autocontrôle (détenues par la société elle-même
      * ou par une société qu'elle contrôle) sont neutralisées (art. L233-31, L225-210). */

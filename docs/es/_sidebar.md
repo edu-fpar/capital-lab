@@ -1,0 +1,16 @@
+- [Inicio](README.md)
+- [🤖 Preparar la clase con una IA](ia-et-skill.md)
+- **Presentar en clase**
+  - [Modo cine: reproducción, preguntas, móvil, compartir](mode-cinema.md)
+  - [Escenarios disponibles](scenarios.md)
+- **Construir**
+  - [Modo libre y estudio](prise-en-main.md)
+  - [Formato de los escenarios](format-scenario.md)
+- **Entender**
+  - [Reglas de cálculo (derecho español)](regles-de-calcul.md)
+- **Referencia**
+  - [Instrucciones para una IA](instructions-ia.md)
+  - [Desarrolladores](developpeurs.md)
+- **Otros idiomas**
+  - [Français](../README.md)
+  - [English](../en/README.md)

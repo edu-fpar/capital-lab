@@ -7,6 +7,20 @@
   const $ = (s, r) => (r || document).querySelector(s);
   const $$ = (s, r) => Array.from((r || document).querySelectorAll(s));
   const esc = P.esc, fmt = P.fmt;
+  const t = P.t;
+  /* minorité de blocage et majorité renforcée selon le droit (textes dans la langue du droit, comme P.JURIS) ;
+   * droit américain : pas de minorité de blocage légale (supermajorité seulement si les statuts la prévoient) */
+  const BLOCKING = {
+    fr: { lo: 100 / 3 + 1e-6, hi: 200 / 3 - 1e-6,
+      minority: "🛑 Minorité de blocage (plus d'1/3 des voix en AGE) : {names}.",
+      controller: "Le contrôleur décide seul en AGO, mais n'atteint pas les 2/3 nécessaires en AGE." },
+    uk: { lo: 25 + 1e-9, hi: 75 - 1e-9,
+      minority: '🛑 Blocking minority (more than 25% of the votes: can defeat a special resolution): {names}.',
+      controller: 'The controller passes ordinary resolutions alone, but does not reach the 75% needed for a special resolution.' },
+    es: { lo: 100 / 3 + 1e-6, hi: 200 / 3 - 1e-6,
+      minority: '🛑 Minoría de bloqueo (más de un tercio de los votos frente a los acuerdos de mayoría reforzada): {names}.',
+      controller: 'El controlador decide solo por mayoría absoluta, pero no alcanza los 2/3 de la mayoría reforzada.' }
+  };
   const NW = 190, NH = 78;
   const PALETTE = ['#2563eb', '#dc2626', '#059669', '#9333ea', '#ea580c', '#0891b2', '#db2777', '#65a30d', '#7c3aed', '#b45309'];
   const LS_KEY = 'capital-lab.libre.v1';
@@ -23,7 +37,7 @@
     colorMap: {}, colorIdx: 0, disp: {}, ldisp: {},
     cam: { x: 0, y: 150, k: 1 }, camT: null,
     scenario: null, scenarioSrc: '', step: 0, playing: false, speed: 1, playMode: 'pas', timer: null,
-    studio: { open: false, title: 'Mon scénario', steps: [] },
+    studio: { open: false, title: t('Mon scénario'), steps: [] },
     hoverRef: null, libreState: null, planOpen: false, drag: null,
     cinePos: {},   // positions d'entités déplacées à la main pendant la lecture d'un scénario
     noteOff: {},   // décalages des bulles déplacées à la main
@@ -47,6 +61,68 @@
   function blockLabel(b) { return b.kind === 'concert' ? '🤝 ' + nameOf(b.id) : nameOf(b.id); }
   function iconOf(id) { const e = App.state.entities[id]; return e ? (P.TYPES[e.type] || P.TYPES.societe).icon : '🤝'; }
   const findLinkByKey = k => App.state.links.find(l => P.linkKey(l) === k);
+  /* titre d'étape : seule l'introduction implicite (sans titre « ## ») porte un nom fixé par le moteur */
+  const stepTitle = s => (s.title === 'Introduction' ? t('Introduction') : s.title);
+
+  /* ============================================================ langues, droits, bibliothèque */
+  /* textes d'aide et de documentation dans la langue de l'interface (js/docs-en.js, js/docs-es.js) */
+  const DOCS = P.DOCS_I18N && P.DOCS_I18N[P.lang];
+  if (P.lang !== 'fr' && DOCS) {
+    ['HELP_LIBRE', 'HELP_CINEMA', 'HELP_THANKS', 'IA_INSTRUCTIONS_URL', 'IA_CONSIGNE', 'FORMAT_DOC', 'AI_PROMPT'].forEach(k => { if (DOCS[k] != null) P[k] = DOCS[k]; });
+    if (typeof DOCS.noLink === 'function') P.iaConsigneSansLien = DOCS.noLink;
+  }
+  /* textes statiques d'index.html (écrits en français) */
+  if (P.lang !== 'fr') { P.translateDom(document.body); document.title = t(document.title); }
+  /** Lien vers une page de la documentation (docs/index.html#/page, #/en/page, #/es/page) */
+  const docHref = page => 'docs/index.html#/' + (P.lang === 'fr' ? '' : P.lang + '/') + page;
+
+  /* scénarios intégrés : les entrées françaises (js/library.js) n'ont ni langue ni droit */
+  const libLang = s => s.lang || 'fr';
+  const libDroit = s => s.droit || 'fr';
+  const libFind = id => (P.LIBRARY || []).find(s => s.id === id);
+  const langLibrary = () => (P.LIBRARY || []).filter(s => libLang(s) === P.lang);
+  /** Scénario par défaut (« Charger un exemple ») : la pyramide du droit en vigueur, sinon un scénario de la langue, sinon le français */
+  const PYRAMID = { fr: 'pyramide', uk: 'uk-pyramid', us: 'us-pyramid', es: 'es-piramide' };
+  function defaultScenario() {
+    const list = langLibrary();
+    return libFind(PYRAMID[P.juris]) || list.find(s => libDroit(s) === P.juris) || list[0] || libFind('pyramide') || P.LIBRARY[0];
+  }
+  /** Droit d'un scénario : en-tête « droit: », sinon celui de son entrée de bibliothèque, sinon le droit choisi */
+  function scenarioDroit(sc, origin) {
+    const m = P.norm(sc.meta.droit || sc.meta.law || sc.meta.derecho || '');
+    if (P.JURIS[m]) return m;
+    const e = origin && origin.id ? libFind(origin.id) : null;
+    if (e) return libDroit(e);
+    if (EMBED && EMBED.droit && P.JURIS[EMBED.droit]) return EMBED.droit;   // paquet SCORM
+    return P.defaultJuris();
+  }
+  /** Applique le droit de l'état affiché ; en mode libre, il doit être l'un des droits de la langue de l'interface. */
+  function applyJuris() {
+    const st = App.state, laws = P.lawsFor(P.lang);
+    if (App.mode === 'libre' && !laws.includes(st.options.droit)) st.options.droit = P.defaultJuris();
+    P.setJuris(st.options.droit || P.defaultJuris());
+    const legend = $('#legend');
+    if (legend.dataset.juris && legend.dataset.juris !== P.juris) buildLegend(true);
+    updateLawUI();
+  }
+  function updateLawUI() {
+    const lab = $('#opt-defacto').closest('label');
+    if (lab) lab.hidden = !P.jur().deFacto;
+    const sel = $('#opt-droit'); if (!sel) return;
+    const laws = P.lawsFor(P.lang);
+    sel.hidden = laws.length < 2;
+    if (sel.hidden) return;
+    const codes = laws.includes(P.juris) ? laws : laws.concat(P.juris);
+    if (sel.dataset.codes !== codes.join()) {
+      sel.innerHTML = codes.map(c => `<option value="${c}">${P.JURIS[c].flag} ${c.toUpperCase()}</option>`).join('');
+      sel.dataset.codes = codes.join();
+    }
+    sel.value = P.juris;
+    // pendant la lecture d'un scénario, le droit est celui du scénario
+    const locked = App.mode === 'cinema' && !!App.scenario;
+    sel.disabled = locked;
+    sel.title = locked ? t('Droit applicable : fixé par le scénario') : t('Droit applicable');
+  }
 
   let toastT;
   function toast(msg, ms) {
@@ -60,11 +136,11 @@
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
   }
   function copyText(text) {
-    const done = () => toast('📋 Copié dans le presse-papiers');
+    const done = () => toast(t('📋 Copié dans le presse-papiers'));
     const fallback = () => {
       const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
       document.body.appendChild(ta); ta.select();
-      try { document.execCommand('copy'); done(); } catch (e) { toast('Copie impossible'); }
+      try { document.execCommand('copy'); done(); } catch (e) { toast(t('Copie impossible')); }
       ta.remove();
     };
     if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
@@ -73,7 +149,7 @@
   /* ============================================================ rendu SVG */
   const svg = $('#canvas');
   const marker = (id, color) => `<marker id="${id}" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="13" markerHeight="13" markerUnits="userSpaceOnUse" orient="auto-start-reverse"><path d="M0,0.5 L10,5 L0,9.5 z" fill="${color}"/></marker>`;
-  svg.innerHTML = '<defs>' + P.CATS.map(c => marker('m-' + c.key, c.color)).join('') + marker('m-sup', '#94a3b8') + marker('m-tmp', '#4f46e5') +
+  svg.innerHTML = '<defs>' + P.CATS_ALL.map(c => marker('m-' + c.key, c.color)).join('') + marker('m-sup', '#94a3b8') + marker('m-tmp', '#4f46e5') +
     '<pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><circle class="gdot" cx="2" cy="2" r="1.3"/></pattern>' +
     '<filter id="shadow" x="-20%" y="-30%" width="140%" height="170%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity=".10"/></filter>' +
     '</defs><rect class="bg" x="-50000" y="-50000" width="100000" height="100000"/><g id="world"></g>';
@@ -150,9 +226,9 @@
     if (inChain || sel) s += `<path class="halo" d="${g.d}" style="stroke-width:${w + 9}px"/>`;
     s += `<path class="stroke" d="${g.d}" pathLength="1" style="stroke:${col};stroke-width:${w.toFixed(1)}px;${dash}"${a > 0.9 ? ` marker-end="url(#m-${sup ? 'sup' : cat.key})"` : ''}/>`;
     s += '</g>';
-    let txt = votes !== l.capital ? `${fmt(l.capital)} · DV ${fmt(votes)}` : fmt(l.capital);
-    if (sup) txt += ' · voix neutralisées';
-    else if (Math.abs(eff - votes) > 0.05) txt += ` → ${fmt(eff)} eff.`;
+    let txt = votes !== l.capital ? t('{cap} · DV {votes}', { cap: fmt(l.capital), votes: fmt(votes) }) : fmt(l.capital);
+    if (sup) txt += t(' · voix neutralisées');
+    else if (Math.abs(eff - votes) > 0.05) txt += t(' → {v} eff.', { v: fmt(eff) });
     const lw = txt.length * 6.3 + 16;
     const pulse = now - ld.changed < 1200 ? 1 + 0.18 * Math.sin(Math.PI * (now - ld.changed) / 1200) : 1;
     const label = `<g class="llabel${sel ? ' sel' : ''}" data-link="${esc(k)}" transform="translate(${g.lx.toFixed(1)},${g.ly.toFixed(1)}) scale(${pulse.toFixed(3)})" style="opacity:${(faded ? 0.3 : 1) * a}"><rect x="${-lw / 2}" y="-10" width="${lw}" height="20" rx="10" style="stroke:${col}"/><text y="4" text-anchor="middle">${esc(txt)}</text></g>`;
@@ -171,16 +247,16 @@
     let l2 = T.short, l3 = '', l3c = 'var(--muted)';
     if (hasH) {
       const rest = 100 - an.capSum[id];
-      l2 = an.capSum[id] > 100.001 ? '⚠ capital attribué > 100 %' : (rest > 0.001 ? `${T.short} · autres ${fmt(rest)}` : `${T.short} · capital 100 % identifié`);
+      l2 = an.capSum[id] > 100.001 ? t('⚠ capital attribué > 100 %') : (rest > 0.001 ? t('{type} · autres {v}', { type: T.short, v: fmt(rest) }) : t('{type} · capital 100 % identifié', { type: T.short }));
     }
-    if (u) { l3 = (u.type === 'conjoint' ? '🤝 conjoint : ' : '🎯 ') + nameOf(u.block.id) + (u.how === 'fait' ? ' (de fait)' : ''); l3c = color; }
-    else if (ctl.length) { l3 = `👑 contrôle ${ctl.length} entité${ctl.length > 1 ? 's' : ''}`; l3c = color; }
-    else if (hasH) l3 = '○ aucun contrôle';
+    if (u) { l3 = (u.type === 'conjoint' ? t('🤝 conjoint : ') : '🎯 ') + nameOf(u.block.id) + (u.how === 'fait' ? t(' (de fait)') : ''); l3c = color; }
+    else if (ctl.length) { l3 = ctl.length > 1 ? t('👑 contrôle {n} entités', { n: ctl.length }) : t('👑 contrôle {n} entité', { n: ctl.length }); l3c = color; }
+    else if (hasH) l3 = t('○ aucun contrôle');
     if (pv) {
-      if (id === pv) { l3 = '👁 point de vue'; l3c = 'var(--accent)'; }
+      if (id === pv) { l3 = t('👁 point de vue'); l3c = 'var(--accent)'; }
       else if (!dimmed) {
         const it = an.interestOf(pv, id), ok = an.ctrl[pv].has(id), pc = an.pct(pv, id);
-        l3 = `Intérêt ${fmt(it * 100)} · ${ok ? 'contrôle ✔' : 'DV ' + fmt(pc)}`;
+        l3 = t('Intérêt {v}', { v: fmt(it * 100) }) + ' · ' + (ok ? t('contrôle ✔') : t('DV {v}', { v: fmt(pc) }));
         l3c = ok ? 'var(--ok)' : 'var(--ink)';
       }
     }
@@ -234,7 +310,7 @@
     const tail = (o.dx || o.dy)
       ? (ay > y + lh ? `M${cx - 8},${y + lh - 0.5} L${ax},${ay} L${cx + 8},${y + lh - 0.5}` : `M${cx - 8},${y + 0.5} L${ax},${d.y + NH / 2 - 2} L${cx + 8},${y + 0.5}`)
       : `M${x + 14},${y + lh - 0.5} L${x + 12},${y + lh + 12} L${x + 28},${y + lh - 0.5}`;
-    let s = `<g class="note" data-note="${esc(id)}"><title>Glisser pour déplacer la bulle</title><path d="${tail}"/><rect x="${x}" y="${y}" width="${lw}" height="${lh}" rx="9"/>`;
+    let s = `<g class="note" data-note="${esc(id)}"><title>${esc(t('Glisser pour déplacer la bulle'))}</title><path d="${tail}"/><rect x="${x}" y="${y}" width="${lw}" height="${lh}" rx="9"/>`;
     lines.forEach((l, i) => { s += `<text x="${(x + lw / 2).toFixed(1)}" y="${(y + 20 + i * 16).toFixed(1)}" text-anchor="middle">${esc(l)}</text>`; });
     return s + '</g>';
   }
@@ -296,6 +372,7 @@
       P.layout(st);
       for (const id in App.cinePos) if (st.entities[id]) Object.assign(st.entities[id], App.cinePos[id]);
     }
+    applyJuris();
     App.an = P.analyze(st);
     syncDisp(o.animate !== false);
     if (App.sel && !selExists(App.sel)) App.sel = null;
@@ -340,7 +417,7 @@
     const st = App.state, el = $('#banner'), pv = st.view.perspective;
     if (!pv || !st.entities[pv] || !App.an) { el.hidden = true; return; }
     const n = App.an.controlled(pv).length;
-    el.innerHTML = `👁 Point de vue : <b>${esc(nameOf(pv))}</b> · contrôle ${n} entité${n > 1 ? 's' : ''} <button data-act="pvoff" title="Quitter le point de vue">×</button>`;
+    el.innerHTML = t('👁 Point de vue : <b>{name}</b>', { name: esc(nameOf(pv)) }) + ' · ' + (n > 1 ? t('contrôle {n} entités', { n }) : t('contrôle {n} entité', { n })) + ` <button data-act="pvoff" title="${esc(t('Quitter le point de vue'))}">×</button>`;
     el.hidden = false;
   }
   $('#banner').addEventListener('click', ev => {
@@ -500,7 +577,7 @@
   function createLink(from, to) {
     const st = App.state, te = st.entities[to];
     if (!te || !st.entities[from]) return;
-    if (!(P.TYPES[te.type] || {}).holdable) { toast(`« ${esc(te.name)} » (${P.TYPES[te.type].label.toLowerCase()}) ne peut pas être détenu(e).`); requestRender(); return; }
+    if (!(P.TYPES[te.type] || {}).holdable) { toast(t('« {name} » ({type}) ne peut pas être détenu(e).', { name: esc(te.name), type: P.TYPES[te.type].label.toLowerCase() })); requestRender(); return; }
     const ex = P.findLink(st, from, to);
     if (ex) { App.select({ kind: 'link', id: P.linkKey(ex) }); return; }
     const an = App.an, rest = 100 - (an.capSum[to] || 0);
@@ -509,7 +586,7 @@
     const l = P.setLink(st, from, to, cap, null);
     App.sel = { kind: 'link', id: P.linkKey(l) };
     App.commit();
-    if (rest < 1 && from !== to) toast('⚠ Le capital de cette société était déjà entièrement attribué.');
+    if (rest < 1 && from !== to) toast(t('⚠ Le capital de cette société était déjà entièrement attribué.'));
   }
 
   function addEntityAt(type, x, y) {
@@ -566,72 +643,84 @@
   function catBadge(l) {
     const an = App.an;
     const sup = an.supp[l.to] && an.supp[l.to].set.has(l.from);
-    if (sup) return '<div class="cat" style="--c:#94a3b8">🔁 Voix neutralisées (autocontrôle / auto-détention)</div>';
+    if (sup) return '<div class="cat" style="--c:#94a3b8">' + t('🔁 Voix neutralisées (autocontrôle / auto-détention)') + '</div>';
     const eff = an.norm[l.to][l.from] || 0, c = P.category(eff), v = l.votes == null ? l.capital : l.votes;
-    return `<div class="cat" style="--c:${c.color}" title="${esc(c.text)}">${esc(c.label)}${Math.abs(eff - v) > 0.05 ? ` · ${fmt(eff)} des voix effectives` : ''}</div>`;
+    return `<div class="cat" style="--c:${c.color}" title="${esc(c.text)}">${esc(c.label)}${Math.abs(eff - v) > 0.05 ? t(' · {v} des voix effectives', { v: fmt(eff) }) : ''}</div>`;
   }
 
   App.analysisHTML = function (id) {
     const an = App.an, st = App.state, e = st.entities[id]; if (!e) return '';
     const T = P.TYPES[e.type] || P.TYPES.societe;
-    let h = '<h4>Analyse</h4>';
+    let h = '<h4>' + t('Analyse') + '</h4>';
     const hasH = T.holdable && an.holders[id].length > 0;
     if (hasH) {
       const u = an.ultimate[id];
       if (u) {
         const color = App.colorFor(u.block.id);
         const path = an.path(u.block.id, id), inter = an.interestOf(u.block.id, id);
-        h += `<div class="verdict" style="--c:${color}">🎯 <b>${esc(blockLabel(u.block))}</b> ${u.type === 'conjoint' ? 'contrôle <b>conjointement</b>' : 'contrôle'} ${esc(e.name)}${u.how === 'fait' ? ' — <i>contrôle de fait présumé (plus de 40 % et aucun autre associé au-dessus)</i>' : ''}.</div>`;
-        if (path.length > 2) h += `<div class="chain">🔗 Chaîne de contrôle : ${path.map(p => esc(nameOf(p))).join(' → ')}</div>`;
-        h += `<div class="kv"><span>Droits de vote contrôlés</span><b>${fmt(an.pct(u.block.id, id))}</b></div>`;
-        h += `<div class="kv"><span>Intérêt économique (capital)</span><b>${fmt(inter * 100)}</b></div>`;
-        if (inter < 0.5 - 1e-9) h += `<div class="insight">⚡ Avec seulement <b>${fmt(inter * 100)}</b> du capital économique, ${esc(blockLabel(u.block))} détient le contrôle : pouvoir et capital sont dissociés${path.length > 2 ? ' grâce à la chaîne de sociétés contrôlées' : ''}.</div>`;
+        const vv = { who: esc(blockLabel(u.block)), name: esc(e.name) };
+        h += `<div class="verdict" style="--c:${color}">🎯 ${u.type === 'conjoint' ? t('<b>{who}</b> contrôle <b>conjointement</b> {name}', vv) : t('<b>{who}</b> contrôle {name}', vv)}${u.how === 'fait' ? t(' — <i>contrôle de fait présumé (plus de 40 % et aucun autre associé au-dessus)</i>') : ''}.</div>`;
+        if (path.length > 2) h += `<div class="chain">${t('🔗 Chaîne de contrôle : {chain}', { chain: path.map(p => esc(nameOf(p))).join(' → ') })}</div>`;
+        h += `<div class="kv"><span>${t('Droits de vote contrôlés')}</span><b>${fmt(an.pct(u.block.id, id))}</b></div>`;
+        h += `<div class="kv"><span>${t('Intérêt économique (capital)')}</span><b>${fmt(inter * 100)}</b></div>`;
+        if (inter < 0.5 - 1e-9) {
+          const iv = { v: fmt(inter * 100), who: esc(blockLabel(u.block)) };
+          h += `<div class="insight">${path.length > 2
+            ? t('⚡ Avec seulement <b>{v}</b> du capital économique, {who} détient le contrôle : pouvoir et capital sont dissociés grâce à la chaîne de sociétés contrôlées.', iv)
+            : t('⚡ Avec seulement <b>{v}</b> du capital économique, {who} détient le contrôle : pouvoir et capital sont dissociés.', iv)}</div>`;
+        }
       } else {
-        h += `<div class="verdict none">Aucun actionnaire, ni groupe d'actionnaires de concert, ne contrôle ${esc(e.name)} : aucun bloc ne dépasse 50 % des droits de vote${an.deFacto ? ' et aucun ne bénéficie de la présomption de contrôle de fait' : ''}.</div>`;
+        h += `<div class="verdict none">${an.deFacto
+          ? t("Aucun actionnaire, ni groupe d'actionnaires de concert, ne contrôle {name} : aucun bloc ne dépasse 50 % des droits de vote et aucun ne bénéficie de la présomption de contrôle de fait.", { name: esc(e.name) })
+          : t("Aucun actionnaire, ni groupe d'actionnaires de concert, ne contrôle {name} : aucun bloc ne dépasse 50 % des droits de vote.", { name: esc(e.name) })}</div>`;
       }
       const blocs = an.blocs(id), base = 100 - an.supp[id].total;
       const restV = base > 0 ? Math.max(0, 100 - an.voteSum[id]) * 100 / base : 0;
-      h += '<table class="mini"><tr><th>Blocs de vote (par contrôleur ultime)</th><th class="n">DV eff.</th><th class="n">Intérêt</th></tr>';
+      h += `<table class="mini"><tr><th>${t('Blocs de vote (par contrôleur ultime)')}</th><th class="n">${t('DV eff.')}</th><th class="n">${t('Intérêt')}</th></tr>`;
       blocs.forEach(b => {
         const c = P.category(b.pct);
         h += `<tr><td><span class="dot" style="background:${c.color}"></span>${esc(blockLabel(b.block))}</td><td class="n">${fmt(b.pct)}</td><td class="n">${fmt(b.interest * 100)}</td></tr>`;
       });
-      if (restV > 0.001) h += `<tr><td class="muted"><span class="dot" style="background:#e2e8f0"></span>Autres actionnaires</td><td class="n muted">${fmt(restV)}</td><td class="n muted">${fmt(Math.max(0, 100 - an.capSum[id]))}</td></tr>`;
+      if (restV > 0.001) h += `<tr><td class="muted"><span class="dot" style="background:#e2e8f0"></span>${t('Autres actionnaires')}</td><td class="n muted">${fmt(restV)}</td><td class="n muted">${fmt(Math.max(0, 100 - an.capSum[id]))}</td></tr>`;
       h += '</table>';
-      const blockers = blocs.filter(b => b.pct > 100 / 3 + 1e-6 && !(u && u.block.id === b.block.id) && b.pct < 200 / 3 - 1e-6);
-      if (blockers.length) h += `<div class="warnbox">🛑 Minorité de blocage (plus d'1/3 des voix en AGE) : ${blockers.map(b => `<b>${esc(blockLabel(b.block))}</b>`).join(', ')}.</div>`;
-      if (u && an.pct(u.block.id, id) < 200 / 3 - 1e-6) h += `<div class="muted small">Le contrôleur décide seul en AGO, mais n'atteint pas les 2/3 nécessaires en AGE.</div>`;
+      const BK = BLOCKING[P.juris];
+      if (BK) {
+        const blockers = blocs.filter(b => b.pct > BK.lo && !(u && u.block.id === b.block.id) && b.pct < BK.hi);
+        if (blockers.length) h += `<div class="warnbox">${BK.minority.replace('{names}', blockers.map(b => `<b>${esc(blockLabel(b.block))}</b>`).join(', '))}</div>`;
+        if (u && an.pct(u.block.id, id) < BK.hi) h += `<div class="muted small">${BK.controller}</div>`;
+      }
       const sp = an.supp[id];
-      if (sp.total > 0) h += `<div class="warnbox">🔁 <b>Autocontrôle / auto-détention</b> : ${fmt(sp.total)} des droits de vote sont neutralisés (actions détenues par ${esc(e.name)} elle-même ou par des sociétés qu'elle contrôle — art. L225-210 et L233-31 C. com.). Les pourcentages effectifs sont calculés sur ${fmt(100 - sp.total)}.</div>`;
-      if (an.capSum[id] > 100.001) h += `<div class="warnbox">⚠ La somme des participations au capital dépasse 100 % (${fmt(an.capSum[id])}).</div>`;
-      if (an.voteSum[id] > 100.001) h += `<div class="warnbox">⚠ La somme des droits de vote dépasse 100 % (${fmt(an.voteSum[id])}).</div>`;
+      if (sp.total > 0) h += `<div class="warnbox">${t('🔁 <b>Autocontrôle / auto-détention</b> : {v} des droits de vote sont neutralisés ({why}). Les pourcentages effectifs sont calculés sur {base}.', { v: fmt(sp.total), why: P.jur().txt.autocontrol.replace('{name}', esc(e.name)), base: fmt(100 - sp.total) })}</div>`;
+      if (an.capSum[id] > 100.001) h += `<div class="warnbox">${t('⚠ La somme des participations au capital dépasse 100 % ({v}).', { v: fmt(an.capSum[id]) })}</div>`;
+      if (an.voteSum[id] > 100.001) h += `<div class="warnbox">${t('⚠ La somme des droits de vote dépasse 100 % ({v}).', { v: fmt(an.voteSum[id]) })}</div>`;
     }
     const ctl = an.controlled(id);
     if (ctl.length) {
-      h += `<h5>${esc(e.name)} contrôle ${ctl.length} entité${ctl.length > 1 ? 's' : ''}</h5><table class="mini"><tr><th>Entité</th><th class="n">DV contrôlés</th><th class="n">Intérêt</th></tr>`;
-      ctl.forEach(c => { h += `<tr><td><a data-act="sel" data-id="${esc(c)}">${esc(nameOf(c))}</a>${an.how[id][c] === 'fait' ? ' <i class="muted">(de fait)</i>' : ''}</td><td class="n">${fmt(an.pct(id, c))}</td><td class="n">${fmt(an.interestOf(id, c) * 100)}</td></tr>`; });
+      const cv = { name: esc(e.name), n: ctl.length };
+      h += `<h5>${ctl.length > 1 ? t('{name} contrôle {n} entités', cv) : t('{name} contrôle {n} entité', cv)}</h5><table class="mini"><tr><th>${t('Entité')}</th><th class="n">${t('DV contrôlés')}</th><th class="n">${t('Intérêt')}</th></tr>`;
+      ctl.forEach(c => { h += `<tr><td><a data-act="sel" data-id="${esc(c)}">${esc(nameOf(c))}</a>${an.how[id][c] === 'fait' ? ` <i class="muted">${t('(de fait)')}</i>` : ''}</td><td class="n">${fmt(an.pct(id, c))}</td><td class="n">${fmt(an.interestOf(id, c) * 100)}</td></tr>`; });
       h += '</table>';
     }
     const inv = an.ids.filter(c => c !== id && !an.ctrl[id].has(c) && an.interestOf(id, c) > 1e-6);
     if (inv.length) {
-      h += `<h5>Intérêts sans contrôle</h5><table class="mini"><tr><th>Entité</th><th class="n">DV</th><th class="n">Intérêt</th></tr>`;
+      h += `<h5>${t('Intérêts sans contrôle')}</h5><table class="mini"><tr><th>${t('Entité')}</th><th class="n">${t('DV')}</th><th class="n">${t('Intérêt')}</th></tr>`;
       inv.forEach(c => { h += `<tr><td><a data-act="sel" data-id="${esc(c)}">${esc(nameOf(c))}</a></td><td class="n">${fmt(an.pct(id, c))}</td><td class="n">${fmt(an.interestOf(id, c) * 100)}</td></tr>`; });
       h += '</table>';
     }
     const cs = (st.concerts || []).filter(c => c.members.includes(id));
     cs.forEach(c => {
       const bid = 'concert:' + c.id, cc = an.blockById[bid] ? an.controlled(bid).filter(x => !an.ctrl[id].has(x)) : [];
-      if (cc.length) h += `<div class="chain">🤝 Via « ${esc(c.name)} », participe au contrôle conjoint de : ${cc.map(x => esc(nameOf(x))).join(', ')}.</div>`;
+      if (cc.length) h += `<div class="chain">${t('🤝 Via « {name} », participe au contrôle conjoint de : {list}.', { name: esc(c.name), list: cc.map(x => esc(nameOf(x))).join(', ') })}</div>`;
     });
     return h;
   };
 
   function concertAnalysis(cid) {
     const an = App.an, bid = 'concert:' + cid;
-    if (!an.blockById[bid]) return '<p class="muted small">Un pacte doit réunir au moins deux membres.</p>';
+    if (!an.blockById[bid]) return '<p class="muted small">' + t('Un pacte doit réunir au moins deux membres.') + '</p>';
     const cc = an.controlled(bid).filter(x => an.ultimate[x] && an.ultimate[x].block.id === bid);
-    if (!cc.length) return '<h4>Analyse</h4><div class="verdict none">Les membres du pacte ne réunissent la majorité des voix dans aucune société qu\'un membre ne contrôlerait pas déjà seul.</div>';
-    return '<h4>Analyse</h4>' + cc.map(c => `<div class="verdict" style="--c:${App.colorFor(bid)}">🤝 Contrôle conjoint de <a data-act="sel" data-id="${esc(c)}"><b>${esc(nameOf(c))}</b></a> avec ${fmt(an.pct(bid, c))} des voix.</div>`).join('');
+    if (!cc.length) return '<h4>' + t('Analyse') + '</h4><div class="verdict none">' + t("Les membres du pacte ne réunissent la majorité des voix dans aucune société qu'un membre ne contrôlerait pas déjà seul.") + '</div>';
+    return '<h4>' + t('Analyse') + '</h4>' + cc.map(c => `<div class="verdict" style="--c:${App.colorFor(bid)}">${t('🤝 Contrôle conjoint de {name} avec {v} des voix.', { name: `<a data-act="sel" data-id="${esc(c)}"><b>${esc(nameOf(c))}</b></a>`, v: fmt(an.pct(bid, c)) })}</div>`).join('');
   }
 
   /* ============================================================ inspecteur (mode libre) */
@@ -640,35 +729,36 @@
     let head = '';
     if (side) {
       const oid = side === 'from' ? l.from : l.to, e = st.entities[oid];
-      head = `<div class="le-head"><a data-act="sel" data-id="${esc(oid)}">${iconOf(oid)} ${esc(l.from === l.to ? e.name + ' (auto-détention)' : e.name)}</a><button class="x" data-act="dellink" title="Supprimer cette participation">×</button></div>`;
+      head = `<div class="le-head"><a data-act="sel" data-id="${esc(oid)}">${iconOf(oid)} ${esc(l.from === l.to ? e.name + t(' (auto-détention)') : e.name)}</a><button class="x" data-act="dellink" title="${esc(t('Supprimer cette participation'))}">×</button></div>`;
     }
     return `<div class="le" data-link="${esc(k)}">${head}
-      <div class="sl"><span>Capital</span><input type="range" min="0" max="100" step="0.5" value="${l.capital}" data-act="cap"><input type="number" min="0" max="100" step="0.01" value="${P.round2(l.capital)}" data-act="capn"><i>%</i></div>
-      <div class="sl${linked ? ' off' : ''}"><span>Droits de vote</span><input type="range" min="0" max="100" step="0.5" value="${v}" data-act="vot"${linked ? ' disabled' : ''}><input type="number" min="0" max="100" step="0.01" value="${P.round2(v)}" data-act="votn"${linked ? ' disabled' : ''}><i>%</i></div>
-      <label class="chk"><input type="checkbox" data-act="vlink"${linked ? ' checked' : ''}> droits de vote = capital (1 action = 1 voix)</label>
+      <div class="sl"><span>${t('Capital')}</span><input type="range" min="0" max="100" step="0.5" value="${l.capital}" data-act="cap"><input type="number" min="0" max="100" step="0.01" value="${P.round2(l.capital)}" data-act="capn"><i>%</i></div>
+      <div class="sl${linked ? ' off' : ''}"><span>${t('Droits de vote')}</span><input type="range" min="0" max="100" step="0.5" value="${v}" data-act="vot"${linked ? ' disabled' : ''}><input type="number" min="0" max="100" step="0.01" value="${P.round2(v)}" data-act="votn"${linked ? ' disabled' : ''}><i>%</i></div>
+      <label class="chk"><input type="checkbox" data-act="vlink"${linked ? ' checked' : ''}> ${t('droits de vote = capital (1 action = 1 voix)')}</label>
       ${catBadge(l)}</div>`;
   }
 
   function overviewHTML() {
     const st = App.state, an = App.an, ids = Object.keys(st.entities);
     if (!ids.length) {
-      return `<div class="welcome"><h3>Bienvenue 👋</h3>
-        <p>Cet atelier permet de construire des <b>structures de participations</b> et de voir qui contrôle quoi — et avec quel capital réel.</p>
-        <ol><li>Glissez des <b>entités</b> depuis la palette.</li><li>Tirez la poignée <b>+</b> d'un actionnaire vers une société.</li><li>Réglez <b>capital</b> et <b>droits de vote</b> dans ce panneau.</li><li>Activez le <b>👁 point de vue</b> d'un actionnaire.</li></ol>
-        <div class="btns"><button class="primary" data-act="example">✨ Charger un exemple</button><button data-act="cinema">🎬 Voir les scénarios</button></div></div>`;
+      return `<div class="welcome"><h3>${t('Bienvenue 👋')}</h3>
+        <p>${t('Cet atelier permet de construire des <b>structures de participations</b> et de voir qui contrôle quoi — et avec quel capital réel.')}</p>
+        <ol><li>${t('Glissez des <b>entités</b> depuis la palette.')}</li><li>${t("Tirez la poignée <b>+</b> d'un actionnaire vers une société.")}</li><li>${t('Réglez <b>capital</b> et <b>droits de vote</b> dans ce panneau.')}</li><li>${t("Activez le <b>👁 point de vue</b> d'un actionnaire.")}</li></ol>
+        <div class="btns"><button class="primary" data-act="example">${t('✨ Charger un exemple')}</button><button data-act="cinema">${t('🎬 Voir les scénarios')}</button></div></div>`;
     }
-    let h = `<h3>Vue d'ensemble</h3><p class="muted small">${ids.length} entité${ids.length > 1 ? 's' : ''} · ${st.links.length} participation${st.links.length > 1 ? 's' : ''} · ${(st.concerts || []).length} pacte(s)</p>`;
+    const nE = ids.length, nL = st.links.length;
+    let h = `<h3>${t("Vue d'ensemble")}</h3><p class="muted small">${nE > 1 ? t('{n} entités', { n: nE }) : t('{n} entité', { n: nE })} · ${nL > 1 ? t('{n} participations', { n: nL }) : t('{n} participation', { n: nL })} · ${t('{n} pacte(s)', { n: (st.concerts || []).length })}</p>`;
     const roots = an.blocks.filter(b => an.controlled(b.id).length && (b.kind === 'concert' ? an.controlled(b.id).some(c => an.ultimate[c] && an.ultimate[c].block.id === b.id) : !an.ultimate[b.id]));
-    h += '<h4>Contrôleurs ultimes</h4>';
-    if (!roots.length) h += '<p class="muted small">Personne ne contrôle aucune société pour l\'instant.</p>';
+    h += '<h4>' + t('Contrôleurs ultimes') + '</h4>';
+    if (!roots.length) h += '<p class="muted small">' + t("Personne ne contrôle aucune société pour l'instant.") + '</p>';
     h += '<ul class="ctrl-list">' + roots.map(b => {
       const list = an.controlled(b.id).filter(c => an.ultimate[c] && an.ultimate[c].block.id === b.id);
-      return `<li><span class="dot" style="background:${App.colorFor(b.id)}"></span><b>${b.kind === 'concert' ? `<a data-act="selconcert" data-id="${esc(b.id.slice(8))}">${esc(blockLabel(b))}</a>` : `<a data-act="sel" data-id="${esc(b.id)}">${esc(blockLabel(b))}</a>`}</b><br><span class="small">${list.map(c => `${esc(nameOf(c))} <span class="muted">(intérêt ${fmt(an.interestOf(b.id, c) * 100)})</span>`).join(', ')}</span></li>`;
+      return `<li><span class="dot" style="background:${App.colorFor(b.id)}"></span><b>${b.kind === 'concert' ? `<a data-act="selconcert" data-id="${esc(b.id.slice(8))}">${esc(blockLabel(b))}</a>` : `<a data-act="sel" data-id="${esc(b.id)}">${esc(blockLabel(b))}</a>`}</b><br><span class="small">${list.map(c => `${esc(nameOf(c))} <span class="muted">${t('(intérêt {v})', { v: fmt(an.interestOf(b.id, c) * 100) })}</span>`).join(', ')}</span></li>`;
     }).join('') + '</ul>';
     const indep = ids.filter(i => P.TYPES[st.entities[i].type].holdable && an.holders[i].length && !an.ultimate[i]);
-    if (indep.length) h += `<h4>Sociétés sans contrôle</h4><p class="small">${indep.map(i => `<a data-act="sel" data-id="${esc(i)}">${esc(nameOf(i))}</a>`).join(', ')}</p>`;
-    h += `<h4>Point de vue</h4><select data-act="pvsel" class="add"><option value="">— aucun —</option>${ids.map(i => `<option value="${esc(i)}"${st.view.perspective === i ? ' selected' : ''}>${iconOf(i)} ${esc(nameOf(i))}</option>`).join('')}</select>`;
-    h += '<p class="hint">Cliquez sur une entité ou un lien pour le modifier. Glisser le fond déplace la vue, la molette zoome.</p>';
+    if (indep.length) h += `<h4>${t('Sociétés sans contrôle')}</h4><p class="small">${indep.map(i => `<a data-act="sel" data-id="${esc(i)}">${esc(nameOf(i))}</a>`).join(', ')}</p>`;
+    h += `<h4>${t('Point de vue')}</h4><select data-act="pvsel" class="add"><option value="">${t('— aucun —')}</option>${ids.map(i => `<option value="${esc(i)}"${st.view.perspective === i ? ' selected' : ''}>${iconOf(i)} ${esc(nameOf(i))}</option>`).join('')}</select>`;
+    h += '<p class="hint">' + t('Cliquez sur une entité ou un lien pour le modifier. Glisser le fond déplace la vue, la molette zoome.') + '</p>';
     return h;
   }
 
@@ -676,26 +766,26 @@
     const st = App.state, an = App.an, e = st.entities[id];
     const T = P.TYPES[e.type] || P.TYPES.societe, pv = st.view.perspective === id;
     const hasH = an.holders[id].length > 0;
-    let h = `<div class="insp-head"><span class="big">${T.icon}</span><input class="name" data-act="rename" value="${esc(e.name)}" spellcheck="false" title="Renommer"></div>`;
-    h += `<div class="row"><label>Type</label><select data-act="type">${Object.keys(P.TYPES).map(k => `<option value="${k}"${k === e.type ? ' selected' : ''}${!P.TYPES[k].holdable && hasH ? ' disabled' : ''}>${P.TYPES[k].icon} ${P.TYPES[k].label}</option>`).join('')}</select></div>`;
-    h += `<div class="btns"><button data-act="pv" class="${pv ? 'on' : ''}">👁 ${pv ? 'Quitter le point de vue' : 'Point de vue'}</button><button data-act="del" class="danger">🗑 Supprimer</button></div>`;
+    let h = `<div class="insp-head"><span class="big">${T.icon}</span><input class="name" data-act="rename" value="${esc(e.name)}" spellcheck="false" title="${esc(t('Renommer'))}"></div>`;
+    h += `<div class="row"><label>${t('Type')}</label><select data-act="type">${Object.keys(P.TYPES).map(k => `<option value="${k}"${k === e.type ? ' selected' : ''}${!P.TYPES[k].holdable && hasH ? ' disabled' : ''}>${P.TYPES[k].icon} ${P.TYPES[k].label}</option>`).join('')}</select></div>`;
+    h += `<div class="btns"><button data-act="pv" class="${pv ? 'on' : ''}">👁 ${pv ? t('Quitter le point de vue') : t('Point de vue')}</button><button data-act="del" class="danger">${t('🗑 Supprimer')}</button></div>`;
     if (T.holdable) {
-      h += '<h4>Actionnaires</h4>';
+      h += '<h4>' + t('Actionnaires') + '</h4>';
       an.holders[id].forEach(x => { h += linkEditor(x.link, 'from'); });
       const rc = 100 - an.capSum[id], rv = 100 - an.voteSum[id];
-      h += `<div class="rest${rc < -0.001 || rv < -0.001 ? ' bad' : ''}">${rc < -0.001 ? '⚠ Le capital attribué dépasse 100 % !' : `Autres actionnaires (non représentés) : <b>${fmt(rc)}</b> du capital${Math.abs(rc - rv) > 0.001 ? ` · <b>${fmt(Math.max(0, rv))}</b> des voix` : ''}`}${rv < -0.001 ? '<br>⚠ Les droits de vote attribués dépassent 100 % !' : ''}</div>`;
+      h += `<div class="rest${rc < -0.001 || rv < -0.001 ? ' bad' : ''}">${rc < -0.001 ? t('⚠ Le capital attribué dépasse 100 % !') : t('Autres actionnaires (non représentés) : <b>{v}</b> du capital', { v: fmt(rc) }) + (Math.abs(rc - rv) > 0.001 ? t(' · <b>{v}</b> des voix', { v: fmt(Math.max(0, rv)) }) : '')}${rv < -0.001 ? '<br>' + t('⚠ Les droits de vote attribués dépassent 100 % !') : ''}</div>`;
       const cand = Object.keys(st.entities).filter(o => !P.findLink(st, o, id));
-      if (cand.length) h += `<select data-act="addholder" class="add"><option value="">＋ Ajouter un actionnaire…</option>${cand.map(o => `<option value="${esc(o)}">${o === id ? '↻ elle-même (auto-détention)' : iconOf(o) + ' ' + esc(nameOf(o))}</option>`).join('')}</select>`;
+      if (cand.length) h += `<select data-act="addholder" class="add"><option value="">${t('＋ Ajouter un actionnaire…')}</option>${cand.map(o => `<option value="${esc(o)}">${o === id ? t('↻ elle-même (auto-détention)') : iconOf(o) + ' ' + esc(nameOf(o))}</option>`).join('')}</select>`;
     }
-    h += '<h4>Participations détenues</h4>';
+    h += '<h4>' + t('Participations détenues') + '</h4>';
     const held = an.held[id].filter(x => x.to !== id);
-    if (!held.length) h += '<p class="muted small">Aucune.</p>';
+    if (!held.length) h += '<p class="muted small">' + t('Aucune.') + '</p>';
     held.forEach(x => { h += linkEditor(x.link, 'to'); });
     const cand2 = Object.keys(st.entities).filter(o => o !== id && P.TYPES[st.entities[o].type].holdable && !P.findLink(st, id, o));
-    if (cand2.length) h += `<select data-act="addheld" class="add"><option value="">＋ Prendre une participation dans…</option>${cand2.map(o => `<option value="${esc(o)}">${iconOf(o)} ${esc(nameOf(o))}</option>`).join('')}</select>`;
-    h += '<h4>Pactes / action de concert</h4>';
+    if (cand2.length) h += `<select data-act="addheld" class="add"><option value="">${t('＋ Prendre une participation dans…')}</option>${cand2.map(o => `<option value="${esc(o)}">${iconOf(o)} ${esc(nameOf(o))}</option>`).join('')}</select>`;
+    h += '<h4>' + t('Pactes / action de concert') + '</h4>';
     (st.concerts || []).filter(c => c.members.includes(id)).forEach(c => { h += `<div class="pill-row"><a data-act="selconcert" data-id="${esc(c.id)}">🤝 ${esc(c.name)}</a></div>`; });
-    h += '<button data-act="newconcert" class="small">＋ Nouveau pacte avec…</button>';
+    h += '<button data-act="newconcert" class="small">' + t('＋ Nouveau pacte avec…') + '</button>';
     h += `<div id="insp-analysis">${App.analysisHTML(id)}</div>`;
     return h;
   }
@@ -703,10 +793,11 @@
   function linkInspector(k) {
     const l = findLinkByKey(k); if (!l) return overviewHTML();
     const an = App.an, sup = an.supp[l.to].set.has(l.from), eff = sup ? 0 : an.norm[l.to][l.from];
-    let h = `<h3>🔗 Participation</h3><p><a data-act="sel" data-id="${esc(l.from)}">${iconOf(l.from)} ${esc(nameOf(l.from))}</a> détient ${l.from === l.to ? '<b>ses propres actions</b> (auto-détention)' : `des titres de <a data-act="sel" data-id="${esc(l.to)}">${iconOf(l.to)} ${esc(nameOf(l.to))}</a>`}</p>`;
+    const la = `<a data-act="sel" data-id="${esc(l.from)}">${iconOf(l.from)} ${esc(nameOf(l.from))}</a>`;
+    let h = `<h3>${t('🔗 Participation')}</h3><p>${l.from === l.to ? t('{a} détient <b>ses propres actions</b> (auto-détention)', { a: la }) : t('{a} détient des titres de {b}', { a: la, b: `<a data-act="sel" data-id="${esc(l.to)}">${iconOf(l.to)} ${esc(nameOf(l.to))}</a>` })}</p>`;
     h += linkEditor(l, null);
-    h += `<p class="small muted">${sup ? "Ces actions sont privées de droit de vote : elles sont détenues par la société elle-même ou par une société qu'elle contrôle." : esc(P.category(eff).text)}</p>`;
-    h += '<div class="btns"><button data-act="dellink" class="danger">🗑 Supprimer la participation</button></div>';
+    h += `<p class="small muted">${sup ? t("Ces actions sont privées de droit de vote : elles sont détenues par la société elle-même ou par une société qu'elle contrôle.") : esc(P.category(eff).text)}</p>`;
+    h += '<div class="btns"><button data-act="dellink" class="danger">' + t('🗑 Supprimer la participation') + '</button></div>';
     h += `<div id="insp-analysis">${App.analysisHTML(l.to)}</div>`;
     return h;
   }
@@ -714,9 +805,9 @@
   function concertInspector(cid) {
     const st = App.state, c = (st.concerts || []).find(x => x.id === cid); if (!c) return overviewHTML();
     let h = `<div class="insp-head"><span class="big">🤝</span><input class="name" data-act="cname" value="${esc(c.name)}" spellcheck="false"></div>`;
-    h += '<p class="small muted">Action de concert (art. L233-10 C. com.) : les membres sont traités comme <b>un seul bloc de vote</b>. S\'ils dépassent ensemble 50 % des voix d\'une société, ils la contrôlent conjointement (art. L233-3, III).</p>';
-    h += '<h4>Membres</h4><div class="members">' + Object.keys(st.entities).map(id => `<label><input type="checkbox" data-act="cmember" value="${esc(id)}"${c.members.includes(id) ? ' checked' : ''}> ${iconOf(id)} ${esc(nameOf(id))}</label>`).join('') + '</div>';
-    h += '<div class="btns"><button data-act="delconcert" class="danger">Dissoudre le pacte</button></div>';
+    h += '<p class="small muted">' + P.jur().txt.concert + '</p>';
+    h += '<h4>' + t('Membres') + '</h4><div class="members">' + Object.keys(st.entities).map(id => `<label><input type="checkbox" data-act="cmember" value="${esc(id)}"${c.members.includes(id) ? ' checked' : ''}> ${iconOf(id)} ${esc(nameOf(id))}</label>`).join('') + '</div>';
+    h += '<div class="btns"><button data-act="delconcert" class="danger">' + t('Dissoudre le pacte') + '</button></div>';
     h += `<div id="insp-analysis">${concertAnalysis(cid)}</div>`;
     return h;
   }
@@ -803,18 +894,18 @@
 
   function openConcertModal(pre) {
     const st = App.state, ids = Object.keys(st.entities);
-    if (ids.length < 2) { toast('Il faut au moins deux entités pour créer un pacte.'); return; }
-    const c = App.modal(`<h2>🤝 Nouveau pacte / action de concert</h2>
-      <p class="muted small">Les membres d'un pacte votent ensemble : leurs voix sont additionnées pour déterminer le contrôle (contrôle conjoint).</p>
-      <label class="field"><span>Nom du pacte</span><input type="text" id="cn-name" value="Pacte ${(st.concerts || []).length + 1}"></label>
-      <div class="field"><span>Membres</span><div class="members">${ids.map(id => `<label><input type="checkbox" value="${esc(id)}"${pre.includes(id) ? ' checked' : ''}> ${iconOf(id)} ${esc(nameOf(id))}</label>`).join('')}</div></div>
-      <div class="btns"><button class="primary" id="cn-ok">Créer le pacte</button></div>`, 'narrow');
+    if (ids.length < 2) { toast(t('Il faut au moins deux entités pour créer un pacte.')); return; }
+    const c = App.modal(`<h2>${t('🤝 Nouveau pacte / action de concert')}</h2>
+      <p class="muted small">${t("Les membres d'un pacte votent ensemble : leurs voix sont additionnées pour déterminer le contrôle (contrôle conjoint).")}</p>
+      <label class="field"><span>${t('Nom du pacte')}</span><input type="text" id="cn-name" value="${esc(t('Pacte {n}', { n: (st.concerts || []).length + 1 }))}"></label>
+      <div class="field"><span>${t('Membres')}</span><div class="members">${ids.map(id => `<label><input type="checkbox" value="${esc(id)}"${pre.includes(id) ? ' checked' : ''}> ${iconOf(id)} ${esc(nameOf(id))}</label>`).join('')}</div></div>
+      <div class="btns"><button class="primary" id="cn-ok">${t('Créer le pacte')}</button></div>`, 'narrow');
     $('#cn-ok', c).onclick = () => {
       const mem = $$('.members input:checked', c).map(i => i.value);
-      if (mem.length < 2) { toast('Choisissez au moins deux membres.'); return; }
+      if (mem.length < 2) { toast(t('Choisissez au moins deux membres.')); return; }
       pushUndo();
       let n = 1; while (st.concerts.some(x => x.id === 'C' + n)) n++;
-      const cn = { id: 'C' + n, name: $('#cn-name', c).value.trim() || 'Pacte ' + n, members: mem };
+      const cn = { id: 'C' + n, name: $('#cn-name', c).value.trim() || t('Pacte {n}', { n }), members: mem };
       st.concerts.push(cn);
       App.closeModal(); App.sel = { kind: 'concert', id: cn.id }; App.commit();
     };
@@ -822,23 +913,27 @@
   $('#tool-concert').onclick = () => openConcertModal(App.sel && App.sel.kind === 'node' ? [App.sel.id] : []);
 
   /* ============================================================ légende */
-  function buildLegend() {
+  function buildLegend(refresh) {
     const el = $('#legend');
-    let h = '<div class="lg-h">Légende <span>▾</span></div><div class="lg-body"><div class="lg-sec">Liens (droits de vote effectifs)</div>';
+    let h = '<div class="lg-h">' + t('Légende') + ' <span>▾</span></div><div class="lg-body"><div class="lg-sec">' + t('Liens (droits de vote effectifs)') + '</div>';
     P.CATS.forEach(c => { h += `<div class="lg-row" title="${esc(c.text)}"><span class="sw" style="border-color:${c.color}"></span>${esc(c.label)}</div>`; });
-    h += '<div class="lg-row"><span class="sw dash" style="border-color:#94a3b8"></span>voix neutralisées (autocontrôle)</div>';
-    h += '<div class="lg-sec">Entités</div>';
-    h += `<div class="lg-row"><span class="box" style="border-color:${PALETTE[0]};border-width:3px"></span>contrôleur ultime (couleur propre)</div>`;
-    h += `<div class="lg-row"><span class="box" style="border-color:${PALETTE[0]};background:${tint(PALETTE[0], 0.15)}"></span>contrôlée par l'entité de même couleur</div>`;
-    h += '<div class="lg-row"><span class="box" style="border-color:#94a3b8;border-style:dashed"></span>pacte : contrôle conjoint</div></div>';
+    h += '<div class="lg-row"><span class="sw dash" style="border-color:#94a3b8"></span>' + t('voix neutralisées (autocontrôle)') + '</div>';
+    h += '<div class="lg-sec">' + t('Entités') + '</div>';
+    h += `<div class="lg-row"><span class="box" style="border-color:${PALETTE[0]};border-width:3px"></span>${t('contrôleur ultime (couleur propre)')}</div>`;
+    h += `<div class="lg-row"><span class="box" style="border-color:${PALETTE[0]};background:${tint(PALETTE[0], 0.15)}"></span>${t("contrôlée par l'entité de même couleur")}</div>`;
+    h += '<div class="lg-row"><span class="box" style="border-color:#94a3b8;border-style:dashed"></span>' + t('pacte : contrôle conjoint') + '</div></div>';
     el.innerHTML = h;
+    el.dataset.juris = P.juris;
+    if (refresh) { $('.lg-h', el).onclick = toggleLegend; return; }
     let pref = null;
     try { pref = localStorage.getItem('capital-lab.legend'); } catch (e) { /* */ }
     if (pref === '0' || (pref == null && window.innerHeight < 800)) el.classList.add('collapsed');
-    $('.lg-h', el).onclick = () => {
-      el.classList.toggle('collapsed');
-      try { localStorage.setItem('capital-lab.legend', el.classList.contains('collapsed') ? '0' : '1'); } catch (e) { /* */ }
-    };
+    $('.lg-h', el).onclick = toggleLegend;
+  }
+  function toggleLegend() {
+    const el = $('#legend');
+    el.classList.toggle('collapsed');
+    try { localStorage.setItem('capital-lab.legend', el.classList.contains('collapsed') ? '0' : '1'); } catch (e) { /* */ }
   }
 
   /* ============================================================ modales */
@@ -851,19 +946,32 @@
   $('#modal').addEventListener('click', ev => { if (ev.target.id === 'modal' || ev.target.closest('.close')) App.closeModal(); });
 
   function openLibrary() {
-    const cards = P.LIBRARY.map(s => {
+    const card = s => {
       const sc = P.parseScenario(s.md);
-      return `<div class="lib-card"><h4>${esc(sc.title)}</h4><p>${esc(sc.description)}</p><span class="small muted">${sc.steps.length} étapes</span>
-        <div class="btns"><button class="primary" data-run="${s.id}">▶ Lancer</button><button data-see="${s.id}">📝 Markdown</button><button data-dl="${s.id}" title="Télécharger le fichier .md">⬇</button></div></div>`;
-    }).join('');
-    const c = App.modal(`<h2>📚 Scénarios</h2><div class="lib-grid">${cards}</div>
-      <h3>Votre propre scénario</h3>
-      <p class="muted small">Collez le markdown fourni par un enseignant ou généré par une IA, ou ouvrez / déposez un fichier .md.</p>
-      <textarea id="md-input" placeholder="# Mon scénario&#10;&#10;## 1. Première étape&#10;Commentaire…&#10;&#10;\`\`\`scene&#10;personne FAM &quot;Famille&quot;&#10;societe A &quot;Alpha SA&quot;&#10;lien FAM -> A 51%&#10;\`\`\`"></textarea>
-      <div class="btns"><button class="primary" id="md-run">▶ Lancer ce scénario</button><button id="md-file">📂 Ouvrir un fichier .md</button><button id="md-prompt" title="Consigne à donner à une IA avec votre cours">🤖 Consigne pour une IA</button><button id="md-spec">📄 Format des scénarios</button></div>`);
+      return `<div class="lib-card"><h4>${esc(sc.title)}</h4><p>${esc(sc.description)}</p><span class="small muted">${t('{n} étapes', { n: sc.steps.length })}</span>
+        <div class="btns"><button class="primary" data-run="${s.id}">${t('▶ Lancer')}</button><button data-see="${s.id}">📝 Markdown</button><button data-dl="${s.id}" title="${esc(t('Télécharger le fichier .md'))}">⬇</button></div></div>`;
+    };
+    const list = langLibrary(), laws = P.lawsFor(P.lang);
+    let cards;
+    if (laws.length > 1) {
+      // plusieurs droits pour cette langue (anglais : Royaume-Uni, États-Unis) : un groupe par droit, celui en vigueur d'abord
+      const order = laws.includes(P.juris) ? [P.juris].concat(laws.filter(l => l !== P.juris)) : laws;
+      cards = order.map(l => {
+        const items = list.filter(s => libDroit(s) === l); if (!items.length) return '';
+        const J = P.JURIS[l];
+        return `<h3 class="lib-law">${J.flag} ${esc(J.name)}</h3><div class="lib-grid">${items.map(card).join('')}</div>`;
+      }).join('');
+      const other = list.filter(s => !laws.includes(libDroit(s)));
+      if (other.length) cards += `<div class="lib-grid">${other.map(card).join('')}</div>`;
+    } else cards = `<div class="lib-grid">${list.map(card).join('')}</div>`;
+    const c = App.modal(`<h2>${t('📚 Scénarios')}</h2>${cards}
+      <h3>${t('Votre propre scénario')}</h3>
+      <p class="muted small">${t('Collez le markdown fourni par un enseignant ou généré par une IA, ou ouvrez / déposez un fichier .md.')}</p>
+      <textarea id="md-input" placeholder="${esc(t('# Mon scénario\n\n## 1. Première étape\nCommentaire…')).replace(/\n/g, '&#10;')}&#10;&#10;\`\`\`scene&#10;${esc(t('personne FAM "Famille"\nsociete A "Alpha SA"\nlien FAM -> A 51%')).replace(/\n/g, '&#10;')}&#10;\`\`\`"></textarea>
+      <div class="btns"><button class="primary" id="md-run">${t('▶ Lancer ce scénario')}</button><button id="md-file">${t('📂 Ouvrir un fichier .md')}</button><button id="md-prompt" title="${esc(t('Consigne à donner à une IA avec votre cours'))}">${t('🤖 Consigne pour une IA')}</button><button id="md-spec">${t('📄 Format des scénarios')}</button></div>`);
     c.addEventListener('click', ev => {
       const b = ev.target.closest('button'); if (!b) return;
-      const get = id => P.LIBRARY.find(s => s.id === id);
+      const get = libFind;
       if (b.dataset.run) { App.closeModal(); App.loadScenario(get(b.dataset.run).md, { id: b.dataset.run }); }
       else if (b.dataset.see) openEditor(get(b.dataset.see).md, false);
       else if (b.dataset.dl) download(b.dataset.dl + '.md', get(b.dataset.dl).md.replace(/~~~scene/g, '```scene').replace(/^~~~$/gm, '```'));
@@ -875,10 +983,10 @@
   }
 
   function openEditor(md, isCurrent) {
-    const c = App.modal(`<h2>📝 Markdown du scénario</h2>
-      <p class="muted small">Modifiez le texte puis relancez. Les blocs <code>scene</code> contiennent les commandes (voir « Format des scénarios »).</p>
+    const c = App.modal(`<h2>${t('📝 Markdown du scénario')}</h2>
+      <p class="muted small">${t('Modifiez le texte puis relancez. Les blocs <code>scene</code> contiennent les commandes (voir « Format des scénarios »).')}</p>
       <textarea id="ed-md" class="big" spellcheck="false"></textarea>
-      <div class="btns"><button class="primary" id="ed-run">▶ ${isCurrent ? 'Appliquer (rester à cette étape)' : 'Lancer'}</button><button id="ed-copy">📋 Copier</button><button id="ed-dl">⬇ Télécharger .md</button><button id="ed-spec">📄 Format</button></div>`);
+      <div class="btns"><button class="primary" id="ed-run">▶ ${isCurrent ? t('Appliquer (rester à cette étape)') : t('Lancer')}</button><button id="ed-copy">${t('📋 Copier')}</button><button id="ed-dl">${t('⬇ Télécharger .md')}</button><button id="ed-spec">${t('📄 Format')}</button></div>`);
     $('#ed-md', c).value = md;
     $('#ed-run', c).onclick = () => {
       const keep = App.step; App.closeModal();
@@ -894,47 +1002,47 @@
 
   /* Instructions complètes pour une IA : la page publiée (à jour), sinon la version embarquée (hors ligne). */
   function copyAllInstructions(consigne) {
-    const demande = '\n\n---\n\n# Ma demande\n\n' + P.iaConsigneSansLien(consigne) + '\n\n';
-    fetch('docs/instructions-ia.md').then(r => { if (!r.ok) throw 0; return r.text(); })
+    const demande = '\n\n---\n\n# ' + t('Ma demande') + '\n\n' + P.iaConsigneSansLien(consigne) + '\n\n';
+    fetch(P.lang === 'fr' ? 'docs/instructions-ia.md' : `docs/${P.lang}/instructions-ia.md`).then(r => { if (!r.ok) throw 0; return r.text(); })
       .catch(() => fetch(P.IA_INSTRUCTIONS_URL).then(r => { if (!r.ok) throw 0; return r.text(); }))
-      .then(t => copyText(t.trim() + demande), () => copyText(P.AI_PROMPT.trim() + demande));
+      .then(txt => copyText(txt.trim() + demande), () => copyText(P.AI_PROMPT.trim() + demande));
   }
 
   function openHelp(which) {
     if (which === 'format') {
       const c = App.modal(`<div class="help-doc md">${P.md(P.FORMAT_DOC)}</div>
-        <div class="btns"><button class="primary" id="hp-dl">⬇ Télécharger la spécification (.md)</button><a class="btnlink" href="docs/index.html#/format-scenario" target="_blank" rel="noopener">📖 Dans la documentation</a></div>`);
+        <div class="btns"><button class="primary" id="hp-dl">${t('⬇ Télécharger la spécification (.md)')}</button><a class="btnlink" href="${docHref('format-scenario')}" target="_blank" rel="noopener">${t('📖 Dans la documentation')}</a></div>`);
       $('#hp-dl', c).onclick = () => download('format-scenario.md', P.FORMAT_DOC);
       return;
     }
-    const doc = (page, label) => `<a class="doc-link" href="docs/index.html#/${page}" target="_blank" rel="noopener">${label}</a>`;
-    const c = App.modal(`<h2>❔ Aide</h2>
+    const doc = (page, label, sub) => `<a class="doc-link" href="${docHref(page)}" target="_blank" rel="noopener">${label}${sub != null ? `<small>${sub}</small>` : ''}</a>`;
+    const c = App.modal(`<h2>${t('❔ Aide')}</h2>
       <div class="help-cols">
-        <div class="help-card"><h3>✏️ Mode libre</h3><a href="docs/index.html#/prise-en-main" target="_blank" rel="noopener" title="Voir la page « Mode libre » de la documentation"><img src="docs/images/libre-analyse-jour.jpg" alt="Mode libre : palette, structure et analyse" loading="lazy"></a>${P.md(P.HELP_LIBRE)}</div>
-        <div class="help-card"><h3>🎬 Mode cinéma</h3><a href="docs/index.html#/mode-cinema" target="_blank" rel="noopener" title="Voir la page « Mode cinéma » de la documentation"><img src="docs/images/question-revelee-nuit.jpg" alt="Mode cinéma : une question révélée, en mode nuit" loading="lazy"></a>${P.md(P.HELP_CINEMA)}</div>
+        <div class="help-card"><h3>${t('✏️ Mode libre')}</h3><a href="${docHref('prise-en-main')}" target="_blank" rel="noopener" title="${esc(t('Voir la page « Mode libre » de la documentation'))}"><img src="docs/images/libre-analyse-jour.jpg" alt="${esc(t('Mode libre : palette, structure et analyse'))}" loading="lazy"></a>${P.md(P.HELP_LIBRE)}</div>
+        <div class="help-card"><h3>${t('🎬 Mode cinéma')}</h3><a href="${docHref('mode-cinema')}" target="_blank" rel="noopener" title="${esc(t('Voir la page « Mode cinéma » de la documentation'))}"><img src="docs/images/question-revelee-nuit.jpg" alt="${esc(t('Mode cinéma : une question révélée, en mode nuit'))}" loading="lazy"></a>${P.md(P.HELP_CINEMA)}</div>
       </div>
       <div class="help-ai">
-        <h3>🤖 Préparer son cours avec une IA</h3>
+        <h3>${t('🤖 Préparer son cours avec une IA')}</h3>
         <ol class="help-steps">
-          <li><b>Copiez la consigne</b> (elle contient le lien vers les instructions ; le texte est modifiable) :
+          <li>${t('<b>Copiez la consigne</b> (elle contient le lien vers les instructions ; le texte est modifiable) :')}
             <div class="help-prompt" id="hp-text" contenteditable="true" spellcheck="false">${esc(P.IA_CONSIGNE)}</div>
-            <button id="hp-consigne" class="big">📋 Copier la consigne</button></li>
-          <li><b>Collez-la dans votre IA</b> (ChatGPT, Claude, Gemini, Mistral…), puis ajoutez votre cours.</li>
-          <li><b>Collez la réponse</b> dans 📚 Scénarios, puis Lancer.</li>
+            <button id="hp-consigne" class="big">${t('📋 Copier la consigne')}</button></li>
+          <li>${t('<b>Collez-la dans votre IA</b> (ChatGPT, Claude, Gemini, Mistral…), puis ajoutez votre cours.')}</li>
+          <li>${t('<b>Collez la réponse</b> dans 📚 Scénarios, puis Lancer.')}</li>
         </ol>
-        <details class="help-more"><summary>Votre IA ne peut pas ouvrir de lien ?</summary>
-          <p>Copiez la version complète (instructions et consigne en un seul texte), puis ajoutez votre cours.</p>
-          <div class="btns"><button id="hp-all" class="warn">📄 Copier la version complète</button>${doc('ia-et-skill', 'En savoir plus →')}</div>
+        <details class="help-more"><summary>${t('Votre IA ne peut pas ouvrir de lien ?')}</summary>
+          <p>${t('Copiez la version complète (instructions et consigne en un seul texte), puis ajoutez votre cours.')}</p>
+          <div class="btns"><button id="hp-all" class="warn">${t('📄 Copier la version complète')}</button>${doc('ia-et-skill', t('En savoir plus →'))}</div>
         </details>
       </div>
-      <h3>📖 Documentation complète</h3>
+      <h3>${t('📖 Documentation complète')}</h3>
       <div class="doc-links">
-        ${doc('mode-cinema', '🎬 Mode cinéma<small>lecture, questions, téléphone, partage</small>')}
-        ${doc('prise-en-main', '✏️ Mode libre<small>construire, analyser, studio</small>')}
-        ${doc('scenarios', '📚 Scénarios<small>les 10 scénarios intégrés</small>')}
-        ${doc('regles-de-calcul', '🧮 Règles de calcul<small>contrôle, intérêts, couleurs, limites</small>')}
-        ${doc('format-scenario', '📄 Format des scénarios<small>écrire ou corriger un scénario</small>')}
-        ${doc('', '🏠 Accueil de la documentation<small>tout le reste</small>')}
+        ${doc('mode-cinema', t('🎬 Mode cinéma'), t('lecture, questions, téléphone, partage'))}
+        ${doc('prise-en-main', t('✏️ Mode libre'), t('construire, analyser, studio'))}
+        ${doc('scenarios', t('📚 Scénarios'), t('les 10 scénarios intégrés'))}
+        ${doc('regles-de-calcul', t('🧮 Règles de calcul'), t('contrôle, intérêts, couleurs, limites'))}
+        ${doc('format-scenario', t('📄 Format des scénarios'), t('écrire ou corriger un scénario'))}
+        ${doc('', t('🏠 Accueil de la documentation'), t('tout le reste'))}
       </div>
       <p class="help-thanks">${P.md(P.HELP_THANKS).replace(/^<p>|<\/p>$/g, '')}</p>`);
     $('#hp-consigne', c).onclick = () => copyText($('#hp-text', c).innerText.trim());
@@ -952,8 +1060,8 @@
           const st = sanitize(o.state || o);
           if (App.mode !== 'libre') setMode('libre');
           pushUndo(); App.state = st; App.sel = null; App.disp = {}; App.commit({ animate: true }); App.fit(true);
-          toast('📂 Structure chargée : ' + esc(f.name));
-        } catch (e) { toast('⚠ Fichier JSON invalide'); }
+          toast(t('📂 Structure chargée : {name}', { name: esc(f.name) }));
+        } catch (e) { toast(t('⚠ Fichier JSON invalide')); }
       } else { App.closeModal(); App.loadScenario(txt); }
     };
     r.readAsText(f, 'utf-8');
@@ -961,7 +1069,7 @@
   $('#file-input').addEventListener('change', ev => { const f = ev.target.files[0]; if (f) openFile(f); ev.target.value = ''; });
 
   function loadExample() {
-    const sc = P.parseScenario(P.LIBRARY[0].md);
+    const sc = P.parseScenario(defaultScenario().md);
     const st = P.buildState(sc, sc.steps.length - 1);
     P.layout(st);
     Object.values(st.entities).forEach(e => { e.fixed = true; });
@@ -975,7 +1083,8 @@
    *  { id } (bibliothèque), { url } (fichier servi), { packed } (texte encodé dans le lien) ou rien. */
   App.loadScenario = function (md, origin, startStep) {
     const sc = P.parseScenario(md);
-    if (!sc.steps.length) { toast('⚠ Ce scénario ne contient aucune étape.'); return false; }
+    if (!sc.steps.length) { toast(t('⚠ Ce scénario ne contient aucune étape.')); return false; }
+    sc.meta.droit = scenarioDroit(sc, origin);
     const errs = []; P.buildState(sc, sc.steps.length - 1, errs);
     sc.errors = sc.errors.concat(errs);
     App.pause();
@@ -984,7 +1093,7 @@
     App.cinePos = {}; App.noteOff = {};
     if (App.mode !== 'cinema') setMode('cinema', true);
     App.goStep(startStep || 0);
-    if (errs.length) toast(`⚠ ${errs.length} avertissement(s) dans le scénario (voir sous le commentaire).`, 4000);
+    if (errs.length) toast(t('⚠ {n} avertissement(s) dans le scénario (voir sous le commentaire).', { n: errs.length }), 4000);
     return true;
   };
 
@@ -1027,6 +1136,7 @@
   function scenarioUrl(base, step) {
     const o = App.origin; if (!o) return null;
     const u = new URL(base);
+    if (P.lang !== 'fr') u.searchParams.set('lang', P.lang);   // le lien garde la langue de l'interface
     if (o.id) u.searchParams.set('scenario', o.id);
     else if (o.url) u.searchParams.set('md', o.url);
     if (step > 0) u.searchParams.set('etape', step + 1);
@@ -1058,19 +1168,19 @@
   async function openShare() {
     if (!App.scenario) { openLibrary(); return; }
     const base = baseUrl(), isLocal = base !== location.origin + location.pathname;
-    if (!App.origin) { try { App.origin = { packed: await packMd(App.scenarioSrc) }; } catch (e) { toast('Encodage du scénario impossible dans ce navigateur.'); return; } }
+    if (!App.origin) { try { App.origin = { packed: await packMd(App.scenarioSrc) }; } catch (e) { toast(t('Encodage du scénario impossible dans ce navigateur.')); return; } }
     const lib = new URL(base); lib.searchParams.set('scenarios', '');
     const links = [
-      ['Cette étape', `Ouvre « ${esc(App.scenario.title)} » directement à l'étape ${App.step + 1}.`, scenarioUrl(base, App.step)],
-      ['Début du scénario', 'Ouvre le scénario à sa première étape.', scenarioUrl(base, 0)],
-      ['Bibliothèque', 'Ouvre le choix des scénarios.', lib.toString().replace('scenarios=', 'scenarios')]
+      [t('Cette étape'), t("Ouvre « {title} » directement à l'étape {n}.", { title: esc(App.scenario.title), n: App.step + 1 }), scenarioUrl(base, App.step)],
+      [t('Début du scénario'), t('Ouvre le scénario à sa première étape.'), scenarioUrl(base, 0)],
+      [t('Bibliothèque'), t('Ouvre le choix des scénarios.'), lib.toString().replace('scenarios=', 'scenarios')]
     ];
     const long = App.origin.packed && links[0][2].length > 6000;
-    const c = App.modal(`<h2>🔗 Partager</h2>
-      ${App.origin.packed ? '<p class="small muted">Ce scénario ne fait pas partie de la bibliothèque : son texte est encodé dans le lien lui-même (après le #). Aucun serveur ne le reçoit.</p>' : ''}
-      ${long ? '<p class="small" style="color:var(--warn)">⚠ Lien très long : certaines messageries peuvent le couper. Pour un long scénario, publiez plutôt le fichier .md et utilisez ?md=adresse-du-fichier.</p>' : ''}
-      ${isLocal ? `<p class="small muted">Liens construits sur l'adresse publique <b>${esc(PUBLIC_BASE)}</b>${App.origin.id ? ' : le scénario doit y avoir été publié' : ''}.</p>` : ''}
-      ${links.map(([t, d, u], i) => `<div class="share-row"><div><b>${t}</b><span class="small muted"> — ${d}</span></div><div class="share-line"><input type="text" readonly value="${esc(u)}" id="sh-${i}"><button data-copy="${i}">📋 Copier</button><a class="btnlink" href="${esc(u)}" target="_blank" rel="noopener">↗</a></div></div>`).join('')}`, 'narrow');
+    const c = App.modal(`<h2>${t('🔗 Partager')}</h2>
+      ${App.origin.packed ? '<p class="small muted">' + t('Ce scénario ne fait pas partie de la bibliothèque : son texte est encodé dans le lien lui-même (après le #). Aucun serveur ne le reçoit.') + '</p>' : ''}
+      ${long ? '<p class="small" style="color:var(--warn)">' + t('⚠ Lien très long : certaines messageries peuvent le couper. Pour un long scénario, publiez plutôt le fichier .md et utilisez ?md=adresse-du-fichier.') + '</p>' : ''}
+      ${isLocal ? `<p class="small muted">${App.origin.id ? t("Liens construits sur l'adresse publique <b>{url}</b> : le scénario doit y avoir été publié.", { url: esc(PUBLIC_BASE) }) : t("Liens construits sur l'adresse publique <b>{url}</b>.", { url: esc(PUBLIC_BASE) })}</p>` : ''}
+      ${links.map(([lt, d, u], i) => `<div class="share-row"><div><b>${lt}</b><span class="small muted"> — ${d}</span></div><div class="share-line"><input type="text" readonly value="${esc(u)}" id="sh-${i}"><button data-copy="${i}">${t('📋 Copier')}</button><a class="btnlink" href="${esc(u)}" target="_blank" rel="noopener">↗</a></div></div>`).join('')}`, 'narrow');
     c.addEventListener('click', ev => { const b = ev.target.closest('[data-copy]'); if (b) copyText($('#sh-' + b.dataset.copy, c).value); });
     $$('input[readonly]', c).forEach(i => i.addEventListener('focus', () => i.select()));
   }
@@ -1080,29 +1190,29 @@
   function openScorm() {
     if (!App.scenario) { openLibrary(); return; }
     const sc = App.scenario, nq = sc.steps.filter(s => s.question && s.question.choices.some(c => c.correct)).length;
-    const c = App.modal(`<h2>📦 Exporter en SCORM</h2>
-      <p class="small muted">Un fichier .zip à déposer dans Moodle (activité « Paquetage SCORM ») ou dans une autre plateforme d'apprentissage. Il contient l'atelier et ce scénario : les élèves le suivent seuls, en pas à pas, sans connexion à ce site.</p>
-      <label class="field"><span>Titre dans la plateforme</span><input type="text" id="sc-title" value="${esc(sc.title)}"></label>
-      <label class="field"><span>Version</span><select id="sc-ver"><option value="1.2">SCORM 1.2 (recommandé, Moodle)</option><option value="2004">SCORM 2004 4ᵉ édition</option></select></label>
-      ${nq ? `<label class="chk"><input type="checkbox" id="sc-score" checked> Transmettre une note sur 100 : ${nq > 1 ? `part des ${nq} questions où l'élève choisit` : "100 si l'élève choisit"} une bonne carte avant de révéler la réponse</label>` : ''}
+    const c = App.modal(`<h2>${t('📦 Exporter en SCORM')}</h2>
+      <p class="small muted">${t("Un fichier .zip à déposer dans Moodle (activité « Paquetage SCORM ») ou dans une autre plateforme d'apprentissage. Il contient l'atelier et ce scénario : les élèves le suivent seuls, en pas à pas, sans connexion à ce site.")}</p>
+      <label class="field"><span>${t('Titre dans la plateforme')}</span><input type="text" id="sc-title" value="${esc(sc.title)}"></label>
+      <label class="field"><span>${t('Version')}</span><select id="sc-ver"><option value="1.2">${t('SCORM 1.2 (recommandé, Moodle)')}</option><option value="2004">${t('SCORM 2004 4ᵉ édition')}</option></select></label>
+      ${nq ? `<label class="chk"><input type="checkbox" id="sc-score" checked> ${nq > 1 ? t("Transmettre une note sur 100 : part des {n} questions où l'élève choisit une bonne carte avant de révéler la réponse", { n: nq }) : t("Transmettre une note sur 100 : 100 si l'élève choisit une bonne carte avant de révéler la réponse")}</label>` : ''}
       <ul class="small muted">
-        <li>Activité <b>terminée</b> quand l'élève atteint la dernière étape (${sc.steps.length}).</li>
-        <li>En revenant, l'élève reprend à l'étape où il s'était arrêté.</li>
+        <li>${t("Activité <b>terminée</b> quand l'élève atteint la dernière étape ({n}).", { n: sc.steps.length })}</li>
+        <li>${t("En revenant, l'élève reprend à l'étape où il s'était arrêté.")}</li>
       </ul>
-      <div class="btns"><button class="primary" id="sc-ok">⬇ Télécharger le paquet SCORM</button></div>`, 'narrow');
+      <div class="btns"><button class="primary" id="sc-ok">${t('⬇ Télécharger le paquet SCORM')}</button></div>`, 'narrow');
     $('#sc-ok', c).onclick = async () => {
       const b = $('#sc-ok', c), title = $('#sc-title', c).value.trim() || sc.title, version = $('#sc-ver', c).value;
-      b.disabled = true; b.textContent = '⏳ Préparation…';
+      b.disabled = true; b.textContent = t('⏳ Préparation…');
       try {
-        const blob = await P.scormPackage({ md: App.scenarioSrc, title, version, score: !!($('#sc-score', c) || {}).checked, publicBase: PUBLIC_BASE });
+        const blob = await P.scormPackage({ md: App.scenarioSrc, title, version, score: !!($('#sc-score', c) || {}).checked, publicBase: PUBLIC_BASE, lang: P.lang, droit: App.state.options.droit });
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
         a.download = 'scorm-' + (P.slug(title).toLowerCase().replace(/_/g, '-') || 'scenario') + '.zip';
         document.body.appendChild(a); a.click();
         setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 800);
-        App.closeModal(); toast('📦 Paquet SCORM téléchargé');
+        App.closeModal(); toast(t('📦 Paquet SCORM téléchargé'));
       } catch (e) {
-        b.disabled = false; b.textContent = '⬇ Télécharger le paquet SCORM';
-        toast('⚠ Paquet impossible à construire : fichiers de l’atelier inaccessibles (ouvrez l’atelier depuis un serveur web ou en ligne).', 6000);
+        b.disabled = false; b.textContent = t('⬇ Télécharger le paquet SCORM');
+        toast(t('⚠ Paquet impossible à construire : fichiers de l’atelier inaccessibles (ouvrez l’atelier depuis un serveur web ou en ligne).'), 6000);
       }
     };
   }
@@ -1128,22 +1238,22 @@
 
   /** Contenu de la question : en feuille sur le canevas (écran large) ou dans le texte (téléphone). */
   function qsheetHTML(q, inline) {
-    const Q = App.q, inl = t => P.md(t, { nameOf });
-    let h = `<div class="qs-head" data-qs="toggle" title="Réduire / agrandir"><span class="qs-badge">❓ Question</span><div class="qs-text">${inl(q.text)}</div><div class="qs-actions">`;
-    h += Q.revealed ? '<span class="qs-done">✔ Réponse révélée</span>' : '<button class="primary" data-qs="reveal" title="Révéler la réponse (→)">💡 Révéler la réponse</button>';
-    h += `<button class="qs-min" data-qs="toggle" title="${Q.collapsed ? 'Agrandir' : 'Réduire'}">${Q.collapsed ? '▴' : '▾'}</button></div></div><div class="qs-body">`;
+    const Q = App.q, inl = x => P.md(x, { nameOf });
+    let h = `<div class="qs-head" data-qs="toggle" title="${esc(t('Réduire / agrandir'))}"><span class="qs-badge">${t('❓ Question')}</span><div class="qs-text">${inl(q.text)}</div><div class="qs-actions">`;
+    h += Q.revealed ? '<span class="qs-done">' + t('✔ Réponse révélée') + '</span>' : `<button class="primary" data-qs="reveal" title="${esc(t('Révéler la réponse (→)'))}">${t('💡 Révéler la réponse')}</button>`;
+    h += `<button class="qs-min" data-qs="toggle" title="${Q.collapsed ? t('Agrandir') : t('Réduire')}">${Q.collapsed ? '▴' : '▾'}</button></div></div><div class="qs-body">`;
     if (q.choices.length) {
       h += '<div class="qs-grid">' + q.choices.map((c, i) => {
         const cls = ['qcard', Q.picked === i ? 'picked' : '', Q.revealed ? (c.correct ? 'correct' : 'wrong') : '', Q.revealed && Q.flipped[i] ? 'flipped' : ''].join(' ');
-        const pickTag = Q.picked === i ? '<span class="qc-pick">👥 choix de la salle</span>' : '';
+        const pickTag = Q.picked === i ? '<span class="qc-pick">' + t('👥 choix de la salle') + '</span>' : '';
         return `<div class="${cls}" data-card="${i}" role="button" tabindex="0"><div class="qc-inner">
           <div class="qc-face qc-front"><span class="qc-letter">${'ABCDEFGHIJ'[i] || i + 1}</span><div class="qc-txt">${inl(c.text)}${pickTag}</div>${Q.revealed ? `<span class="qc-mark">${c.correct ? '✓' : '✗'}</span>` : ''}</div>
-          <div class="qc-face qc-back"><div class="qc-verdict">${c.correct ? '✓ Bonne réponse' : '✗ Mauvaise réponse'}</div><div class="qc-txt">${c.explain ? inl(c.explain) : ''}</div></div>
+          <div class="qc-face qc-back"><div class="qc-verdict">${c.correct ? t('✓ Bonne réponse') : t('✗ Mauvaise réponse')}</div><div class="qc-txt">${c.explain ? inl(c.explain) : ''}</div></div>
         </div></div>`;
       }).join('') + '</div>';
-      h += `<p class="qs-hint">${Q.revealed ? (q.choices.some(c => c.explain) ? 'Cliquez sur une carte (ou tapez son numéro) pour la retourner et lire son explication.' : 'Cliquez sur une carte pour la retourner.') : 'Cliquez sur la réponse choisie par la salle (ou tapez son numéro), puis révélez la réponse (→).'}${inline ? '' : ' Le canevas reste déplaçable au-dessus.'}</p>`;
+      h += `<p class="qs-hint">${Q.revealed ? (q.choices.some(c => c.explain) ? t('Cliquez sur une carte (ou tapez son numéro) pour la retourner et lire son explication.') : t('Cliquez sur une carte pour la retourner.')) : t('Cliquez sur la réponse choisie par la salle (ou tapez son numéro), puis révélez la réponse (→).')}${inline ? '' : t(' Le canevas reste déplaçable au-dessus.')}</p>`;
     } else {
-      h += `<p class="qs-open">${Q.revealed ? (inline ? 'La réponse est affichée ci-dessous.' : 'La réponse est affichée dans le panneau de droite.') : 'Question ouverte : échangez avec la salle, puis révélez la réponse (→).'}</p>`;
+      h += `<p class="qs-open">${Q.revealed ? (inline ? t('La réponse est affichée ci-dessous.') : t('La réponse est affichée dans le panneau de droite.')) : t('Question ouverte : échangez avec la salle, puis révélez la réponse (→).')}</p>`;
     }
     return h + '</div>';
   }
@@ -1207,18 +1317,18 @@
   function updatePlayer() {
     const sc = App.scenario, cont = App.playMode === 'continu';
     $('#pl-play').hidden = !cont;
-    $('#pl-play').textContent = App.playing ? '⏸ Pause' : '▶ Lecture';
+    $('#pl-play').textContent = App.playing ? t('⏸ Pause') : t('▶ Lecture');
     $('#pl-next').className = cont ? '' : 'primary';
     $('#pl-timer').style.visibility = cont ? 'visible' : 'hidden';
     $('.speed').style.display = cont ? '' : 'none';
     if (!sc) { $('#pl-count').textContent = '–'; $('#pl-dots').innerHTML = ''; return; }
     $('#pl-count').textContent = `${App.step + 1} / ${sc.steps.length}`;
-    $('#pl-dots').innerHTML = sc.steps.map((s, i) => `<button data-go="${i}" class="${i === App.step ? 'cur' : i < App.step ? 'done' : ''}" title="${esc((i + 1) + '. ' + s.title)}"></button>`).join('');
+    $('#pl-dots').innerHTML = sc.steps.map((s, i) => `<button data-go="${i}" class="${i === App.step ? 'cur' : i < App.step ? 'done' : ''}" title="${esc((i + 1) + '. ' + stepTitle(s))}"></button>`).join('');
     $('#pl-reset').hidden = !Object.keys(App.cinePos).length && !Object.keys(App.noteOff).length;
     $('#pl-prev').disabled = App.step <= 0;
     const pending = !!curQuestion() && !App.q.revealed;
-    $('#pl-next').textContent = pending ? (isMobile() ? '💡 Réponse' : '💡 Réponse ▶') : (isMobile() ? 'Suivant' : 'Suivant ▶');
-    $('#pl-next').title = pending ? 'Révéler la réponse (→)' : 'Étape suivante (→)';
+    $('#pl-next').textContent = pending ? (isMobile() ? t('💡 Réponse') : t('💡 Réponse ▶')) : (isMobile() ? t('Suivant') : t('Suivant ▶'));
+    $('#pl-next').title = pending ? t('Révéler la réponse (→)') : t('Étape suivante (→)');
     $('#pl-next').disabled = !pending && App.step >= sc.steps.length - 1;
   }
   $('#pl-first').onclick = () => App.goStep(0);
@@ -1234,39 +1344,39 @@
   };
   $('#pl-speed').oninput = ev => {
     App.speed = parseFloat(ev.target.value);
-    $('#pl-speed-v').textContent = App.speed.toLocaleString('fr-FR') + '×';
+    $('#pl-speed-v').textContent = App.speed.toLocaleString(P.locale || 'fr-FR') + '×';
   };
   $('#pl-speed').onchange = () => { if (App.playing) App.schedule(); };
 
   function perspectiveSummary(pv) {
     const an = App.an, rows = an.ids.filter(c => c !== pv && (an.interestOf(pv, c) > 1e-6 || an.ctrl[pv].has(c)));
     if (!rows.length) return '';
-    return `<div class="auto"><div class="auto-h">👁 Point de vue : ${esc(nameOf(pv))}</div><table class="mini"><tr><th>Entité</th><th class="n">Intérêt</th><th class="n">DV contrôlés</th><th class="n">Contrôle</th></tr>${rows.map(c => `<tr><td><span class="ref" data-ref="${esc(c)}">${esc(nameOf(c))}</span></td><td class="n">${fmt(an.interestOf(pv, c) * 100)}</td><td class="n">${fmt(an.pct(pv, c))}</td><td class="n">${an.ctrl[pv].has(c) ? '✔' : '—'}</td></tr>`).join('')}</table></div>`;
+    return `<div class="auto"><div class="auto-h">${t('👁 Point de vue : {name}', { name: esc(nameOf(pv)) })}</div><table class="mini"><tr><th>${t('Entité')}</th><th class="n">${t('Intérêt')}</th><th class="n">${t('DV contrôlés')}</th><th class="n">${t('Contrôle')}</th></tr>${rows.map(c => `<tr><td><span class="ref" data-ref="${esc(c)}">${esc(nameOf(c))}</span></td><td class="n">${fmt(an.interestOf(pv, c) * 100)}</td><td class="n">${fmt(an.pct(pv, c))}</td><td class="n">${an.ctrl[pv].has(c) ? '✔' : '—'}</td></tr>`).join('')}</table></div>`;
   }
 
   App.renderCommentary = function () {
     const el = $('#commentary'), sc = App.scenario;
     if (!sc) {
-      el.innerHTML = '<div class="empty"><h2>🎬 Mode cinéma</h2><p>Un scénario déroule, étape par étape, la construction d\'une structure de participations avec ses commentaires.</p><button class="primary" data-act="lib">📚 Choisir un scénario</button></div>';
+      el.innerHTML = '<div class="empty"><h2>' + t('🎬 Mode cinéma') + '</h2><p>' + t("Un scénario déroule, étape par étape, la construction d'une structure de participations avec ses commentaires.") + '</p><button class="primary" data-act="lib">' + t('📚 Choisir un scénario') + '</button></div>';
       return;
     }
     const s = sc.steps[App.step], st = App.state;
-    let h = `<div class="sc-head"><div class="sc-title">${esc(sc.title)}</div><div class="sc-no">Étape ${App.step + 1} / ${sc.steps.length}</div></div>`;
-    h += `<h2 class="step-title">${s.question ? '❓ ' : ''}${esc(s.title)}</h2><div class="md">${P.md(s.md, { nameOf })}</div>`;
+    let h = `<div class="sc-head"><div class="sc-title">${esc(sc.title)}</div><div class="sc-no">${t('Étape {n} / {total}', { n: App.step + 1, total: sc.steps.length })}</div></div>`;
+    h += `<h2 class="step-title">${s.question ? '❓ ' : ''}${esc(stepTitle(s))}</h2><div class="md">${P.md(s.md, { nameOf })}</div>`;
     if (s.question) {
       const q = s.question, good = q.choices.map((c, i) => c.correct ? `<b>${'ABCDEFGHIJ'[i] || i + 1}</b> — ${P.md(c.text, { nameOf }).replace(/^<p>|<\/p>$/g, '')}` : null).filter(Boolean);
       if (isMobile()) h += `<div class="qinline">${qsheetHTML(q, true)}</div>`;
-      if (!App.q.revealed) { if (!isMobile()) h += '<div class="answer-wait">La réponse s\'affichera ici. <button class="small" data-act="reveal">💡 Révéler la réponse</button></div>'; }
+      if (!App.q.revealed) { if (!isMobile()) h += '<div class="answer-wait">' + t("La réponse s'affichera ici.") + ' <button class="small" data-act="reveal">' + t('💡 Révéler la réponse') + '</button></div>'; }
       else if (good.length || q.answerMd) {
-        h += `<details class="answer" open><summary>💡 Réponse</summary>${good.length ? `<p class="good">${good.length > 1 ? 'Bonnes réponses' : 'Bonne réponse'} : ${good.join(' ; ')}</p>` : ''}<div class="md">${P.md(q.answerMd, { nameOf })}</div></details>`;
+        h += `<details class="answer" open><summary>${t('💡 Réponse')}</summary>${good.length ? `<p class="good">${good.length > 1 ? t('Bonnes réponses : {list}', { list: good.join(' ; ') }) : t('Bonne réponse : {list}', { list: good.join(' ; ') })}</p>` : ''}<div class="md">${P.md(q.answerMd, { nameOf })}</div></details>`;
       }
     }
     const target = App.sel && App.sel.kind === 'node' ? App.sel.id : null;
-    if (target && st.entities[target]) h += `<div class="auto"><div class="auto-h">🔍 ${iconOf(target)} ${esc(nameOf(target))}<button data-act="unsel" title="Fermer">×</button></div>${App.analysisHTML(target)}</div>`;
+    if (target && st.entities[target]) h += `<div class="auto"><div class="auto-h">🔍 ${iconOf(target)} ${esc(nameOf(target))}<button data-act="unsel" title="${esc(t('Fermer'))}">×</button></div>${App.analysisHTML(target)}</div>`;
     else if (st.view.perspective && st.entities[st.view.perspective]) h += perspectiveSummary(st.view.perspective);
-    h += `<details class="plan"${App.planOpen ? ' open' : ''}><summary>Plan du scénario</summary><ol>${sc.steps.map((x, i) => `<li class="${i === App.step ? 'cur' : ''}${i < App.step ? ' done' : ''}"><a data-go="${i}">${esc(x.title)}</a></li>`).join('')}</ol></details>`;
-    if (sc.errors.length) h += `<details class="errs"><summary>⚠ ${sc.errors.length} avertissement(s) dans le scénario</summary><ul>${sc.errors.map(e => `<li>Étape ${(e.step || 0) + 1}, ligne ${e.line} : <code>${esc(e.text)}</code> — ${esc(e.msg)}</li>`).join('')}</ul></details>`;
-    h += '<p class="hint">Cliquez sur une entité du canevas pour afficher son analyse. Glissez une entité ou une bulle pour la déplacer.</p>';
+    h += `<details class="plan"${App.planOpen ? ' open' : ''}><summary>${t('Plan du scénario')}</summary><ol>${sc.steps.map((x, i) => `<li class="${i === App.step ? 'cur' : ''}${i < App.step ? ' done' : ''}"><a data-go="${i}">${esc(stepTitle(x))}</a></li>`).join('')}</ol></details>`;
+    if (sc.errors.length) h += `<details class="errs"><summary>${t('⚠ {n} avertissement(s) dans le scénario', { n: sc.errors.length })}</summary><ul>${sc.errors.map(e => `<li>${t('Étape {n}, ligne {line} :', { n: (e.step || 0) + 1, line: e.line })} <code>${esc(e.text)}</code> — ${esc(e.msg)}</li>`).join('')}</ul></details>`;
+    h += '<p class="hint">' + t('Cliquez sur une entité du canevas pour afficher son analyse. Glissez une entité ou une bulle pour la déplacer.') + '</p>';
     el.innerHTML = h;
     const d = $('details.plan', el); if (d) d.addEventListener('toggle', () => { App.planOpen = d.open; });
   };
@@ -1295,17 +1405,19 @@
     $('#btn-studio').classList.toggle('on', App.studio.open);
     if (el.hidden) return;
     const n = App.studio.steps.length;
-    el.innerHTML = `<b>🎞 Studio</b><span>${n} étape${n > 1 ? 's' : ''} capturée${n > 1 ? 's' : ''}</span>
-      <button class="primary" data-st="cap">📸 Capturer l'étape</button>
-      <button data-st="prev"${n ? '' : ' disabled'}>▶ Prévisualiser</button>
-      <button data-st="exp">⬇ Exporter .md</button>
-      <button data-st="pop"${n ? '' : ' disabled'} title="Retirer la dernière étape">↶</button>
-      <button data-st="clr"${n ? '' : ' disabled'}>Vider</button>
-      <button data-st="close" title="Fermer le studio">×</button>`;
+    el.innerHTML = `<b>${t('🎞 Studio')}</b><span>${n > 1 ? t('{n} étapes capturées', { n }) : t('{n} étape capturée', { n })}</span>
+      <button class="primary" data-st="cap">${t("📸 Capturer l'étape")}</button>
+      <button data-st="prev"${n ? '' : ' disabled'}>${t('▶ Prévisualiser')}</button>
+      <button data-st="exp">${t('⬇ Exporter .md')}</button>
+      <button data-st="pop"${n ? '' : ' disabled'} title="${esc(t('Retirer la dernière étape'))}">↶</button>
+      <button data-st="clr"${n ? '' : ' disabled'}>${t('Vider')}</button>
+      <button data-st="close" title="${esc(t('Fermer le studio'))}">×</button>`;
   }
   function studioMd() {
-    const steps = App.studio.steps.length ? App.studio.steps : [{ title: 'Structure', comment: '', snap: P.clone(App.state) }];
-    return P.studioMarkdown(App.studio.title, steps);
+    const steps = App.studio.steps.length ? App.studio.steps : [{ title: t('Structure'), comment: '', snap: P.clone(App.state) }];
+    // droit autre que français : en-tête « droit: » pour que le scénario se rejoue avec les bons seuils
+    const d = App.state.options.droit || P.juris;
+    return (d && d !== 'fr' ? `---\ndroit: ${d}\n---\n` : '') + P.studioMarkdown(App.studio.title, steps);
   }
   $('#studio').addEventListener('click', ev => {
     const b = ev.target.closest('[data-st]'); if (!b) return;
@@ -1313,12 +1425,12 @@
     switch (b.dataset.st) {
       case 'cap': {
         const selNode = App.sel && App.sel.kind === 'node' ? App.sel.id : null;
-        const c = App.modal(`<h2>📸 Capturer l'étape ${S.steps.length + 1}</h2>
-          ${S.steps.length ? '' : `<label class="field"><span>Titre du scénario</span><input type="text" id="sd-title" value="${esc(S.title)}"></label>`}
-          <label class="field"><span>Titre de l'étape</span><input type="text" id="sd-step" value="${S.steps.length + 1}. "></label>
-          <label class="field"><span>Commentaire (markdown : **gras**, listes « - », citations « > »…)</span><textarea id="sd-com" placeholder="Expliquez ce que montre cette étape…"></textarea></label>
-          ${selNode ? `<label class="chk"><input type="checkbox" id="sd-focus" checked> mettre en évidence « ${esc(nameOf(selNode))} »</label>` : ''}
-          <div class="btns"><button class="primary" id="sd-ok">Capturer</button></div>`, 'narrow');
+        const c = App.modal(`<h2>${t("📸 Capturer l'étape {n}", { n: S.steps.length + 1 })}</h2>
+          ${S.steps.length ? '' : `<label class="field"><span>${t('Titre du scénario')}</span><input type="text" id="sd-title" value="${esc(S.title)}"></label>`}
+          <label class="field"><span>${t("Titre de l'étape")}</span><input type="text" id="sd-step" value="${S.steps.length + 1}. "></label>
+          <label class="field"><span>${t('Commentaire (markdown : **gras**, listes « - », citations « > »…)')}</span><textarea id="sd-com" placeholder="${esc(t('Expliquez ce que montre cette étape…'))}"></textarea></label>
+          ${selNode ? `<label class="chk"><input type="checkbox" id="sd-focus" checked> ${t('mettre en évidence « {name} »', { name: esc(nameOf(selNode)) })}</label>` : ''}
+          <div class="btns"><button class="primary" id="sd-ok">${t('Capturer')}</button></div>`, 'narrow');
         $('#sd-step', c).focus();
         $('#sd-ok', c).onclick = () => {
           const snap = P.clone(App.state);
@@ -1326,15 +1438,15 @@
           snap.view.notes = {}; snap.view.select = null;
           if ($('#sd-title', c)) S.title = $('#sd-title', c).value.trim() || S.title;
           S.steps.push({ title: $('#sd-step', c).value.trim(), comment: $('#sd-com', c).value, snap });
-          App.closeModal(); updateStudio(); toast(`📸 Étape ${S.steps.length} capturée`);
+          App.closeModal(); updateStudio(); toast(t('📸 Étape {n} capturée', { n: S.steps.length }));
         };
         break;
       }
       case 'prev': App.loadScenario(studioMd()); break;
       case 'exp': {
         const md = studioMd();
-        const c = App.modal(`<h2>⬇ Scénario généré</h2><textarea class="big" id="sd-md" spellcheck="false"></textarea>
-          <div class="btns"><button class="primary" id="sd-dl">⬇ Télécharger .md</button><button id="sd-cp">📋 Copier</button><button id="sd-play">▶ Lire en mode cinéma</button></div>`);
+        const c = App.modal(`<h2>${t('⬇ Scénario généré')}</h2><textarea class="big" id="sd-md" spellcheck="false"></textarea>
+          <div class="btns"><button class="primary" id="sd-dl">${t('⬇ Télécharger .md')}</button><button id="sd-cp">${t('📋 Copier')}</button><button id="sd-play">${t('▶ Lire en mode cinéma')}</button></div>`);
         $('#sd-md', c).value = md;
         $('#sd-dl', c).onclick = () => download(P.slug(S.title).toLowerCase() + '.md', $('#sd-md').value);
         $('#sd-cp', c).onclick = () => copyText($('#sd-md').value);
@@ -1342,7 +1454,7 @@
         break;
       }
       case 'pop': S.steps.pop(); updateStudio(); break;
-      case 'clr': if (confirm('Vider toutes les étapes capturées ?')) { S.steps = []; updateStudio(); } break;
+      case 'clr': if (confirm(t('Vider toutes les étapes capturées ?'))) { S.steps = []; updateStudio(); } break;
       case 'close': S.open = false; updateStudio(); break;
     }
   });
@@ -1379,7 +1491,7 @@
 
   /* ============================================================ barre d'actions */
   $('#btn-new').onclick = () => {
-    if (Object.keys(App.state.entities).length && !confirm('Vider le canevas ? (Ctrl+Z pour annuler)')) return;
+    if (Object.keys(App.state.entities).length && !confirm(t('Vider le canevas ? (Ctrl+Z pour annuler)'))) return;
     pushUndo(); App.state = P.newState(); App.sel = null; App.colorMap = {}; App.colorIdx = 0; App.commit(); App.fit(true);
   };
   $('#btn-undo').onclick = undo;
@@ -1399,7 +1511,7 @@
   $('#btn-edit-md').onclick = () => { if (App.scenario) openEditor(App.scenarioSrc, true); else openLibrary(); };
   $('#btn-to-libre').onclick = () => {
     const lib = App.libreState;
-    if (lib && Object.keys(lib.entities).length && !confirm('Remplacer la structure du mode libre par l\'état affiché ? (Ctrl+Z pour annuler en mode libre)')) return;
+    if (lib && Object.keys(lib.entities).length && !confirm(t("Remplacer la structure du mode libre par l'état affiché ? (Ctrl+Z pour annuler en mode libre)"))) return;
     const st = P.clone(App.state);
     Object.values(st.entities).forEach(e => { e.fixed = true; });
     st.view.focus = []; st.view.notes = {}; st.view.select = null;
@@ -1407,17 +1519,17 @@
     setMode('libre');
     if (prevLibre) App.undoStack.push(JSON.stringify(prevLibre));
     App.state = st; App.commit({ animate: false }); App.fit(false);
-    toast('✏️ Vous pouvez maintenant modifier librement cette structure.');
+    toast(t('✏️ Vous pouvez maintenant modifier librement cette structure.'));
   };
   $('#btn-help').onclick = () => openHelp('all');
 
   /* ---- mode jour / nuit (le thème initial est posé par le script en tête d'index.html) */
-  function applyTheme(t, remember) {
-    document.documentElement.setAttribute('data-theme', t);
+  function applyTheme(th, remember) {
+    document.documentElement.setAttribute('data-theme', th);
     const b = $('#btn-theme');
-    b.textContent = t === 'dark' ? '☀️' : '🌙';
-    b.title = t === 'dark' ? 'Passer en mode jour' : 'Passer en mode nuit';
-    if (remember) { try { localStorage.setItem('capital-lab.theme', t); } catch (e) { /* */ } }
+    b.textContent = th === 'dark' ? '☀️' : '🌙';
+    b.title = th === 'dark' ? t('Passer en mode jour') : t('Passer en mode nuit');
+    if (remember) { try { localStorage.setItem('capital-lab.theme', th); } catch (e) { /* */ } }
     requestRender();
   }
   applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light', false);
@@ -1430,6 +1542,20 @@
   $('#opt-defacto').onchange = ev => {
     if (App.mode === 'libre') pushUndo();
     App.state.options.deFacto = ev.target.checked; App.commit();
+  };
+  /* langue de l'interface (la page est rechargée) et droit applicable (anglais : Royaume-Uni ou États-Unis) */
+  const langSel = $('#opt-lang');
+  if (langSel) { langSel.value = P.lang; langSel.onchange = () => P.setLang(langSel.value); }
+  const lawSel = $('#opt-droit');
+  if (lawSel) lawSel.onchange = () => {
+    const d = lawSel.value;
+    if (!P.JURIS[d] || (App.mode === 'cinema' && App.scenario)) return;
+    try { localStorage.setItem('capital-lab.droit', d); } catch (e) { /* */ }
+    if (App.mode === 'libre') pushUndo();
+    else if (App.libreState) App.libreState.options.droit = d;
+    App.state.options.droit = d;
+    App.commit();
+    if (App.mode === 'cinema' && !$('#modal').hidden && $('#modal .lib-grid')) openLibrary();
   };
 
   document.addEventListener('keydown', ev => {
@@ -1471,7 +1597,7 @@
   }, { passive: true });
   $('#side').addEventListener('touchend', ev => {
     if (!swipe) return;
-    const t = ev.changedTouches[0], dx = t.clientX - swipe.x, dy = t.clientY - swipe.y;
+    const tc = ev.changedTouches[0], dx = tc.clientX - swipe.x, dy = tc.clientY - swipe.y;
     const ok = Math.abs(dx) > 60 && Math.abs(dx) > 1.6 * Math.abs(dy) && Date.now() - swipe.t < 800;
     swipe = null;
     if (ok) { if (dx < 0) next(); else prev(); }
@@ -1504,15 +1630,15 @@
     const step = Math.max(0, (parseInt(q.get('etape') || q.get('step'), 10) || 1) - 1);
     const hash = (location.hash.match(/(?:^#|&)md=([A-Za-z0-9_-]+)/) || [])[1];
     if (sid) {
-      const s = P.LIBRARY.find(x => x.id === sid);
-      if (s) App.loadScenario(s.md, { id: sid }, step); else { toast('Scénario introuvable : ' + esc(sid)); setMode('cinema'); }
+      const s = libFind(sid);
+      if (s) App.loadScenario(s.md, { id: sid }, step); else { toast(t('Scénario introuvable : {id}', { id: esc(sid) })); setMode('cinema'); }
     } else if (hash) {
-      unpackMd(hash).then(t => App.loadScenario(t, { packed: hash }, step))
-        .catch(() => { toast('⚠ Lien de scénario illisible (incomplet ?)'); setMode('cinema'); });
+      unpackMd(hash).then(txt => App.loadScenario(txt, { packed: hash }, step))
+        .catch(() => { toast(t('⚠ Lien de scénario illisible (incomplet ?)')); setMode('cinema'); });
     } else if (url) {
       fetch(url).then(r => { if (!r.ok) throw new Error(r.status); return r.text(); })
-        .then(t => App.loadScenario(t, { url }, step))
-        .catch(() => toast('⚠ Impossible de charger ' + esc(url)));
+        .then(txt => App.loadScenario(txt, { url }, step))
+        .catch(() => toast(t('⚠ Impossible de charger {url}', { url: esc(url) })));
     } else if (q.has('scenarios') || q.has('bibliotheque') || isMobile()) {
       setMode('cinema');   // ouvre la bibliothèque ; sur téléphone, le mode cinéma est le point d'entrée
     }

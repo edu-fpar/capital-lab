@@ -31,6 +31,12 @@
     .markdown-section table { display: table; width: 100%; }
     .markdown-section pre > code { font-size: .85rem; }
     .app-name-link { font-weight: 700; }
+    #doc-langs { position: fixed; top: 12px; right: 62px; z-index: 30; display: flex; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; background: #fff; }
+    #doc-langs a { padding: 4px 9px; font: 600 13px/1.6 system-ui, sans-serif; color: #64748b; text-decoration: none; }
+    #doc-langs a.on { background: var(--theme-color); color: #fff; }
+    [data-theme="dark"] #doc-langs { background: #141c2f; border-color: #2a3550; }
+    [data-theme="dark"] #doc-langs a { color: #94a3b8; }
+    [data-theme="dark"] #doc-langs a.on { color: #0b1120; }
     #theme-toggle {
       position: fixed; top: 12px; right: 16px; z-index: 30; border: 1px solid #e2e8f0; background: #fff;
       border-radius: 8px; padding: 4px 9px; font-size: 16px; cursor: pointer;
@@ -113,6 +119,7 @@
   </style>
 </head>
 <body>
+  <nav id="doc-langs" aria-label="Langue / Language / Idioma"><a href="#/" data-l="fr">FR</a><a href="#/en/" data-l="en">EN</a><a href="#/es/" data-l="es">ES</a></nav>
   <button id="theme-toggle" type="button"></button>
   <script>
     (function () {
@@ -143,25 +150,46 @@
       subMaxLevel: 2,
       auto2top: true,
       relativePath: true,
-      search: { placeholder: 'Rechercher…', noData: 'Aucun résultat', depth: 3 },
-      plugins: [function (hook) { hook.doneEach(fillAiBox); }]
+      search: {
+        placeholder: { '/en/': 'Search…', '/es/': 'Buscar…', '/': 'Rechercher…' },
+        noData: { '/en/': 'No results', '/es/': 'Sin resultados', '/': 'Aucun résultat' },
+        depth: 3
+      },
+      plugins: [function (hook) { hook.doneEach(function () { showLang(); fillAiBox(); }); }]
     };
+
+    /* Langue de la page : #/en/… (anglais), #/es/… (espagnol), sinon français */
+    function pageLang() { var m = location.hash.match(/^#\/(en|es)(\/|$)/); return m ? m[1] : 'fr'; }
+    var L10N = {
+      fr: { copied: '✅ Copié !', fail: 'Copie impossible : sélectionnez le texte manuellement.', read: 'Lecture impossible : ouvrez la page des instructions (lien « voir les instructions ») et copiez son contenu.',
+        request: '# Ma demande', re: /^Lis les instructions sur \S+ et prépare/, rep: 'En suivant les instructions ci-dessus, prépare' },
+      en: { copied: '✅ Copied!', fail: 'Copy failed: please select the text manually.', read: 'Could not read the file: open the instructions page and copy its content.',
+        request: '# My request', re: /^Read the instructions at \S+ and prepare/, rep: 'Following the instructions above, prepare' },
+      es: { copied: '✅ ¡Copiado!', fail: 'No se pudo copiar: selecciona el texto manualmente.', read: 'No se pudo leer el archivo: abre la página de instrucciones y copia su contenido.',
+        request: '# Mi petición', re: /^Lee las instrucciones en \S+ y prepara/, rep: 'Siguiendo las instrucciones anteriores, prepara' }
+    };
+    function showLang() {
+      var l = pageLang();
+      document.documentElement.lang = l;
+      document.querySelectorAll('#doc-langs a').forEach(function (a) { a.classList.toggle('on', a.getAttribute('data-l') === l); });
+    }
 
     /* Encart IA : adresse de la page d'instructions (publique si la doc est consultée en local) et boutons Copier */
     var PUBLIC_DOCS = 'https://edu-fpar.github.io/capital-lab/docs/';
     function isLocal() { return location.protocol === 'file:' || /^(localhost|127\.|\[::1\])/.test(location.hostname); }
     function docsBase() { return isLocal() ? PUBLIC_DOCS : location.href.split('#')[0].split('?')[0].replace(/[^/]*$/, ''); }
     function fillAiBox() {
-      var url = docsBase() + 'instructions-ia.md';
+      var l = pageLang(), url = docsBase() + (l === 'fr' ? '' : l + '/') + 'instructions-ia.md';
       document.querySelectorAll('.js-ia-url').forEach(function (e) { e.textContent = url; });
       document.querySelectorAll('.js-ia-local').forEach(function (e) { e.hidden = !isLocal(); });
     }
     function copyText(text, btn) {
-      var done = function () { var old = btn.innerHTML; btn.innerHTML = '✅ Copié !'; setTimeout(function () { btn.innerHTML = old; }, 1600); };
+      var T = L10N[pageLang()];
+      var done = function () { var old = btn.innerHTML; btn.innerHTML = T.copied; setTimeout(function () { btn.innerHTML = old; }, 1600); };
       var fallback = function () {
         var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
         document.body.appendChild(ta); ta.select();
-        try { document.execCommand('copy'); done(); } catch (e) { alert('Copie impossible : sélectionnez le texte manuellement.'); }
+        try { document.execCommand('copy'); done(); } catch (e) { alert(T.fail); }
         ta.remove();
       };
       if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(done, fallback); else fallback();
@@ -173,13 +201,14 @@
       var consigne = (box.querySelector('.js-ia-prompt') || {}).innerText || '';
       if (b.hasAttribute('data-copy-sel')) { copyText(box.querySelector(b.getAttribute('data-copy-sel')).innerText.trim(), b); return; }
       // Version complète, pour une IA qui n'ouvre pas les liens : instructions + consigne (sans le lien)
-      var f = b.getAttribute('data-copy-full');
-      var suite = consigne.trim().replace(/^Lis les instructions sur \S+ et prépare/, 'En suivant les instructions ci-dessus, prépare');
+      var f = b.getAttribute('data-copy-full'), l = pageLang(), T = L10N[l];
+      if (l !== 'fr' && f.indexOf('/') < 0) f = l + '/' + f;   // pages en/ et es/ : leur propre fichier d'instructions
+      var suite = consigne.trim().replace(T.re, T.rep);
       // fichier local d'abord ; sinon (ouverture en file://) la version publiée
       fetch(f).then(function (r) { if (!r.ok) throw 0; return r.text(); })
         .catch(function () { return fetch(PUBLIC_DOCS + f).then(function (r) { if (!r.ok) throw 0; return r.text(); }); })
-        .then(function (t) { copyText(t.trim() + '\n\n---\n\n# Ma demande\n\n' + suite + '\n\n', b); })
-        .catch(function () { alert('Lecture impossible : ouvrez la page des instructions (lien « voir les instructions ») et copiez son contenu.'); });
+        .then(function (t) { copyText(t.trim() + '\n\n---\n\n' + T.request + '\n\n' + suite + '\n\n', b); })
+        .catch(function () { alert(T.read); });
     });
   </script>
   <script src="https://cdn.jsdelivr.net/npm/docsify@4.13.1/lib/docsify.min.js"></script>
