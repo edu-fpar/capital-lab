@@ -1,6 +1,9 @@
 # Capital Lab — atelier capital & pouvoir
 
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24464409.svg)](https://doi.org/10.5281/zenodo.24464409)
+Code source : [github.com/edu-fpar/capital-lab](https://github.com/edu-fpar/capital-lab)
+
+**Français** · 🇬🇧 [English](README.en.md) · 🇪🇸 [Español](README.es.md)
 
 [![Capital Lab en mode libre : un groupe avec filiale, associée, sous-filiale et coentreprise sous pacte, le point de vue de la société mère et l'analyse de la filiale sélectionnée](capital-lab-libre.png)](https://edu-fpar.github.io/capital-lab/)
 
@@ -11,7 +14,7 @@ des pactes, des droits de vote double, l'autocontrôle…
 **▶ En ligne : [edu-fpar.github.io/capital-lab](https://edu-fpar.github.io/capital-lab/)** (aussi sur téléphone) ·
 [documentation](https://edu-fpar.github.io/capital-lab/docs/)
 
-**Trois langues, quatre droits** : français (droit français), anglais (droit britannique ou américain, au choix dans la barre d'outils) et espagnol (droit espagnol). Langue : sélecteur dans la barre d'outils ou `?lang=en` / `?lang=es`. Les seuils, la légende, les textes d'analyse et les scénarios suivent le droit choisi. 🇬🇧 [English below](#english) · 🇪🇸 [Español más abajo](#español)
+**Trois langues, quatre droits** : français (droit français), anglais (droit britannique ou américain, au choix dans la barre d'outils) et espagnol (droit espagnol). Langue : sélecteur dans la barre d'outils ou `?lang=en` / `?lang=es`. Les seuils, la légende, les textes d'analyse et les scénarios suivent le droit choisi. README en [anglais](README.en.md) et en [espagnol](README.es.md).
 
 Aucune installation : ouvrez `index.html` (double-clic) ou servez le dossier avec UwAmp
 (`http://localhost/edu-fpar/capital-lab/`). Pas de dépendance externe, fonctionne hors ligne.
@@ -100,22 +103,6 @@ Merci à **Tao**, dont l'outil imaginé pour montrer à sa classe de droit finan
 
 Vous l'utilisez en cours ? [Dites-le-moi](https://www.linkedin.com/in/francois-parlant/) : ces retours m'aident à faire connaître et améliorer l'outil.
 
-### License and citation
+---
 
-© 2026 François Parlant — [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/). Using it in class or in training is free, with credit to the author; adaptations must be shared under the same license. See [LICENSE](LICENSE).
-
-**Commercial use** (training company, publisher, white label, custom scenarios, tailored SCORM packages): a commercial license is available by agreement. [Get in touch](https://edu-fpar.github.io/about.html?lang=en).
-
-**How to cite** (GitHub's *Cite this repository* button, from [CITATION.cff](CITATION.cff)):
-
-> Parlant, F. (2026). *Capital Lab* [Educational software]. Zenodo. https://doi.org/10.5281/zenodo.24464409
-
-Using it in class? [Let me know](https://www.linkedin.com/in/francois-parlant/): this feedback helps me improve the tool and spread the word.
-
-## English
-
-Capital Lab is also available **in English**, under **UK law** (Companies Act 2006, Takeover Code) or **US law** (Delaware, federal securities law): choose the law in the toolbar. Thresholds, legend, analysis and the built-in scenarios follow the chosen law. Open [edu-fpar.github.io/capital-lab/?lang=en](https://edu-fpar.github.io/capital-lab/?lang=en) · [documentation](https://edu-fpar.github.io/capital-lab/docs/#/en/) · [video tour](https://edu-fpar.github.io/capital-lab/intro.html?lang=en).
-
-## Español
-
-Capital Lab también está disponible **en español**, con el **derecho español** (Ley de Sociedades de Capital, OPA, NIIF). Abrir [edu-fpar.github.io/capital-lab/?lang=es](https://edu-fpar.github.io/capital-lab/?lang=es) · [documentación](https://edu-fpar.github.io/capital-lab/docs/#/es/) · [visita guiada](https://edu-fpar.github.io/capital-lab/intro.html?lang=es).
+🇬🇧 **English**: Capital Lab under UK or US law → [README.en.md](README.en.md) · 🇪🇸 **Español**: Capital Lab con el derecho español → [README.es.md](README.es.md)
