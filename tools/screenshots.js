@@ -2,6 +2,8 @@
 /*
  * Régénère les captures d'écran de la documentation (docs/images/*.jpg).
  * Usage (depuis le dossier du projet) : node tools/screenshots.js
+ *   node tools/screenshots.js og   → seulement les images d'aperçu des réseaux sociaux
+ *                                    (capital-lab.png, capital-lab-en.png, capital-lab-es.png à la racine)
  *
  * Pilote Microsoft Edge (ou Chrome) sans fenêtre via son protocole de débogage :
  * aucune dépendance à installer. Chemin du navigateur modifiable avec BROWSER=…
@@ -25,6 +27,7 @@ const BROWSER = process.env.BROWSER || [
 
 const DESKTOP = { width: 1366, height: 800, deviceScaleFactor: 1, mobile: false };
 const PHONE = { width: 390, height: 844, deviceScaleFactor: 2, mobile: true };
+const OG = { width: 1079, height: 778, deviceScaleFactor: 1.2, mobile: false };   // ≈ 1295 × 934 px, texte agrandi pour les vignettes
 
 /* Chaque capture : page, taille, thème, et la mise en scène à exécuter dans la page avant la photo. */
 const SHOTS = [
@@ -41,6 +44,21 @@ const SHOTS = [
          document.querySelector('.qinline').scrollIntoView({ block: 'start' });` },
   { file: 'telephone-schema-jour', url: '?scenario=controle-de-fait&etape=4', size: PHONE, theme: 'light' }
 ];
+
+/* Images d'aperçu (og:image) : la question de la pyramide, une par langue, en PNG à la racine du site. */
+const OG_SHOTS = [
+  { scenario: 'pyramide', lang: 'fr', file: 'capital-lab' },
+  { scenario: 'uk-pyramid', lang: 'en', file: 'capital-lab-en' },
+  { scenario: 'es-piramide', lang: 'es', file: 'capital-lab-es' }
+].map(o => ({ file: o.file, url: `?lang=${o.lang}&scenario=${o.scenario}&etape=6`, size: OG, theme: 'dark',
+  js: `foldLegend();
+    // vignette : sans le panneau latéral, le schéma et la question occupent toute la largeur
+    document.getElementById('side').style.display = 'none';
+    document.getElementById('main').style.gridTemplateColumns = '0 1fr 0';
+    await wait(400); App.fit(false);`, dir: root, format: 'png' }));
+
+const ONLY_OG = process.argv.includes('og');
+const TODO = ONLY_OG ? OG_SHOTS : SHOTS.concat(OG_SHOTS);
 
 /* ---------- petit serveur statique */
 const TYPES = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.md': 'text/markdown', '.png': 'image/png', '.jpg': 'image/jpeg', '.json': 'application/json' };
@@ -77,7 +95,7 @@ async function main() {
     });
     await send('Page.enable'); await send('Runtime.enable');
 
-    for (const s of SHOTS) {
+    for (const s of TODO) {
       await send('Emulation.setDeviceMetricsOverride', s.size);
       await send('Emulation.setTouchEmulationEnabled', { enabled: !!s.size.mobile });
       await send('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-color-scheme', value: s.theme }] });
@@ -91,8 +109,9 @@ async function main() {
       const r = await send('Runtime.evaluate', { expression: `(async () => { ${prelude} ${s.js || ''} })()`, awaitPromise: true });
       if (r.exceptionDetails) throw new Error(s.file + ' : ' + r.exceptionDetails.exception.description);
       await sleep(1600);   // fin des animations (apparition, recadrage)
-      const shot = await send('Page.captureScreenshot', { format: 'jpeg', quality: 82 });
-      const file = path.join(out, s.file + '.jpg');
+      const fmt = s.format || 'jpeg';
+      const shot = await send('Page.captureScreenshot', fmt === 'png' ? { format: 'png' } : { format: 'jpeg', quality: 82 });
+      const file = path.join(s.dir || out, s.file + (fmt === 'png' ? '.png' : '.jpg'));
       fs.writeFileSync(file, Buffer.from(shot.data, 'base64'));
       console.log('capturé  ' + path.relative(root, file) + `  (${Math.round(fs.statSync(file).size / 1024)} ko)`);
     }
