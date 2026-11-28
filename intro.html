@@ -7,6 +7,7 @@
 <meta name="description" content="Capital Lab en une minute : contrôler une société en étant minoritaire, le mode cinéma, le mode libre et la préparation d'un scénario avec une IA.">
 <link rel="canonical" href="https://edu-fpar.github.io/capital-lab/intro.html">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath d='M50 6 94 50 50 94 6 50z' fill='%234f46e5'/%3E%3C/svg%3E">
+<!-- intro/kit/anim.css et anim.js : copies de anim-kit/kit (anim.css recopié le 2026-11-28). Outils de contrôle non publiés : intro/kit/controle.html, planche.html. -->
 <link rel="stylesheet" href="intro/kit/anim.css">
 <style>
  /* ================= page de présentation (autour de l'animation) =================
@@ -115,6 +116,9 @@
  .ring .num small { color: var(--soft); font-size: 1em; font-weight: 600; }
  .ring .crown { position: absolute; left: 76%; top: -4%; font-size: 2.6em; rotate: 22deg; filter: drop-shadow(0 6px 14px rgba(251,191,36,.55)); }
  .s-hook .k-h2 { max-width: 20em; text-wrap: balance; }
+ .ring .arc-still { stroke-dasharray: 1 1; stroke-dashoffset: .867; }
+ .hook-brand { display: inline-flex; align-items: center; gap: .5em; font-size: 1.15em; }
+ .hook-dot { width: .8em; height: .8em; rotate: 45deg; border-radius: .15em; background: linear-gradient(145deg, #a5b4fc, #6366f1); }
  .anim[data-format="9x16"] .ring { width: 12.5em; height: 12.5em; }
  .anim[data-format="1x1"] .ring { width: 10em; height: 10em; }
 
@@ -333,23 +337,27 @@
 <div class="anim" data-title="title">
 
  <!-- ============ 1. Accroche : 13 % du capital, le contrôle quand même ============ -->
- <section class="scene s-hook" data-dur="5.5" data-chapter="ch1" data-say="say1" data-key="4.6">
-  <p class="k-kicker" data-in="fade 0.2 0.5" data-t="hookK"></p>
-  <div class="ring" data-in="zoom 0.1 0.7">
+ <!-- Ouverture « image fixe » (anim-kit, 2026-11-28) : à t = 0 tout est déjà composé (nom, anneau à 13 %, couronne, question),
+      sans data-in. Vers 0,8 s l'anneau se vide puis se remplit de nouveau, la couronne rebondit, puis la réponse arrive. -->
+ <section class="scene s-hook" data-dur="6.5" data-chapter="ch1" data-say="say1" data-key="4.6">
+  <p class="k-kicker hook-brand"><span class="hook-dot"></span>Capital Lab</p>
+  <div class="ring">
    <svg viewBox="0 0 100 100" aria-hidden="true">
     <defs><linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#a5b4fc"/><stop offset="1" stop-color="#8b5cf6"/></linearGradient></defs>
     <circle class="trk" cx="50" cy="50" r="44"/>
-    <circle class="arc" cx="50" cy="50" r="44" pathLength="1" data-in="ring 0.6 1.6"/>
+    <circle class="arc arc-still" cx="50" cy="50" r="44" pathLength="1" data-out="fade 0.8 0.25"/>
+    <circle class="arc" cx="50" cy="50" r="44" pathLength="1" data-in="ring 0.95 1.4"/>
    </svg>
-   <div class="num"><b><span data-count="0.6 1.6">13</span> %</b><small data-in="fade 1.4 0.5" data-t="hookCap"></small></div>
-   <div class="crown" data-in="pop 2.4 0.6">👑</div>
+   <div class="num"><b>13 %</b><small data-t="hookCap"></small></div>
+   <div class="crown" data-out="fade 0.8 0.2">👑</div>
+   <div class="crown" data-in="pop 2.2 0.6">👑</div>
   </div>
-  <h2 class="k-h2" data-in="fade-up 2.0 0.6" data-t="hookQ"></h2>
-  <span class="k-pill is-amber" data-in="pop 3.4 0.5" data-t="hookA"></span>
+  <h2 class="k-h2" data-t="hookQ"></h2>
+  <span class="k-pill is-amber" data-in="pop 3.0 0.5" data-t="hookA"></span>
  </section>
 
  <!-- ============ 2. Titre ============ -->
- <section class="scene g-center s-title" data-dur="4.5" data-chapter="ch2" data-say="say2">
+ <section class="scene g-center s-title" data-dur="6.1" data-chapter="ch2" data-say="say2">
   <svg class="deco" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><g data-in="drift 0 4.5 linear">
   <line class="g" x1="260" y1="210" x2="470" y2="420" pathLength="1" data-in="draw 0.35 0.7"/>
   <line class="" x1="150" y1="420" x2="470" y2="420" pathLength="1" data-in="draw 0.47 0.7"/>
@@ -490,7 +498,7 @@
  </section>
 
  <!-- ============ 5. Contrôle de fait, étape 4 → Explorer librement ============ -->
- <section class="scene g-app s-fait" data-dur="8.5" data-chapter="ch5" data-say="say5" data-key="7.2">
+ <section class="scene g-app s-fait" data-dur="9.8" data-chapter="ch5" data-say="say5" data-key="7.2">
   <div class="hd"><p class="k-kicker" data-in="fade 0.1" data-t="libK"></p><h2 class="k-h2" data-in="fade-up 0.2" data-t="libT"></h2></div>
   <div class="cl-app" data-in="fade-up 0.25 0.6">
    <div class="cl-top">
@@ -576,7 +584,7 @@
  </section>
 
  <!-- ============ 7. Chiffres ============ -->
- <section class="scene g-stats" data-dur="4.5" data-chapter="ch7" data-say="say7">
+ <section class="scene g-stats" data-dur="5.6" data-chapter="ch7" data-say="say7">
   <p class="k-kicker" data-in="fade 0.1" data-t="statsK"></p>
   <div class="k-stats" data-stagger="0.3 0.2">
    <div class="k-stat" data-in="fade-up"><b data-count="0.4 1.2">10</b><span data-t="stat1"></span></div>

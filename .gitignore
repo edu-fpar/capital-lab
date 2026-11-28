@@ -1,0 +1,7 @@
+# anim-kit : outils de contrôle de l'intro (non publiés)
+intro/kit/controle.html
+intro/kit/planche.html
+intro/kit/repliques.json
+
+# copies de sauvegarde avant modification
+_archives/

@@ -149,3 +149,7 @@
 .ap-row.done .ap-bar i { background: #1d7a46; }
 /* mode rendu (?render=1) : la scène seule, taille réelle */
 .anim-render, .anim-render body { margin: 0; background: transparent; overflow: hidden; }
+/* la page d'intro autour de l'animation (en-tête, textes, liens) disparaît : seule la scène reste, en haut à gauche */
+.anim-render body * { visibility: hidden; }
+.anim-render .anim, .anim-render .anim * { visibility: visible; }
+.anim-render .anim { position: fixed !important; left: 0 !important; top: 0 !important; margin: 0 !important; z-index: 2147483647; }
